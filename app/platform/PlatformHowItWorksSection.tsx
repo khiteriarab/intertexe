@@ -9,9 +9,9 @@ export function PlatformHowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="scroll-mt-28 platform-product-story platform-what-it-is platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-24 border-b border-[#e8e3da]/60"
+      className="scroll-mt-28 platform-product-story platform-what-it-is platform-abstract-band py-16 sm:py-20 lg:py-28"
     >
-      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+      <div className="relative platform-lux-wrap">
         <div className="max-w-2xl lg:max-w-3xl mb-8 lg:mb-10">
           <Eyebrow>How INTERTEXE works</Eyebrow>
           <Heading className="mb-4">From raw product data to intelligent action.</Heading>

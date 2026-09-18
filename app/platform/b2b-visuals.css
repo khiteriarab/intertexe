@@ -427,50 +427,35 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-width: 72rem;
-}
-
-.platform-lifecycle-accordion {
-  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
-}
-
-.platform-lifecycle-accordion-trigger {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  min-height: 3.25rem;
-  padding: 0.85rem 0;
-  flex: none;
+  max-width: none;
 }
 
 .platform-lifecycle-journey-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  align-items: stretch;
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
   max-width: none;
-  padding: 0 0 1.5rem;
+  padding: 0;
 }
 
-.platform-lifecycle-journey-lead {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1.15rem;
-  width: 100%;
-}
-
-@media (min-width: 768px) {
-  .platform-lifecycle-journey-lead {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1.75rem;
+@media (min-width: 900px) {
+  .platform-lifecycle-journey-panel {
+    grid-template-columns: minmax(16.5rem, 0.78fr) minmax(0, 1.22fr);
+    gap: 3rem 3.5rem;
   }
 }
 
 .platform-lifecycle-journey-copy {
   min-width: 0;
-  flex: 1;
+  max-width: 28rem;
+}
+
+.platform-lifecycle-journey-kicker {
+  margin: 0 0 0.85rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
 }
 
 .platform-lifecycle-journey-label {
@@ -552,30 +537,16 @@
 
 .platform-lifecycle-graphic {
   position: relative;
-  flex: 0 0 auto;
   width: 100%;
-  max-width: 26.5rem;
+  max-width: none;
   height: auto;
   aspect-ratio: 16 / 10;
   min-height: 0;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   overflow: hidden;
-  background: #f7f4ef;
-  border: 1px solid rgba(17, 17, 17, 0.1);
-}
-
-@media (min-width: 768px) {
-  .platform-lifecycle-graphic {
-    flex: 0 0 26.5rem;
-    width: 26.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .platform-lifecycle-graphic {
-    flex-basis: 28.5rem;
-    width: 28.5rem;
-  }
+  background: #f4f1ec;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.08);
 }
 
 .platform-lifecycle-graphic--screenshot .platform-lifecycle-graphic-ui {
@@ -654,10 +625,12 @@
 .platform-what-slides-tabs {
   display: flex;
   flex-wrap: nowrap;
-  align-items: baseline;
-  gap: 1.25rem 1.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem 2.75rem;
   overflow-x: auto;
-  padding: 0.15rem 0 0.5rem;
+  margin: 0 0 2.25rem;
+  padding: 0.15rem 0 1.15rem;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -669,22 +642,34 @@
 .platform-what-slides-tab {
   flex: 0 0 auto;
   appearance: none;
-  min-height: 0;
-  padding: 0.25rem 0;
+  min-height: 44px;
+  padding: 0.35rem 0;
   border: none;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   color: #8a847c;
-  font-size: 1.0625rem;
-  letter-spacing: 0.02em;
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
   text-transform: none;
-  font-weight: 500;
-  text-align: left;
+  font-weight: 400;
+  text-align: center;
   cursor: pointer;
   text-decoration: none;
-  text-underline-offset: 0.32em;
+  text-underline-offset: 0.45em;
   transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .platform-what-slides-tabs {
+    gap: 2rem 4.25rem;
+    margin-bottom: 2.75rem;
+    padding-bottom: 1.35rem;
+  }
+
+  .platform-what-slides-tab {
+    font-size: 1.25rem;
+  }
 }
 
 .platform-what-slides-tab:hover {
@@ -695,12 +680,36 @@
 
 .platform-what-slides-tab.is-active {
   color: var(--platform-ink);
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: underline;
-  text-decoration-thickness: 1.5px;
+  text-decoration-thickness: 1px;
   background: transparent;
   border: none;
   box-shadow: none;
+}
+
+.platform-lifecycle-discover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+  padding: 0.8rem 1.35rem;
+  min-height: 44px;
+  border-radius: 0.35rem;
+  background: var(--platform-ink);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  width: auto;
+  transition: background 0.2s ease;
+}
+
+.platform-lifecycle-discover:hover {
+  background: #000;
+  color: #fff;
 }
 
 /* Fairly Made–style lifecycle slide screens */
@@ -3055,18 +3064,26 @@
   outline-offset: 4px;
 }
 
-.platform-delivery-storyline-reveal,
-.platform-delivery-storyline-visual-wrap {
+.platform-delivery-storyline-reveal {
   display: none;
 }
 
-.platform-delivery-storyline-step.is-active .platform-delivery-storyline-reveal,
-.platform-delivery-storyline-step.is-active .platform-delivery-storyline-visual-wrap {
+.platform-delivery-storyline-step.is-active .platform-delivery-storyline-reveal {
   display: grid;
   grid-template-rows: 1fr;
   opacity: 1;
   transform: none;
   pointer-events: auto;
+}
+
+.platform-delivery-storyline-visual-wrap {
+  display: flex;
+  align-items: center;
+  opacity: 0.55;
+}
+
+.platform-delivery-storyline-step.is-active .platform-delivery-storyline-visual-wrap {
+  opacity: 1;
 }
 
 .platform-delivery-storyline-reveal-inner {
@@ -3078,12 +3095,12 @@
   .platform-delivery-storyline-step {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     gap: 1.75rem;
-    min-height: 0;
+    min-height: 4.25rem;
+    align-items: center;
   }
 
   .platform-delivery-storyline-step.is-active {
     min-height: 10.5rem;
-    align-items: center;
   }
 
   .platform-delivery-storyline-step--left .platform-delivery-storyline-copy {
@@ -3178,9 +3195,10 @@
 }
 
 .platform-delivery-storyline-visual-wrap {
+  display: flex;
+  align-items: center;
   width: auto;
   min-width: 0;
-  justify-items: inherit;
 }
 
 .platform-delivery-story-visual {
@@ -3385,8 +3403,7 @@
     transition: none;
   }
 
-  .platform-delivery-storyline-step:not(.is-active) .platform-delivery-storyline-reveal,
-  .platform-delivery-storyline-step:not(.is-active) .platform-delivery-storyline-visual-wrap {
+  .platform-delivery-storyline-step:not(.is-active) .platform-delivery-storyline-reveal {
     display: none;
   }
 }

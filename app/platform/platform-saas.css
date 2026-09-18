@@ -7,40 +7,40 @@
  */
 
 .platform-shell {
-  --itx-canvas: #ffffff;
+  --itx-canvas: #faf9f6;
   --itx-surface: #ffffff;
-  --itx-highlight: #ffffff;
-  --platform-bg: #ffffff;
+  --itx-highlight: #f4f2ee;
+  --platform-bg: #faf9f6;
   --platform-surface: #ffffff;
-  --platform-ink: #111111;
-  --platform-primary: #111111;
+  --platform-ink: #101312;
+  --platform-primary: #101312;
   --platform-primary-hover: #000000;
-  --platform-muted: #3a3835;
-  --platform-quiet: #5c5852;
-  --platform-border: rgba(17, 17, 17, 0.1);
+  --platform-muted: #3d3f3e;
+  --platform-quiet: #5c605e;
+  --platform-border: rgba(15, 20, 18, 0.1);
   --platform-accent: #c4a574;
   --platform-accent-soft: #f4efe6;
   --platform-accent-muted: #d9c9a8;
-  --platform-highlight: #f7f6f4;
+  --platform-highlight: #f4f2ee;
   --platform-gold: #c9a962;
-  --platform-dark: #0a0c0f;
-  --platform-navy: #111111;
-  --platform-max: 1360px;
-  --platform-display: clamp(3.5rem, 6vw, 4.5rem);
-  --platform-title: clamp(2.35rem, 4.2vw, 3.5rem);
-  --platform-body: clamp(1.05rem, 1.2vw, 1.125rem);
+  --platform-dark: #101312;
+  --platform-navy: #101312;
+  --platform-max: 1440px;
+  --platform-display: clamp(64px, 7vw, 112px);
+  --platform-title: clamp(44px, 5vw, 80px);
+  --platform-body: 1.125rem;
   --platform-kicker-size: 0.71875rem;
   --platform-kicker-tracking: 0.2em;
   --platform-section-y: clamp(5.5rem, 9vw, 8.5rem);
   --platform-radius: 0.125rem;
-  background-color: #ffffff;
+  background-color: #faf9f6;
   color: var(--platform-ink);
   font-family: var(--itx-sans, "DM Sans", ui-sans-serif, system-ui, sans-serif);
 }
 
 html:has(.platform-shell),
 html:has(.platform-shell) body {
-  background: #ffffff;
+  background: #faf9f6;
 }
 
 /* Kill beige editorial atmosphere */
@@ -305,15 +305,15 @@ html:has(.platform-shell) body {
 /* ── Workflow: original workspace screenshot next to the wording ── */
 
 .platform-lifecycle-journey-panel {
-  gap: 0.85rem;
+  gap: 1.75rem;
   max-width: none;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .platform-lifecycle-journey-panel {
-    grid-template-columns: none;
-    gap: 0.85rem;
-    align-items: stretch;
+    grid-template-columns: minmax(16.5rem, 0.78fr) minmax(0, 1.22fr);
+    gap: 3rem 3.5rem;
+    align-items: center;
   }
 }
 
@@ -324,28 +324,12 @@ html:has(.platform-shell) body {
 
 .platform-lifecycle-graphic {
   width: 100%;
-  max-width: 26.5rem;
+  max-width: none;
   height: auto;
   aspect-ratio: 16 / 10;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(17, 17, 17, 0.1);
-  background: #f7f4ef;
-}
-
-@media (min-width: 768px) {
-  .platform-lifecycle-graphic {
-    width: 26.5rem;
-    max-width: 26.5rem;
-    height: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .platform-lifecycle-graphic {
-    width: 28.5rem;
-    max-width: 28.5rem;
-    height: auto;
-  }
+  border-radius: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #f4f1ec;
 }
 
 .platform-lifecycle-graphic-shot {
@@ -381,10 +365,14 @@ html:has(.platform-shell) body {
 }
 
 .platform-lifecycle-journey-check {
-  border-radius: 0;
+  border-radius: 999px;
   border-color: var(--platform-gold);
   color: var(--platform-gold);
   background: transparent;
+}
+
+.platform-lifecycle-journey-kicker {
+  font-family: var(--itx-sans, sans-serif);
 }
 
 .platform-what-slides-tab {
@@ -392,8 +380,9 @@ html:has(.platform-shell) body {
 }
 
 .platform-what-slides-tab.is-active {
-  box-shadow: inset 0 -1px 0 var(--platform-gold);
-  text-decoration: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 0.45em;
 }
 
 /* ── Intelligence ── */

@@ -87,11 +87,22 @@ export function SoftwareStage({
   );
 }
 
-export function DiscoverLink({ href, children }: { href: string; children: ReactNode }) {
+export function DiscoverLink({
+  href,
+  children,
+  className,
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <Link
       href={href}
-      className="inline-flex items-center gap-2 px-0 py-2.5 text-[13px] font-medium text-[var(--platform-ink)] min-h-[44px] hover:text-[var(--platform-gold)] transition-colors underline underline-offset-4"
+      className={
+        className ??
+        "inline-flex items-center gap-2 px-0 py-2.5 text-[13px] font-medium text-[var(--platform-ink)] min-h-[44px] hover:text-[var(--platform-gold)] transition-colors underline underline-offset-4"
+      }
     >
       {children}
       <span aria-hidden="true">→</span>

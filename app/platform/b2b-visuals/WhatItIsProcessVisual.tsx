@@ -101,7 +101,7 @@ function StageGraphic({ slideId }: { slideId: SlideId }) {
           width={1138}
           height={706}
           className="platform-lifecycle-graphic-shot"
-          sizes="(max-width: 767px) 92vw, 420px"
+          sizes="(max-width: 767px) 92vw, 860px"
           priority
         />
       </div>
@@ -111,59 +111,62 @@ function StageGraphic({ slideId }: { slideId: SlideId }) {
 
 export function WhatItIsProcessVisual() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const item = SLIDES[activeIndex] ?? SLIDES[0];
+  const panelId = "lifecycle-slide-panel";
 
   return (
     <div className="platform-lifecycle-journey">
-      {SLIDES.map((item, index) => {
-        const open = index === activeIndex;
-        const panelId = `lifecycle-slide-panel-${item.id}`;
-        return (
-          <div
-            key={item.id}
-            className={`platform-lifecycle-accordion ${open ? "is-open" : ""}`}
-          >
+      <div className="platform-what-slides-tabs" role="tablist" aria-label="How INTERTEXE works">
+        {SLIDES.map((slide, index) => {
+          const selected = index === activeIndex;
+          return (
             <button
+              key={slide.id}
               type="button"
-              id={`lifecycle-tab-${item.id}`}
-              className={`platform-what-slides-tab platform-lifecycle-accordion-trigger ${open ? "is-active" : ""}`}
-              aria-expanded={open}
+              role="tab"
+              id={`lifecycle-tab-${slide.id}`}
+              className={`platform-what-slides-tab ${selected ? "is-active" : ""}`}
+              aria-selected={selected}
               aria-controls={panelId}
+              tabIndex={selected ? 0 : -1}
               onClick={() => setActiveIndex(index)}
             >
-              {item.label}
+              <span className="platform-what-slides-tab-index">{slide.index.padStart(2, "0")}</span>
+              {slide.label}
             </button>
+          );
+        })}
+      </div>
 
-            {open ? (
-              <div
-                id={panelId}
-                role="region"
-                aria-labelledby={`lifecycle-tab-${item.id}`}
-                className="platform-lifecycle-journey-panel"
-              >
-                <div className="platform-lifecycle-journey-lead">
-                  <StageGraphic slideId={item.id} />
-                  <div className="platform-lifecycle-journey-copy">
-                    <h3 className="platform-lifecycle-journey-title">{item.title}</h3>
-                    <p className="platform-lifecycle-journey-body">{item.copy}</p>
-                    <ul className="platform-lifecycle-journey-bullets">
-                      {item.bullets.map((bullet) => (
-                        <li key={bullet}>
-                          <span className="platform-lifecycle-journey-check" aria-hidden>
-                            ✓
-                          </span>
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="platform-lifecycle-journey-foot">{item.foot}</p>
-                    <DiscoverLink href={item.discoverHref}>Discover</DiscoverLink>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+      <div
+        id={panelId}
+        role="tabpanel"
+        aria-labelledby={`lifecycle-tab-${item.id}`}
+        className="platform-lifecycle-journey-panel"
+      >
+        <StageGraphic slideId={item.id} />
+        <div className="platform-lifecycle-journey-copy">
+          <p className="platform-lifecycle-journey-kicker">
+            {item.index.padStart(2, "0")} · {item.label}
+          </p>
+          <h3 className="platform-lifecycle-journey-title">{item.title}</h3>
+          <p className="platform-lifecycle-journey-body">{item.copy}</p>
+          <ul className="platform-lifecycle-journey-bullets">
+            {item.bullets.map((bullet) => (
+              <li key={bullet}>
+                <span className="platform-lifecycle-journey-check" aria-hidden>
+                  ✓
+                </span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="platform-lifecycle-journey-foot">{item.foot}</p>
+          <DiscoverLink href={item.discoverHref} className="platform-lifecycle-discover">
+            Discover
+          </DiscoverLink>
+        </div>
+      </div>
     </div>
   );
 }
