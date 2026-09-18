@@ -75,7 +75,7 @@ const nextConfig = {
       },
       {
         source: "/platform/api",
-        destination: "/platform#api",
+        destination: "/platform",
         permanent: true,
       },
     ];

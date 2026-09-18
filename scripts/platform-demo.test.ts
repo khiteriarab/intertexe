@@ -194,15 +194,13 @@ describe("Public demo and docs source safety", () => {
   });
 
   it("keeps documentation examples on the demo endpoint and OpenAPI URL", () => {
-    const docs = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformApiSection.tsx"), "utf8");
-    const shared = fs.readFileSync(path.join(process.cwd(), "app/platform/api-snippets.ts"), "utf8");
-    assert.match(shared, /\/api\/v1\/demo\/composition\//);
-    assert.match(docs, /\/api\/openapi\.json/);
-    assert.match(shared, /DEMO_GTIN_VERIFIED/);
-    assert.doesNotMatch(docs, /0198765432104/);
-    assert.match(docs, /unknown_legacy/);
-    assert.match(shared, /Authorization: Bearer/);
+    const openapi = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/openapi.ts"), "utf8");
+    const faq = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformFaq.tsx"), "utf8");
+    assert.match(openapi, /\/api\/v1\/demo\/composition\//);
+    assert.match(openapi, /unknown_legacy/);
+    assert.match(faq, /\/api\/openapi\.json/);
     assert.equal(fs.existsSync(path.join(process.cwd(), "app/platform/api/page.tsx")), false);
+    assert.equal(fs.existsSync(path.join(process.cwd(), "app/platform/PlatformApiSection.tsx")), false);
   });
 });
 

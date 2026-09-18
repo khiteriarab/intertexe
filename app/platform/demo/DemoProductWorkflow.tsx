@@ -180,7 +180,7 @@ export function DemoProductWorkflow() {
   const stats = demoCatalogStats();
   const [activeStep, setActiveStep] = useState<FlowStepId>("source");
   const [openIssue, setOpenIssue] = useState(SAMPLE_ISSUES[0].id);
-  const passportUrl = "/platform#api";
+  const passportUrl = "/platform/demo#passport";
 
   return (
     <section id="journey" className="demo-workflow-chart scroll-mt-24 border-y border-[var(--platform-border)]/70">
@@ -341,7 +341,7 @@ export function DemoProductWorkflow() {
                 <div className="demo-workflow-qr-block">
                   <QRCodeCanvas value={passportUrl} size={72} marginSize={1} />
                   <p className="text-[9px] tracking-[0.1em] uppercase text-[var(--platform-muted)] mt-2">Scan to view</p>
-                  <Link href={`/platform#api`} className="text-[10px] text-[var(--platform-accent)] underline underline-offset-4">
+                  <Link href="/platform/demo#passport" className="text-[10px] text-[var(--platform-accent)] underline underline-offset-4">
                     Open passport →
                   </Link>
                 </div>

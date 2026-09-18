@@ -264,7 +264,7 @@ export const PLAN_DECISION_GATE = {
 export const PLAN_MUST_HAPPEN_NEXT = [
   "Correct /platform, /about, /press and repeated verified claims.",
   "Finish the Material Intelligence migration and production smoke tests.",
-  "Make /platform/demo, /platform#api, /platform/request and OpenAPI publicly functional.",
+  "Make /platform/demo, /platform/request and OpenAPI publicly functional.",
   "Benchmark ten catalogs before promising coverage, turnaround or margin.",
   "Finalize the $5K pilot SOW, sample deliverable, invoice path and data-handling one-pager.",
   "Select the first 30 high-fit retailers, marketplaces, resale platforms and EU-selling brands.",
