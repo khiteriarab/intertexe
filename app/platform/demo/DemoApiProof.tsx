@@ -169,7 +169,7 @@ export function DemoApiProof() {
             >
               {showJson ? "Hide raw JSON" : "View raw JSON"}
             </button>
-            <Link href="/platform/api" className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-muted)] underline underline-offset-4">
+            <Link href="/platform#api" className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-muted)] underline underline-offset-4">
               API documentation →
             </Link>
           </div>

@@ -11,7 +11,7 @@ const NAV = [
   { href: "/platform", label: "Platform" },
   { href: "/platform#how-it-works", label: "Solutions" },
   { href: "/platform#delivery", label: "Digital Product Passport" },
-  { href: "/platform/api", label: "API" },
+  { href: "/platform#api", label: "API" },
   { href: "/platform/demo", label: "See it live" },
 ] as const;
 
@@ -39,7 +39,7 @@ export function PlatformNav({
     const isActive =
       (active === "platform" && (href === "/platform" || href === "/platform#how-it-works")) ||
       (active === "demo" && href === "/platform/demo") ||
-      (active === "api" && href === "/platform/api");
+      (active === "api" && href === "/platform#api");
     return `platform-lux-nav-link ${isActive ? "is-active" : ""}`;
   };
 

@@ -44,8 +44,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
           /platform/demo
         </Link>{" "}
         or explore the Material Intelligence API on{" "}
-        <Link href="/platform/api" className="underline underline-offset-4">
-          /platform/api
+        <Link href="/platform#api" className="underline underline-offset-4">
+          the API section
         </Link>
         .
       </>
