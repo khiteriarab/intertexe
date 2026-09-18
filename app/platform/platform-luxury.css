@@ -782,6 +782,273 @@
   justify-self: start;
 }
 
+/* ── API ── */
+
+.platform-api-section {
+  background: #101312;
+  color: #f5f3ef;
+  padding: 4.5rem 0 5rem;
+}
+
+@media (min-width: 900px) {
+  .platform-api-section {
+    padding: 6rem 0 6.5rem;
+  }
+}
+
+.platform-api-head {
+  max-width: 42rem;
+  margin-bottom: 2.75rem;
+}
+
+.platform-api-kicker {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.55);
+  margin-bottom: 1.15rem;
+}
+
+.platform-api-title {
+  font-size: clamp(2.35rem, 4.5vw, 4rem);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin-bottom: 1rem;
+}
+
+.platform-api-copy {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: rgba(245, 243, 239, 0.74);
+}
+
+.platform-api-stage {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .platform-api-stage {
+    grid-template-columns: minmax(0, 1.55fr) minmax(16rem, 0.65fr);
+    gap: 2rem;
+  }
+}
+
+.platform-api-panel {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.platform-api-panel-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.5rem 0.75rem;
+}
+
+.platform-api-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+}
+
+.platform-api-tab {
+  min-height: 44px;
+  padding: 0.5rem 0;
+  background: none;
+  border: 0;
+  color: rgba(245, 243, 239, 0.55);
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.platform-api-tab:hover,
+.platform-api-tab.is-active {
+  color: #f5f3ef;
+}
+
+.platform-api-tab.is-active {
+  box-shadow: inset 0 -1px 0 var(--platform-gold);
+}
+
+.platform-api-code,
+.platform-api-response {
+  margin: 0;
+  padding: 1.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: #e8e4dc;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+.platform-api-response-label {
+  padding: 0 1.25rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 1rem;
+}
+
+.platform-api-response {
+  max-height: 22rem;
+  overflow: auto;
+  color: rgba(232, 228, 220, 0.82);
+}
+
+.platform-api-product {
+  padding: 1.5rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.platform-api-product-kicker {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.5);
+  margin-bottom: 1rem;
+}
+
+.platform-api-product-name {
+  font-size: 1.65rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.platform-api-product-brand {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.6);
+  margin: 0.35rem 0 1.25rem;
+}
+
+.platform-api-product-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.platform-api-product-rows dt {
+  color: rgba(245, 243, 239, 0.62);
+}
+
+.platform-api-product-rows dd {
+  margin: 0;
+  color: #f5f3ef;
+}
+
+.platform-api-product-note {
+  margin-top: 1.25rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: rgba(245, 243, 239, 0.5);
+}
+
+.platform-api-reference {
+  display: grid;
+  gap: 0;
+  margin: 3rem 0 0;
+}
+
+@media (min-width: 800px) {
+  .platform-api-reference {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 3rem;
+  }
+}
+
+.platform-api-reference div {
+  padding: 1.15rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.platform-api-reference dt {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f5f3ef;
+  margin-bottom: 0.4rem;
+}
+
+.platform-api-reference dd {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(245, 243, 239, 0.7);
+}
+
+.platform-api-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.75rem;
+  margin-top: 2.5rem;
+}
+
+.platform-api-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.85rem 1.35rem;
+  background: #fff;
+  color: #101312;
+  border-radius: 2px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.platform-api-cta:hover {
+  background: var(--platform-gold);
+}
+
+.platform-api-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.78);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.platform-api-link:hover {
+  color: #fff;
+}
+
 /* ── FAQ ── */
 
 .platform-faq-lux {
@@ -885,6 +1152,234 @@
   background: #fff;
   color: #101312;
   letter-spacing: 0.12em;
+}
+
+/* ── See it live (/platform/demo) ── */
+
+.platform-shell .demo-editorial-hero {
+  background: #111514;
+  color: #f5f3ef;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.platform-shell .demo-editorial-hero h1 {
+  font-size: clamp(2.75rem, 5vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #f5f3ef;
+}
+
+.platform-shell .demo-editorial-hero p {
+  font-family: var(--itx-sans, sans-serif);
+  color: rgba(245, 243, 239, 0.74);
+}
+
+.platform-shell .demo-editorial-hero p:first-child {
+  color: rgba(245, 243, 239, 0.55);
+  letter-spacing: 0.22em;
+}
+
+.platform-shell .demo-editorial-hero-art,
+.platform-shell .demo-editorial-hero-art-image {
+  border-radius: 4px;
+}
+
+.platform-shell .demo-editorial-hero-art {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+.platform-shell .demo-editorial-btn-primary {
+  border-radius: 2px;
+  background: #101312;
+  color: #fff;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.platform-shell .demo-editorial-btn-primary:hover {
+  background: #000;
+  color: #fff;
+}
+
+.platform-shell .demo-editorial-hero .demo-editorial-btn-primary {
+  background: #fff;
+  color: #101312;
+}
+
+.platform-shell .demo-editorial-hero .demo-editorial-btn-primary:hover {
+  background: var(--platform-gold);
+  color: #101312;
+}
+
+.platform-shell .demo-editorial-hero .demo-editorial-btn-text {
+  color: rgba(245, 243, 239, 0.8);
+}
+
+.platform-shell .demo-editorial-btn-text {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.platform-shell .demo-workflow-chart,
+.platform-shell .demo-editorial-passport {
+  background: #fff;
+}
+
+.platform-shell .demo-workflow-panel,
+.platform-shell .demo-editorial-panel,
+.platform-shell .demo-editorial-source-card,
+.platform-shell .demo-editorial-passport-card {
+  border-radius: 4px;
+  border-color: rgba(15, 20, 18, 0.1);
+  box-shadow: 0 18px 50px rgba(16, 19, 18, 0.07);
+}
+
+.platform-shell .demo-workflow-panel-title,
+.platform-shell .demo-editorial-passport h2 {
+  letter-spacing: -0.03em;
+}
+
+.platform-shell .demo-workflow-rail-btn {
+  font-family: var(--itx-sans, sans-serif);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.platform-shell .demo-editorial-passport-lifestyle,
+.platform-shell .demo-editorial-passport-page,
+.platform-shell .demo-editorial-passport-thumb-image {
+  border-radius: 4px;
+}
+
+/* ── Request a demo (/platform/request) ── */
+
+.platform-request-page {
+  background: var(--platform-bg);
+  padding: 4rem 1.25rem 5rem;
+}
+
+@media (min-width: 768px) {
+  .platform-request-page {
+    padding: 5.5rem 2rem 6rem;
+  }
+}
+
+.platform-request-page-inner {
+  max-width: 1320px;
+  gap: 3rem;
+}
+
+@media (min-width: 1024px) {
+  .platform-request-page-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 33rem);
+    gap: 4.5rem;
+  }
+}
+
+.platform-request-eyebrow,
+.platform-request-form-kicker {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  color: var(--platform-quiet);
+}
+
+.platform-request-headline {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: var(--platform-title);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  max-width: 13ch;
+}
+
+.platform-request-body,
+.platform-request-sub,
+.platform-request-points li,
+.platform-request-form-intro,
+.platform-request-office-detail {
+  font-family: var(--itx-sans, sans-serif);
+  color: var(--platform-muted);
+}
+
+.platform-request-body {
+  font-size: var(--platform-body);
+}
+
+.platform-request-stat {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: clamp(1.5rem, 3vw, 2.15rem);
+  letter-spacing: -0.03em;
+  max-width: 24rem;
+}
+
+.platform-request-points li::before {
+  border-radius: 0;
+  background: var(--platform-gold);
+}
+
+.platform-request-office {
+  border-left: 1px solid rgba(15, 20, 18, 0.16);
+  padding-left: 1.25rem;
+}
+
+.platform-request-office-label {
+  font-family: var(--itx-sans, sans-serif);
+  letter-spacing: 0.22em;
+  color: var(--platform-quiet);
+}
+
+.platform-request-office-title {
+  font-family: var(--itx-sans, sans-serif);
+  font-weight: 500;
+  color: var(--platform-ink);
+}
+
+.platform-request-demo-link {
+  font-family: var(--itx-sans, sans-serif);
+  color: var(--platform-ink);
+  text-underline-offset: 4px;
+}
+
+.platform-request-form-card {
+  border-radius: 4px;
+  border: 1px solid rgba(15, 20, 18, 0.1);
+  box-shadow: 0 24px 70px rgba(16, 19, 18, 0.08);
+  padding: 2rem 1.75rem 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .platform-request-form-card {
+    padding: 2.5rem 2.25rem 2.5rem;
+  }
+}
+
+.platform-request-form-title {
+  font-family: var(--itx-serif, Georgia, serif);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
+  letter-spacing: -0.03em;
+}
+
+.platform-request-form-card button[type="submit"] {
+  border-radius: 2px;
+  background: #101312;
+  letter-spacing: 0.14em;
+}
+
+.platform-request-form-card button[type="submit"]:hover {
+  background: #000;
+}
+
+.platform-request-form-card input,
+.platform-request-form-card select,
+.platform-request-form-card textarea {
+  border-radius: 2px;
 }
 
 /* ── Footer ── */
