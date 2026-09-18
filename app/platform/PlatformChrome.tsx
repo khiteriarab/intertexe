@@ -6,6 +6,7 @@ import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import "./platform-tokens.css";
 import "./b2b-visuals.css";
 import "./platform-saas.css";
+import "./platform-luxury.css";
 
 export function PlatformChrome({
   children,
@@ -18,41 +19,30 @@ export function PlatformChrome({
     <div className="platform-shell platform-editorial min-h-screen">
       <PlatformNav active={active} tone="light" />
       {children}
-      <footer className="border-t border-[var(--platform-border)] px-4 sm:px-6 md:px-8 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] bg-[var(--platform-surface)]">
-        <div className="max-w-6xl mx-auto flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+      <footer className="platform-lux-footer">
+        <div className="platform-lux-footer-inner">
           <div>
-            <PlatformWordmark size="sm" className="text-[var(--platform-ink)] mb-3" />
-            <p className="text-xs text-[var(--platform-quiet)] max-w-xs leading-relaxed">
+            <PlatformWordmark size="sm" className="text-[var(--platform-ink)]" />
+            <p className="platform-lux-footer-lead">
               Product intelligence infrastructure for fashion — govern one record, deliver consumer experiences your way.
             </p>
           </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs text-[var(--platform-quiet)]">
-            <Link href="/" className="hover:text-[var(--platform-ink)] transition-colors">
-              Consumer
-            </Link>
-            <Link href="/platform" className="hover:text-[var(--platform-ink)] transition-colors">
-              Platform
-            </Link>
-            <Link href="/platform/demo" className="hover:text-[var(--platform-ink)] transition-colors">
-              Demo
-            </Link>
-            <Link href="/platform/api" className="hover:text-[var(--platform-ink)] transition-colors">
-              API
-            </Link>
-            <Link href={getEnterpriseLoginUrl()} className="hover:text-[var(--platform-ink)] transition-colors">
-              Sign in
-            </Link>
-            <Link href="/privacy" className="hover:text-[var(--platform-ink)] transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[var(--platform-ink)] transition-colors">
-              Terms
-            </Link>
+          <div className="platform-lux-footer-col">
+            <p className="platform-lux-footer-heading">Platform</p>
+            <Link href="/platform">Product Record</Link>
+            <Link href="/platform#delivery">DPP</Link>
+            <Link href="/platform/api">API</Link>
+            <Link href="/platform/demo">See it live</Link>
+          </div>
+          <div className="platform-lux-footer-col">
+            <p className="platform-lux-footer-heading">Company</p>
+            <Link href="/">About</Link>
             <span dangerouslySetInnerHTML={{ __html: "<!--email_off-->" }} />
-            <a href="mailto:info@intertexe.com" className="hover:text-[var(--platform-ink)] transition-colors">
-              info@intertexe.com
-            </a>
+            <a href="mailto:info@intertexe.com">Contact</a>
             <span dangerouslySetInnerHTML={{ __html: "<!--email_on-->" }} />
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
+            <Link href={getEnterpriseLoginUrl()}>Sign in</Link>
           </div>
         </div>
       </footer>

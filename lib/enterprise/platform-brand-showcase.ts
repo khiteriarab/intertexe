@@ -6,6 +6,8 @@ export type ShowcaseProductTile = {
   brand: string;
   name: string;
   imageUrl: string;
+  composition?: string;
+  featured?: boolean;
 };
 
 export type ShowcaseBrandTile = {
@@ -22,6 +24,7 @@ type PilotRow = {
   name: string;
   brand?: string;
   image_url?: string | null;
+  composition?: string;
 };
 
 /** Curated Customer Zero / Mytheresa pilot products for the platform hero mosaic. */
@@ -39,6 +42,8 @@ const SHOWCASE_STYLES = [
 /** Three clothing records shown on /platform/demo — selected from the editor-pick 10. */
 export const PLATFORM_FEATURED_EXAMPLE_STYLES = ["ITX-LIVE-07", "ITX-LIVE-01", "ITX-LIVE-09"] as const;
 
+const FEATURED_MOSAIC_STYLES = new Set(["ITX-LIVE-07", "ITX-LIVE-09", "ITX-LIVE-06"]);
+
 function productTiles(): ShowcaseProductTile[] {
   const rows = liveProducts as PilotRow[];
   return SHOWCASE_STYLES.map((style) => {
@@ -50,6 +55,8 @@ function productTiles(): ShowcaseProductTile[] {
       brand: row.brand,
       name: row.name,
       imageUrl: row.image_url,
+      composition: row.composition,
+      featured: FEATURED_MOSAIC_STYLES.has(style),
     };
   }).filter(Boolean) as ShowcaseProductTile[];
 }
@@ -79,23 +86,23 @@ export const PLATFORM_SHOWCASE_ROW_B = [...mosaic.slice(half), ...mosaic.slice(0
 
 export const PLATFORM_SHOWCASE_STATS = [
   {
-    figure: "70%",
-    qualifier: "faster",
-    label: "Product data to governed record",
+    figure: "01",
+    qualifier: "One record",
+    label: "Across the product lifecycle",
   },
   {
-    figure: "95%",
-    qualifier: "ready",
-    label: "For Digital Product Passports",
+    figure: "02",
+    qualifier: "Multiple outputs",
+    label: "Passport · API · Consumer",
   },
   {
-    figure: "50%",
-    qualifier: "fewer",
-    label: "Unresolved data gaps",
+    figure: "03",
+    qualifier: "Governed data",
+    label: "Approved fields only",
   },
   {
-    figure: "3×",
-    qualifier: "faster",
-    label: "Resale activation",
+    figure: "04",
+    qualifier: "Lifecycle ready",
+    label: "Creation through resale",
   },
 ] as const;

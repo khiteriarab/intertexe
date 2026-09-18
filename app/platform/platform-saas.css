@@ -7,40 +7,40 @@
  */
 
 .platform-shell {
-  --itx-canvas: #ffffff;
+  --itx-canvas: #faf9f6;
   --itx-surface: #ffffff;
-  --itx-highlight: #ffffff;
-  --platform-bg: #ffffff;
+  --itx-highlight: #f4f2ee;
+  --platform-bg: #faf9f6;
   --platform-surface: #ffffff;
-  --platform-ink: #111111;
-  --platform-primary: #111111;
+  --platform-ink: #101312;
+  --platform-primary: #101312;
   --platform-primary-hover: #000000;
-  --platform-muted: #3a3835;
-  --platform-quiet: #5c5852;
-  --platform-border: rgba(17, 17, 17, 0.1);
+  --platform-muted: #3d3f3e;
+  --platform-quiet: #5c605e;
+  --platform-border: rgba(15, 20, 18, 0.1);
   --platform-accent: #c4a574;
   --platform-accent-soft: #f4efe6;
   --platform-accent-muted: #d9c9a8;
-  --platform-highlight: #f7f6f4;
+  --platform-highlight: #f4f2ee;
   --platform-gold: #c9a962;
-  --platform-dark: #0a0c0f;
-  --platform-navy: #111111;
-  --platform-max: 1360px;
-  --platform-display: clamp(3.5rem, 6vw, 4.5rem);
-  --platform-title: clamp(2.35rem, 4.2vw, 3.5rem);
-  --platform-body: clamp(1.05rem, 1.2vw, 1.125rem);
+  --platform-dark: #101312;
+  --platform-navy: #101312;
+  --platform-max: 1440px;
+  --platform-display: clamp(64px, 7vw, 112px);
+  --platform-title: clamp(44px, 5vw, 80px);
+  --platform-body: 1.125rem;
   --platform-kicker-size: 0.71875rem;
   --platform-kicker-tracking: 0.2em;
   --platform-section-y: clamp(5.5rem, 9vw, 8.5rem);
   --platform-radius: 0.125rem;
-  background-color: #ffffff;
+  background-color: #faf9f6;
   color: var(--platform-ink);
   font-family: var(--itx-sans, "DM Sans", ui-sans-serif, system-ui, sans-serif);
 }
 
 html:has(.platform-shell),
 html:has(.platform-shell) body {
-  background: #ffffff;
+  background: #faf9f6;
 }
 
 /* Kill beige editorial atmosphere */

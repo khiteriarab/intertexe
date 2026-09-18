@@ -8,8 +8,8 @@ export function SalesHeroSection() {
 
 export function SalesDeliverySection() {
   return (
-    <section className="platform-abstract-band itx-abstract-motif py-12 sm:py-16 lg:py-20">
-      <div className="relative max-w-6xl lg:max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+    <section id="delivery" className="platform-abstract-band itx-abstract-motif py-16 sm:py-20 lg:py-24">
+      <div className="relative platform-lux-wrap">
         <div className="grid lg:grid-cols-[minmax(0,1fr)_auto] gap-6 lg:gap-10 mb-10 lg:mb-14 items-start">
           <div className="max-w-3xl">
             <Eyebrow>Consumer delivery</Eyebrow>

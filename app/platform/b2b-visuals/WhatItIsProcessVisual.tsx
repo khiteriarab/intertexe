@@ -101,7 +101,7 @@ function StageGraphic({ slideId }: { slideId: SlideId }) {
           width={1138}
           height={706}
           className="platform-lifecycle-graphic-shot"
-          sizes="(max-width: 767px) 92vw, 720px"
+          sizes="(max-width: 767px) 92vw, 860px"
           priority
         />
       </div>
@@ -131,6 +131,7 @@ export function WhatItIsProcessVisual() {
               tabIndex={selected ? 0 : -1}
               onClick={() => setActiveIndex(index)}
             >
+              <span className="platform-what-slides-tab-index">{slide.index.padStart(2, "0")}</span>
               {slide.label}
             </button>
           );
@@ -143,8 +144,11 @@ export function WhatItIsProcessVisual() {
         aria-labelledby={`lifecycle-tab-${item.id}`}
         className="platform-lifecycle-journey-panel"
       >
+        <StageGraphic slideId={item.id} />
         <div className="platform-lifecycle-journey-copy">
-          <p className="platform-lifecycle-journey-kicker">{item.micro}</p>
+          <p className="platform-lifecycle-journey-kicker">
+            {item.index.padStart(2, "0")} · {item.label}
+          </p>
           <h3 className="platform-lifecycle-journey-title">{item.title}</h3>
           <p className="platform-lifecycle-journey-body">{item.copy}</p>
           <ul className="platform-lifecycle-journey-bullets">
@@ -162,7 +166,6 @@ export function WhatItIsProcessVisual() {
             Discover
           </DiscoverLink>
         </div>
-        <StageGraphic slideId={item.id} />
       </div>
     </div>
   );
