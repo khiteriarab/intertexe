@@ -43,10 +43,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
         <Link href="/platform/demo#live-passport" className="underline underline-offset-4">
           /platform/demo
         </Link>{" "}
-        or explore the Material Intelligence API on{" "}
-        <Link href="/platform#api" className="underline underline-offset-4">
-          the API section
-        </Link>
+        or read the Material Intelligence API contract at{" "}
+        <a href="/api/openapi.json" className="underline underline-offset-4">
+          /api/openapi.json
+        </a>
         .
       </>
     ),

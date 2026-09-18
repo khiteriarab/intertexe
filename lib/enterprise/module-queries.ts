@@ -300,7 +300,7 @@ export async function loadOrgDevelopers(client: SupabaseClient, organizationId: 
     client.from("webhooks").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
   ]);
   const origin = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.intertexe.com").replace(/\/$/, "");
-  return { organization: org, credentials: credQuery.data || [], webhookCount: webhookCount || 0, canSeeCredentials, publicPassportExample: `${origin}/p/{public_id}`, docsUrl: `${origin}/platform#api` };
+  return { organization: org, credentials: credQuery.data || [], webhookCount: webhookCount || 0, canSeeCredentials, publicPassportExample: `${origin}/p/{public_id}`, docsUrl: `${origin}/api/openapi.json` };
 }
 
 export type FileSourceRow = { id: string; kind: "import" | "source_record" | "file"; label: string; status: string | null; productId: string | null; productName: string | null; createdAt: string; detail: string | null };

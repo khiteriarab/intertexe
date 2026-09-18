@@ -43,10 +43,10 @@ export function PlatformDemoShell({ children }: { children: ReactNode }) {
       <div className="rounded-2xl border border-[var(--platform-border)] bg-white/80 px-4 py-3 sm:px-5 mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-[var(--platform-muted)]">Guided product tour · Silk Midi Skirt · ITX-4102</p>
         <Link
-          href="/platform#api"
+          href="/api/openapi.json"
           className="inline-flex items-center gap-2 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] shrink-0"
         >
-          API documentation
+          OpenAPI contract
           <span aria-hidden>→</span>
         </Link>
       </div>
