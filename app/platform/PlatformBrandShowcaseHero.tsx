@@ -22,29 +22,38 @@ function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: numb
     );
   }
 
-  return (
-    <div
-      className={`platform-showcase-tile platform-showcase-tile--product ${tile.featured ? "platform-showcase-tile--featured" : ""}`}
-      style={style}
-      title={tile.name}
-    >
-      <div className="platform-showcase-tile-photo">
-        <Image
-          src={tile.imageUrl}
-          alt={tile.name}
-          fill
-          className="object-contain p-1.5 scale-110"
-          sizes={tile.featured ? "200px" : "160px"}
-          unoptimized
-        />
+  const photo = (
+    <Image
+      src={tile.imageUrl}
+      alt={tile.name}
+      fill
+      className="object-contain p-1.5 scale-110"
+      sizes="160px"
+      unoptimized
+    />
+  );
+
+  if (!tile.composition) {
+    return (
+      <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+        <div className="platform-showcase-tile-photo">{photo}</div>
       </div>
-      {tile.featured && tile.composition ? (
-        <div className="platform-showcase-tile-meta">
-          <span className="platform-showcase-tile-brand">{tile.brand}</span>
-          <span className="platform-showcase-tile-comp">{tile.composition}</span>
-          <span className="platform-showcase-tile-state">Verified</span>
+    );
+  }
+
+  return (
+    <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+      <div className="platform-showcase-flip" style={style}>
+        <div className="platform-showcase-face platform-showcase-face--front">{photo}</div>
+        <div className="platform-showcase-face platform-showcase-face--back">
+          {photo}
+          <div className="platform-showcase-tile-meta">
+            <span className="platform-showcase-tile-brand">{tile.brand}</span>
+            <span className="platform-showcase-tile-comp">{tile.composition}</span>
+            <span className="platform-showcase-tile-state">Verified</span>
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
@@ -123,7 +132,10 @@ export function PlatformBrandShowcaseHero() {
         <div className="platform-showcase-stats">
           {PLATFORM_SHOWCASE_STATS.map((stat) => (
             <div key={stat.label} className="platform-showcase-stat">
-              <p className="platform-showcase-stat-value">{stat.figure}</p>
+              <p className="platform-showcase-stat-value" style={SERIF}>
+                {stat.figure}
+                <span className="sr-only"> {stat.qualifier}</span>
+              </p>
               <p className="platform-showcase-stat-qualifier">{stat.qualifier}</p>
               <p className="platform-showcase-stat-label">{stat.label}</p>
             </div>
