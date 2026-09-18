@@ -324,9 +324,12 @@ describe("Platform B2B sales page", () => {
     assert.match(pillarsVisual, /Product intelligence/);
     assert.match(pillarsVisual, /Traceability \+ compliance/);
     assert.match(pillarsVisual, /Connected product lifecycle/);
-    assert.match(pillarsVisual, /Explore product intelligence/);
-    assert.match(pillarsVisual, /Explore traceability/);
-    assert.match(pillarsVisual, /Explore the lifecycle/);
+    assert.match(pillarsVisual, /Learn more/);
+    assert.match(pillarsVisual, /platform-product-pillar-mark/);
+    assert.match(pillarsVisual, /app-icon\.png/);
+    assert.doesNotMatch(pillarsVisual, /platform-product-pillar-visual/);
+    assert.match(pillarsVisual, /\/platform\/demo#journey/);
+    assert.match(pillarsVisual, /\/platform#delivery/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });

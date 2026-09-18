@@ -593,122 +593,101 @@
   font-family: var(--itx-sans, sans-serif);
 }
 
-/* ── Three layers ── */
+/* ── Three layers — colour-blocked columns ── */
 
 .platform-product-pillars-grid {
   display: grid;
-  gap: 0;
+  grid-template-columns: 1fr;
+  gap: 2px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .platform-product-pillars-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
+.platform-product-pillars-grid--light .platform-product-pillar,
 .platform-product-pillar {
-  display: grid;
-  gap: 1.25rem;
-  padding: 2rem 0;
-  border-top: 1px solid rgba(15, 20, 18, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 2.25rem 1.75rem 2rem;
+  background: var(--platform-accent-soft);
+  border: 0;
+  border-radius: 0;
 }
 
 @media (min-width: 900px) {
   .platform-product-pillar {
-    grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
-    gap: 2.5rem;
-    align-items: center;
-    padding: 2.75rem 0;
+    padding: 2.75rem 2rem 2.25rem;
+    min-height: 25rem;
   }
 }
 
-.platform-product-pillar--featured {
-  border: 0;
-  background: transparent;
+.platform-product-pillar-mark {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 2px;
+  margin-bottom: 2rem;
 }
 
-.platform-product-pillar-visual {
-  position: relative;
-  overflow: hidden;
-  border-radius: 4px;
-  border: 1px solid rgba(15, 20, 18, 0.1);
-  background: #f4f2ee;
-  aspect-ratio: 16 / 10;
-}
-
-.platform-product-pillar-visual img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top left;
-}
-
-.platform-product-pillar-index {
+.platform-product-pillar-tag {
   font-family: var(--itx-sans, sans-serif);
   font-size: 0.6875rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--platform-quiet);
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.85rem;
 }
 
 .platform-product-pillar-title {
-  font-family: var(--itx-serif, Georgia, serif);
-  font-size: clamp(1.65rem, 2.6vw, 2.35rem);
-  font-weight: 300;
-  letter-spacing: -0.03em;
-  line-height: 1.12;
-}
-
-.platform-product-pillar-copy,
-.platform-product-pillar-tag,
-.platform-product-pillar-cta {
   font-family: var(--itx-sans, sans-serif);
+  font-size: clamp(1.5rem, 2.1vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  color: var(--platform-ink);
+  margin-bottom: 1rem;
 }
 
-.platform-product-pillar-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 1rem 0 1.25rem;
-  padding: 0;
-  list-style: none;
-}
-
-.platform-product-pillar-chips li {
+.platform-product-pillar-copy {
   font-family: var(--itx-sans, sans-serif);
-  font-size: 0.6875rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  line-height: 1.6;
   color: var(--platform-muted);
-  border: 1px solid rgba(15, 20, 18, 0.12);
-  padding: 0.35rem 0.55rem;
+  margin-bottom: 2rem;
 }
 
-.platform-product-flow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 0.85rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(15, 20, 18, 0.1);
+.platform-product-pillar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  min-height: 44px;
   font-family: var(--itx-sans, sans-serif);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--platform-quiet);
+  color: var(--platform-ink);
+  text-decoration: none;
+  border: 0;
 }
 
-.platform-product-flow span[aria-hidden] {
+.platform-product-pillar-cta:hover {
   color: var(--platform-gold);
 }
 
-.platform-product-pillars-grid--light .platform-product-pillar,
-.platform-product-pillars-grid--light .platform-product-pillar--featured {
-  background: transparent;
-  border-color: rgba(15, 20, 18, 0.1);
+.platform-product-pillar-cta-icon {
+  transition: transform 0.25s ease;
 }
+
+.platform-product-pillar-cta:hover .platform-product-pillar-cta-icon {
+  transform: translateX(4px);
+}
+
 
 /* ── Delivery architecture ── */
 
