@@ -438,6 +438,45 @@ export async function handlePaddleWebhookEvent(
   return { handled, organizationId };
 }
 
+/**
+ * Modular licence checkout for the public pricing configurator.
+ * No organization exists yet, so the transaction carries the selected modules and
+ * the webhook/sales team resolves the workspace after payment.
+ */
+export async function createPaddleModuleCheckout(input: {
+  priceIds: string[];
+  moduleKeys: string[];
+  customerEmail?: string | null;
+  successUrl: string;
+}): Promise<{ checkoutUrl: string; transactionId: string }> {
+  const items = input.priceIds
+    .map((id) => String(id || "").trim())
+    .filter(Boolean)
+    .map((price_id) => ({ price_id, quantity: 1 }));
+  if (!items.length) {
+    throw new Error("No Paddle price IDs configured for the selected modules.");
+  }
+
+  const data = await paddleFetch<{ id: string; checkout?: { url?: string } }>("/transactions", {
+    method: "POST",
+    body: JSON.stringify({
+      items,
+      customer: input.customerEmail ? { email: input.customerEmail } : undefined,
+      custom_data: {
+        source: "platform_pricing_configurator",
+        modules: input.moduleKeys.join(","),
+      },
+      checkout: { url: input.successUrl },
+    }),
+  });
+
+  const checkoutUrl = data.checkout?.url;
+  if (!checkoutUrl) {
+    throw new Error("Paddle did not return a checkout URL.");
+  }
+  return { checkoutUrl, transactionId: data.id };
+}
+
 export function defaultCheckoutPriceForPlan(plan: PlanKey): string | null {
   const normalized = normalizePlanKey(plan);
   if (normalized === "professional" || plan === "saas") {
