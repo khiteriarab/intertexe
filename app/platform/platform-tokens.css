@@ -661,6 +661,27 @@
     opacity: 1;
   }
 
+  .platform-showcase-flip {
+    animation: none;
+    transform: none;
+  }
+
+  .platform-showcase-face--back {
+    display: none;
+  }
+
+  .platform-showcase-face--front {
+    display: block;
+    transform: none;
+  }
+
+  .platform-showcase-tile-photo,
+  .platform-showcase-face img,
+  .platform-showcase-tile img {
+    transform: none !important;
+    object-fit: contain;
+  }
+
   .platform-showcase-brand-label {
     font-size: 0.72rem;
     letter-spacing: 0.14em;
