@@ -266,8 +266,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-hero-scanner-v2.png")));
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
-    assert.match(featuredSection, /workspace-cashmere-crew/);
-    assert.match(featuredSection, /workspace-silk-midi-skirt/);
+    assert.match(featuredSection, /workspace-gods-true-linen-shirt/);
+    assert.match(featuredSection, /workspace-upside-daria-miniskirt/);
     assert.match(featuredSection, /WORKSPACE_BY_STYLE/);
     assert.match(featuredSection, /View full passport/);
     assert.doesNotMatch(featuredSection, /Try another product/);
@@ -275,8 +275,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(featuredSection, /QRCodeCanvas/);
     assert.match(featuredSection, /PLATFORM_FEATURED_EXAMPLE_STYLES/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cotton-poplin-shirt.png")));
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cashmere-crew.jpg")));
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-silk-midi-skirt.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-gods-true-linen-shirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-upside-daria-miniskirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/ganni-poplin-shirt.jpg")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/rohe-turtleneck.jpg")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/magda-butrym-midi.jpg")));

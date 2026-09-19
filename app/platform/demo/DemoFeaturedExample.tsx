@@ -14,11 +14,11 @@ type LiveProduct = (typeof liveProducts)[number];
 const FEATURED_COPY =
   "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
 
-/** Workspace screenshots beside each featured product — avoid live-HQ-labeled Impact shots. */
+/** Workspace Impact / Traceability screenshots shown beside each featured product image. */
 const WORKSPACE_BY_STYLE: Record<string, string> = {
   "ITX-LIVE-07": "/platform/demo/workspace-cotton-poplin-shirt.png",
-  "ITX-LIVE-01": "/platform/demo/workspace-cashmere-crew.jpg",
-  "ITX-LIVE-09": "/platform/demo/workspace-silk-midi-skirt.jpg",
+  "ITX-LIVE-01": "/platform/demo/workspace-gods-true-linen-shirt.png",
+  "ITX-LIVE-09": "/platform/demo/workspace-upside-daria-miniskirt.png",
 };
 
 const DEFAULT_WORKSPACE = "/platform/demo/workspace-cotton-poplin-shirt.png";
