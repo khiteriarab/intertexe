@@ -78,6 +78,15 @@ export const PLATFORM_GRAPHICS = {
     brief: "Same 10 SKUs, clean fiber names, conflict still visible on Dress 8721, 105% total flagged on the wool trouser. Do not invent missing values.",
     ready: false,
   },
+  demoValidate: {
+    src: "/platform/demo-validate.png",
+    alt: "INTERTEXE product workspace with key indicators — traceability, compliance, recyclability, and environmental impact.",
+    width: 1672,
+    height: 941,
+    placement: "/platform/demo · Validate step",
+    brief: "Product record with KEY INDICATORS overlay: scores, supply-chain tiers, and PEFCR environmental impact. Ready-to-publish sample SKU.",
+    ready: true,
+  },
   demoIntelligence: {
     src: "/platform/demo-intelligence.png",
     alt: "Material intelligence overview for the ten-product sample catalog.",
