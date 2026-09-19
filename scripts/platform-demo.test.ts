@@ -263,7 +263,14 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
     assert.match(hero, /From a tag to full transparency/);
     assert.match(hero, /demo-hero-scanner-v2\.png/);
+    assert.match(hero, /demo-editorial-hero-layout/);
+    assert.match(hero, /demo-editorial-hero-copy/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-hero-scanner-v2.png")));
+    const heroCss = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/demo-tour.css"), "utf8");
+    assert.match(heroCss, /grid-template-columns: minmax\(15rem, 0\.22fr\) minmax\(0, 0\.78fr\)/);
+    const heroArtRule = heroCss.match(/\.demo-editorial-hero-art-image \{[^}]+\}/)?.[0] || "";
+    assert.match(heroArtRule, /max-width:\s*none/);
+    assert.doesNotMatch(heroArtRule, /max-width:\s*36rem/);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);

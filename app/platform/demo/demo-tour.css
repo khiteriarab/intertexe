@@ -5,8 +5,110 @@
   overflow: hidden;
 }
 
+.demo-editorial-hero-inner {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: 3rem 1rem 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .demo-editorial-hero-inner {
+    padding: 4rem 1.5rem 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-hero-inner {
+    padding: 4.5rem 2rem 3.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-hero-inner {
+    padding-inline: 2.5rem;
+  }
+}
+
 .demo-editorial-hero-layout {
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
   overflow: visible;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-hero-layout {
+    grid-template-columns: minmax(15rem, 0.26fr) minmax(0, 0.74fr);
+    gap: 1.25rem 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-hero-layout {
+    grid-template-columns: minmax(15rem, 0.22fr) minmax(0, 0.78fr);
+    gap: 1.5rem 1.75rem;
+  }
+}
+
+.demo-editorial-hero-copy {
+  min-width: 0;
+}
+
+.demo-editorial-hero-eyebrow {
+  margin: 0 0 1.25rem;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+.demo-editorial-hero-title {
+  margin: 0 0 1rem;
+  font-size: clamp(2.15rem, 5.5vw, 3.5rem);
+  font-weight: 300;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.demo-editorial-hero-lede {
+  margin: 0 0 1.5rem;
+  max-width: 28rem;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: var(--platform-muted);
+}
+
+@media (min-width: 640px) {
+  .demo-editorial-hero-lede {
+    font-size: 16px;
+    margin-bottom: 1.75rem;
+  }
+}
+
+.demo-editorial-hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (min-width: 480px) {
+  .demo-editorial-hero-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.25rem;
+  }
+}
+
+.demo-editorial-hero-foot {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
 }
 
 .demo-editorial-hero-art {
@@ -18,19 +120,18 @@
   min-height: 0;
   aspect-ratio: auto;
   box-shadow: none;
+  min-width: 0;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art {
-    min-height: 0;
-    aspect-ratio: auto;
-    margin-right: -1.5rem;
+    margin-right: -1.25rem;
   }
 }
 
 @media (min-width: 1280px) {
   .demo-editorial-hero-art {
-    margin-right: -2.5rem;
+    margin-right: -2rem;
   }
 }
 
@@ -46,7 +147,6 @@
 @media (min-width: 1024px) {
   .demo-editorial-hero-art-image {
     width: 100%;
-    max-width: none;
     object-position: center right;
   }
 }
@@ -54,8 +154,8 @@
 @media (max-width: 1023px) {
   .demo-editorial-hero-art-image {
     width: 100%;
-    max-width: 36rem;
-    margin-inline: auto;
+    max-width: none;
+    margin-inline: 0;
     object-position: center center;
   }
 }
@@ -444,8 +544,16 @@
 }
 
 @media (max-width: 639px) {
-  .demo-editorial-hero h1 {
+  .demo-editorial-hero-title {
     font-size: 2.15rem;
+  }
+
+  .demo-editorial-hero-actions {
+    width: 100%;
+  }
+
+  .demo-editorial-hero-actions .demo-editorial-btn-primary {
+    width: 100%;
   }
 
   .demo-editorial-btn-primary,
@@ -457,8 +565,21 @@
     min-width: 0;
   }
 
+  .demo-editorial-passport-intro {
+    margin-bottom: 1.5rem;
+  }
+
+  .demo-editorial-passport-steps {
+    gap: 0.5rem 0.85rem;
+    font-size: 10px;
+  }
+
   .demo-editorial-passport-lifestyle-image {
     max-height: 420px;
+  }
+
+  .demo-editorial-passport-page-image {
+    min-height: 280px;
   }
 
   .demo-editorial-chapter h3 {
