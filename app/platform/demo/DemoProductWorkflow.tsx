@@ -1,13 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import {
-  demoCatalogStats,
-} from "../../../lib/material-intelligence/demo-catalog";
-import { DEMO_FEATURED, DEMO_FEATURED_PRODUCT } from "../../../lib/material-intelligence/demo-featured";
-import { PlatformGraphic } from "../PlatformGraphic";
+import { DEMO_FEATURED } from "../../../lib/material-intelligence/demo-featured";
 import { SERIF } from "../platform-ui";
-import { PLATFORM_GRAPHICS } from "../../../lib/platform-graphics";
 
 export const FLOW_STEPS = [
   {
@@ -50,7 +45,7 @@ export const FLOW_STEPS = [
     num: "06",
     title: "Measure",
     headline: "Track, benchmark, improve.",
-    copy: "Compare fiber mix, completeness, and passport readiness against governed peer segments over time.",
+    copy: "Compare fiber mix, composition quality, passport performance, and market readiness against governed peer datasets over time.",
   },
 ] as const;
 
@@ -131,8 +126,6 @@ function WorkflowPanel({
 }
 
 export function DemoProductWorkflow() {
-  const featured = DEMO_FEATURED_PRODUCT;
-  const stats = demoCatalogStats();
   const [activeStep, setActiveStep] = useState<FlowStepId>("source");
 
   return (
@@ -176,16 +169,6 @@ export function DemoProductWorkflow() {
               );
             })}
           </ol>
-          <div className="demo-workflow-rail-product">
-            <img src={DEMO_FEATURED.image} alt="" width={40} height={50} className="demo-workflow-rail-product-image" />
-            <div>
-              <p className="text-[9px] tracking-[0.12em] uppercase text-[var(--platform-quiet)]">Featured product</p>
-              <p className="text-[11px] text-[var(--platform-ink)]" style={SERIF}>
-                {featured.name}
-              </p>
-              <p className="text-[10px] text-[var(--platform-muted)]">{featured.sku}</p>
-            </div>
-          </div>
         </nav>
 
         <div className="demo-workflow-panels">
@@ -251,28 +234,13 @@ export function DemoProductWorkflow() {
 
           {activeStep === "measure" ? (
           <WorkflowPanel step={FLOW_STEPS[5]}>
-            {PLATFORM_GRAPHICS.compareBenchmark.ready ? (
-              <PlatformGraphic slot="compareBenchmark" className="rounded-xl overflow-hidden border border-[var(--platform-border)]" />
-            ) : (
-              <div className="demo-editorial-panel">
-                <div className="demo-editorial-intel-grid mb-5">
-                  {[
-                    ["Natural fiber share", stats.natural == null ? "—" : `${stats.natural}%`, "48% peer"],
-                    ["Passport ready", `${stats.ready}%`, "41% peer"],
-                    ["Complete material data", `${stats.complete}%`, "73% peer"],
-                    ["Silk assortment", `${stats.silkShare}%`, "9% peer"],
-                  ].map(([metric, you, peer]) => (
-                    <div key={metric} className="demo-editorial-intel-metric">
-                      <p className="text-[9px] tracking-[0.12em] uppercase text-[var(--platform-quiet)] mb-2">{metric}</p>
-                      <p className="text-2xl font-light text-[var(--platform-ink)]" style={SERIF}>{you}</p>
-                      <p className="text-xs text-[var(--platform-muted)] mt-1">Peer median · {peer}</p>
-                    </div>
-                  ))}
-                </div>
-                <img src="/platform/compare-benchmark.png" alt="Material Benchmark" className="w-full rounded-lg border border-[var(--platform-border)]" />
-              </div>
-            )}
-            <p className="mt-4 text-xs text-[var(--platform-quiet)]">Illustrative peer medians · governed datasets only</p>
+            <img
+              src="/platform/demo-measure.png"
+              alt="Material Benchmark dashboard — governed record coverage, peer medians, consumer signals, and passport performance"
+              width={1672}
+              height={941}
+              className="w-full rounded-xl border border-[var(--platform-border)]"
+            />
           </WorkflowPanel>
           ) : null}
         </div>
