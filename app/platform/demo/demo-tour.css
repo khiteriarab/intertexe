@@ -544,12 +544,34 @@
 }
 
 @media (max-width: 639px) {
+  .demo-editorial-hero-inner {
+    padding: 2rem 1.15rem 1.75rem;
+  }
+
+  .demo-editorial-hero-layout {
+    gap: 1.35rem;
+  }
+
+  .demo-editorial-hero-eyebrow {
+    margin-bottom: 0.85rem;
+  }
+
   .demo-editorial-hero-title {
-    font-size: 2.15rem;
+    font-size: clamp(1.85rem, 8vw, 2.2rem);
+    margin-bottom: 0.85rem;
+    max-width: 12ch;
+  }
+
+  .demo-editorial-hero-lede {
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+    max-width: none;
   }
 
   .demo-editorial-hero-actions {
     width: 100%;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
   }
 
   .demo-editorial-hero-actions .demo-editorial-btn-primary {
@@ -559,6 +581,22 @@
   .demo-editorial-btn-primary,
   .demo-editorial-btn-outline {
     width: 100%;
+  }
+
+  .demo-editorial-btn-text {
+    width: 100%;
+    text-align: center;
+  }
+
+  .demo-editorial-hero-art {
+    margin-inline: -0.35rem;
+  }
+
+  .demo-editorial-hero-art-image {
+    width: 100%;
+    max-width: none;
+    transform: scale(1.04);
+    transform-origin: center top;
   }
 
   .demo-editorial-passport-grid > * {
@@ -575,15 +613,41 @@
   }
 
   .demo-editorial-passport-lifestyle-image {
-    max-height: 420px;
+    max-height: 360px;
   }
 
   .demo-editorial-passport-page-image {
-    min-height: 280px;
+    min-height: 240px;
+  }
+
+  .demo-editorial-chapter {
+    padding-block: 2.5rem;
   }
 
   .demo-editorial-chapter h3 {
-    font-size: 1.55rem;
+    font-size: 1.45rem;
+  }
+
+  .demo-editorial-intel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-editorial-passport {
+    padding-inline: 1.15rem;
+  }
+
+  .demo-workflow-layout {
+    padding-inline: 1.15rem;
+  }
+
+  .demo-editorial-passport-grid {
+    gap: 1.25rem;
+  }
+
+  .demo-editorial-passport-lifestyle-image,
+  .demo-editorial-passport-page-image {
+    width: 100%;
+    border-radius: 0.35rem;
   }
 }
 

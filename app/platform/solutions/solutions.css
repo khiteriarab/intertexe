@@ -380,3 +380,99 @@
     transform: none;
   }
 }
+
+/* iPhone / narrow phone polish */
+@media (max-width: 767px) {
+  .solutions-intro {
+    padding: 2.5rem 0 1.75rem;
+  }
+
+  .solutions-intro-copy {
+    padding-inline: 0.15rem;
+  }
+
+  .solutions-intro .platform-section-title,
+  .solutions-intro h1,
+  .solutions-intro .platform-display {
+    font-size: clamp(1.85rem, 8vw, 2.25rem);
+    max-width: 12ch;
+    line-height: 1.1;
+  }
+
+  .solutions-intro-actions,
+  .solutions-close-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .solutions-cta-primary {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .solutions-cta-secondary {
+    width: 100%;
+    justify-content: center;
+    border-bottom: 0;
+    min-height: 44px;
+  }
+
+  .solutions-grid-section {
+    padding: 1rem 0 3.25rem;
+  }
+
+  .solutions-grid,
+  .solutions-grid--lead,
+  .solutions-grid-stack {
+    gap: 0.95rem;
+  }
+
+  .solution-card {
+    padding: 1.45rem 1.2rem 1.35rem;
+  }
+
+  .solution-card-title {
+    font-size: clamp(1.35rem, 6.5vw, 1.6rem);
+    max-width: none;
+    margin-bottom: 0.7rem;
+  }
+
+  .solution-card--feature .solution-card-title {
+    font-size: clamp(1.55rem, 7vw, 1.85rem);
+    max-width: none;
+  }
+
+  .solution-card-copy,
+  .solution-card--feature .solution-card-copy {
+    font-size: 0.9rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .solution-card-tags {
+    gap: 0.35rem;
+    margin-bottom: 1.35rem;
+  }
+
+  .solution-card-tags li {
+    font-size: 0.625rem;
+    padding: 0.28rem 0.55rem;
+  }
+
+  .solutions-dark {
+    padding: 3rem 0 3.5rem;
+  }
+
+  .solutions-dark-title {
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+  }
+
+  .solutions-dark-copy {
+    margin-bottom: 2rem;
+  }
+
+  .solutions-close-inner {
+    gap: 1.5rem;
+  }
+}
