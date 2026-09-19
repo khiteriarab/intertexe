@@ -97,6 +97,16 @@ const nextConfig = {
         ],
       },
       {
+        // Serve the guide as a normal HTML page — filename Content-Disposition can make
+        // browsers open it as a data:text/html download instead of navigating.
+        source: "/platform/intertexe-software-guide.html",
+        headers: [
+          { key: "Content-Type", value: "text/html; charset=utf-8" },
+          { key: "Content-Disposition", value: "inline" },
+          { key: "Cache-Control", value: "public, max-age=300" },
+        ],
+      },
+      {
         source: "/downloads/:file*.zip",
         headers: [
           { key: "Content-Type", value: "application/zip" },

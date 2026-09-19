@@ -65,8 +65,8 @@ export function PlatformCircularWardrobeBanner() {
         {state === "done" ? (
           <div className="platform-ebook-success">
             <p>Your guide is ready. If it did not open, use the link below.</p>
-            <a href={PLATFORM_EBOOK_HREF} className="platform-ebook-submit" download>
-              Download the guide
+            <a href={PLATFORM_EBOOK_HREF} className="platform-ebook-submit" target="_blank" rel="noopener noreferrer">
+              Open the guide
             </a>
             <Link href="/platform/request?intent=snapshot&cta=ebook_demo" className="platform-ebook-demo">
               Request a demo →
