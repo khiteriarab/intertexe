@@ -11,7 +11,7 @@ export const PASSPORT_CASE_STUDY = {
   brand: "Ganni",
   composition: "97% Cotton, 3% Elastane",
   category: "Shirt",
-  imageUrl: "/khiteri/live/itx-live-07.jpg",
+  imageUrl: "/khiteri/ganni-poplin-shirt.jpg",
   template: "Editorial" as const,
   lifecycleStages: [
     { stage: "Raw material", detail: "Cotton cultivation", location: "Turkey" },
