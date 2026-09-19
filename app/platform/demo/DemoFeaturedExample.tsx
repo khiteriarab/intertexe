@@ -17,7 +17,7 @@ const FEATURED_COPY =
 /** Workspace Impact screenshots shown beside each featured product image. */
 const WORKSPACE_BY_STYLE: Record<string, string> = {
   "ITX-LIVE-07": "/platform/demo/workspace-cotton-poplin-shirt.png",
-  "ITX-LIVE-01": "/platform/demo/workspace-linen-wrap-top.jpg",
+  "ITX-LIVE-01": "/platform/demo/workspace-gods-true-linen-shirt.png",
   "ITX-LIVE-09": "/platform/demo/workspace-upside-daria-miniskirt.png",
 };
 

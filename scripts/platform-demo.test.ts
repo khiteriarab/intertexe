@@ -255,6 +255,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(hero, /demo-hero-scanner\.png/);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
+    assert.match(featuredSection, /workspace-gods-true-linen-shirt/);
     assert.match(featuredSection, /workspace-upside-daria-miniskirt/);
     assert.match(featuredSection, /WORKSPACE_BY_STYLE/);
     assert.match(featuredSection, /View full passport/);
@@ -263,6 +264,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(featuredSection, /QRCodeCanvas/);
     assert.match(featuredSection, /PLATFORM_FEATURED_EXAMPLE_STYLES/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cotton-poplin-shirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-gods-true-linen-shirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-upside-daria-miniskirt.png")));
     assert.match(featured, /ITX-4102/);
     assert.match(featured, /ITX-4102/);
