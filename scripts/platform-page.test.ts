@@ -132,6 +132,12 @@ describe("Platform B2B sales page", () => {
     const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
     assert.match(banner, /Request a demo/);
     assert.match(banner, /\/platform\/request/);
+    assert.match(banner, /Ebook/);
+    assert.match(banner, /platform-ebook/);
+    assert.doesNotMatch(banner, /Build the record your product deserves/);
+    const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
+    assert.match(showcaseHero, /flipMode="composition"/);
+    assert.match(showcaseHero, /flipMode="brand"/);
     assert.match(gallery, /WorkspaceGallery/);
     assert.match(gallery, /headless API/i);
     assert.ok(!fs.existsSync(path.join(process.cwd(), "app/platform/discover/page.tsx")));
