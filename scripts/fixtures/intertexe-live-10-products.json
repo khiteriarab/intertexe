@@ -1,19 +1,19 @@
 [
   {
     "style": "ITX-LIVE-01",
-    "sku": "P01152404-3",
-    "name": "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
-    "gtin": "560199910000",
-    "category": "Shirt",
-    "composition": "100% Linen",
-    "brand": "God's True Cashmere",
-    "weight_g": 220,
+    "sku": "P01103203",
+    "name": "Turtleneck Wool and Cashmere Top",
+    "gtin": "560199920001",
+    "category": "Knitwear",
+    "composition": "70% Wool, 30% Cashmere",
+    "brand": "Róhe",
+    "weight_g": 280,
     "natural_fiber_percent": 100,
     "scan_count": 0,
-    "fiber_primary": "linen",
+    "fiber_primary": "wool",
     "image_url": "/khiteri/live/itx-live-01.jpg",
     "country_of_origin": "PT",
-    "source_id": "80dbd374-9b4b-4fd1-8d2c-b6ea417c6da6"
+    "source_id": "e1c7a4b2-9f31-4d8a-8c12-1a6d0b7e4f01"
   },
   {
     "style": "ITX-LIVE-02",
@@ -97,19 +97,19 @@
   },
   {
     "style": "ITX-LIVE-07",
-    "sku": "66e629f4-5755-4cdf-b2fb-de69845df13a",
+    "sku": "P01135201",
     "name": "Cotton Poplin Shirt",
-    "gtin": "196223126747",
+    "gtin": "560199920007",
     "category": "Shirt",
-    "composition": "100% Cotton",
-    "brand": "Walter Baker",
+    "composition": "97% Cotton, 3% Elastane",
+    "brand": "Ganni",
     "weight_g": 220,
-    "natural_fiber_percent": 100,
+    "natural_fiber_percent": 97,
     "scan_count": 0,
     "fiber_primary": "cotton",
     "image_url": "/khiteri/live/itx-live-07.jpg",
     "country_of_origin": "PT",
-    "source_id": "dd1feaf8-03a8-41e3-93ae-12e06443ddb6"
+    "source_id": "e1c7a4b2-9f31-4d8a-8c12-1a6d0b7e4f07"
   },
   {
     "style": "ITX-LIVE-08",
@@ -129,19 +129,19 @@
   },
   {
     "style": "ITX-LIVE-09",
-    "sku": "P01146944-6",
-    "name": "The Upside Daria Cotton Jersey Miniskirt",
-    "gtin": "560199910008",
-    "category": "Trousers",
-    "composition": "80% Cotton, 20% Polyester",
-    "brand": "The Upside",
-    "weight_g": 160,
-    "natural_fiber_percent": 80,
+    "sku": "P00783396",
+    "name": "Denim Midi Dress",
+    "gtin": "560199920009",
+    "category": "Dress",
+    "composition": "100% Cotton",
+    "brand": "Magda Butrym",
+    "weight_g": 450,
+    "natural_fiber_percent": 100,
     "scan_count": 0,
     "fiber_primary": "cotton",
     "image_url": "/khiteri/live/itx-live-09.jpg",
     "country_of_origin": "PT",
-    "source_id": "fdc42234-7348-4d5d-85bc-62b1c82ae7db"
+    "source_id": "e1c7a4b2-9f31-4d8a-8c12-1a6d0b7e4f09"
   },
   {
     "style": "ITX-LIVE-10",

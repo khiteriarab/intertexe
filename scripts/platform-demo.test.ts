@@ -266,6 +266,22 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cotton-poplin-shirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-gods-true-linen-shirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-upside-daria-miniskirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-07.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-01.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-09.jpg")));
+    const liveFixtures = fs.readFileSync(
+      path.join(process.cwd(), "lib/enterprise/fixtures/intertexe-live-10-products.json"),
+      "utf8",
+    );
+    assert.match(liveFixtures, /"brand": "Ganni"/);
+    assert.match(liveFixtures, /"brand": "Róhe"/);
+    assert.match(liveFixtures, /"brand": "Magda Butrym"/);
+    assert.match(liveFixtures, /itx-live-07\.jpg/);
+    assert.doesNotMatch(liveFixtures, /Walter Baker/);
+    const caseStudy = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/passport-case-study.ts"), "utf8");
+    assert.match(caseStudy, /brand: "Ganni"/);
+    assert.match(caseStudy, /itx-live-07\.jpg/);
+    assert.doesNotMatch(caseStudy, /Walter Baker/);
     assert.match(featured, /ITX-4102/);
     assert.match(featured, /ITX-4102/);
     assert.doesNotMatch(featuredSection, /EU Certified/);

@@ -14,7 +14,7 @@ type LiveProduct = (typeof liveProducts)[number];
 const FEATURED_COPY =
   "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
 
-/** Workspace Impact screenshots shown beside each featured product image. */
+/** Workspace Impact / Traceability screenshots shown beside each featured product image. */
 const WORKSPACE_BY_STYLE: Record<string, string> = {
   "ITX-LIVE-07": "/platform/demo/workspace-cotton-poplin-shirt.png",
   "ITX-LIVE-01": "/platform/demo/workspace-gods-true-linen-shirt.png",
@@ -23,7 +23,7 @@ const WORKSPACE_BY_STYLE: Record<string, string> = {
 
 const DEFAULT_WORKSPACE = "/platform/demo/workspace-cotton-poplin-shirt.png";
 
-/** Featured live HQ clothing starts with Walter Baker Cotton Poplin Shirt. */
+/** Featured live HQ clothing starts with Ganni Cotton Poplin Shirt. */
 
 function publicIdForStyle(style: string): string {
   if (style === PASSPORT_CASE_STUDY.styleCode) return PASSPORT_CASE_STUDY.publicId;
