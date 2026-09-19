@@ -45,15 +45,9 @@
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art-image {
-    width: 108%;
+    width: 100%;
     max-width: none;
     object-position: center right;
-  }
-}
-
-@media (min-width: 1280px) {
-  .demo-editorial-hero-art-image {
-    width: 112%;
   }
 }
 
