@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const maxDuration = 10;
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "../../../lib/supabase-server";
 
@@ -20,17 +21,12 @@ export async function GET() {
   const supabase = getServerSupabase();
   if (supabase) {
     try {
-      const { count: productCount } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true });
-      checks.products = productCount || 0;
-
-      const { count: designerCount } = await supabase
-        .from("designers")
-        .select("*", { count: "exact", head: true });
-      checks.designers = designerCount || 0;
-
-      checks.supabase_connected = true;
+      // Cheap connectivity probe — never exact-count the full products table
+      // (1.8M+ rows can hang health checks and burn DB capacity).
+      const { data, error } = await supabase.from("products").select("id").limit(1);
+      checks.supabase_connected = !error;
+      checks.products_probe_ok = Boolean(data && data.length > 0);
+      if (error) checks.supabase_error = error.message;
     } catch (e: any) {
       checks.supabase_connected = false;
       checks.supabase_error = e.message;
