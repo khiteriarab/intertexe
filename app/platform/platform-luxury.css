@@ -585,17 +585,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.35rem;
-  height: 3.35rem;
-  margin-bottom: 2rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(15, 20, 18, 0.08);
+  width: auto;
+  height: 2.75rem;
+  margin-bottom: 1.85rem;
+  background: transparent;
+  border: 0;
 }
 
 .platform-product-pillar-mark img {
-  width: 2.1rem;
-  height: 2.1rem;
+  width: auto;
+  height: 100%;
   object-fit: contain;
 }
 
