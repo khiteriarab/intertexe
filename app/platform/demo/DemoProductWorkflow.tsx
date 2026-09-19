@@ -58,13 +58,6 @@ export const FLOW_STEPS = [
 
 export type FlowStepId = (typeof FLOW_STEPS)[number]["id"];
 
-const SOURCE_INPUTS = [
-  ["PLM", "92 SE 8 EA"],
-  ["ERP", "96% silk 4% elastane"],
-  ["Spreadsheet", "100% silk"],
-  ["Supplier file", "Atelier Nord · Milan"],
-] as const;
-
 function StepIcon({ id }: { id: FlowStepId }) {
   const cls = "h-4 w-4";
   if (id === "source") {
@@ -201,27 +194,13 @@ export function DemoProductWorkflow() {
         <div className="demo-workflow-panels">
           {activeStep === "source" ? (
           <WorkflowPanel step={FLOW_STEPS[0]}>
-            <div className="demo-editorial-panel">
-              <div className="demo-editorial-source-grid">
-                {SOURCE_INPUTS.map(([label, raw]) => (
-                  <div key={label} className="demo-editorial-source-card">
-                    {label}
-                    <code>{raw}</code>
-                  </div>
-                ))}
-              </div>
-              <div className="demo-workflow-flow-arrow" aria-hidden>
-                ↓
-              </div>
-              <div className="demo-editorial-record-chip">
-                <img src={DEMO_FEATURED.image} alt="" width={48} height={60} className="demo-editorial-record-chip-image" />
-                <div>
-                  <p className="text-[10px] tracking-[0.12em] uppercase text-[var(--platform-primary)]">Governed product record</p>
-                  <p className="text-sm text-[var(--platform-ink)]" style={SERIF}>{featured.name}</p>
-                  <p className="text-[11px] text-[var(--platform-muted)]">{featured.sku}</p>
-                </div>
-              </div>
-            </div>
+            <img
+              src="/platform/demo-source.png"
+              alt="Fragmented inputs from PLM, ERP, spreadsheet, supplier file, and retailer feed converging into one INTERTEXE product record"
+              width={1672}
+              height={941}
+              className="w-full rounded-xl border border-[var(--platform-border)]"
+            />
           </WorkflowPanel>
           ) : null}
 

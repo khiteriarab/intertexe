@@ -240,10 +240,12 @@ describe("Permanent 10-product demonstration catalog", () => {
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
     assert.match(workflow, /activeStep === "source"/);
     assert.match(workflow, /activeStep === "normalize"/);
+    assert.match(workflow, /demo-source\.png/);
     assert.match(workflow, /demo-normalize\.png/);
     assert.match(workflow, /demo-validate\.png/);
     assert.match(workflow, /demo-activate\.png/);
     assert.doesNotMatch(workflow, /IntersectionObserver/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-validate.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-activate.png")));
