@@ -904,13 +904,14 @@
 
 .platform-shell .demo-editorial-hero-art,
 .platform-shell .demo-editorial-hero-art-image {
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .platform-shell .demo-editorial-hero-art {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: none;
 }
 
 .platform-shell .demo-editorial-btn-primary {

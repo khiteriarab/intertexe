@@ -248,7 +248,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
     assert.match(hero, /From a tag to full transparency/);
-    assert.match(hero, /demo-hero-scanner\.jpg/);
+    assert.match(hero, /demo-hero-scanner\.png/);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /View full passport/);
