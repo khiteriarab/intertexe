@@ -87,6 +87,15 @@ export const PLATFORM_GRAPHICS = {
     brief: "Product record with KEY INDICATORS overlay: scores, supply-chain tiers, and PEFCR environmental impact. Ready-to-publish sample SKU.",
     ready: true,
   },
+  demoActivate: {
+    src: "/platform/demo-activate.png",
+    alt: "INTERTEXE product record with preview QR and full source-to-next-life lifecycle ready to activate.",
+    width: 1672,
+    height: 941,
+    placement: "/platform/demo · Activate step",
+    brief: "Product overview modal over the workspace: preview QR, open consumer page, and eight-stage lifecycle from source through next life.",
+    ready: true,
+  },
   demoIntelligence: {
     src: "/platform/demo-intelligence.png",
     alt: "Material intelligence overview for the ten-product sample catalog.",

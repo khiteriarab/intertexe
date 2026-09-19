@@ -65,19 +65,6 @@ const SOURCE_INPUTS = [
   ["Supplier file", "Atelier Nord · Milan"],
 ] as const;
 
-const CONSUMER_LANES = [
-  { label: "Shop today", detail: "Buy with confidence" },
-  { label: "Care longer", detail: "Instructions that travel with the garment" },
-  { label: "Resale tomorrow", detail: "Identity follows the product" },
-  { label: "Circular future", detail: "Impact and next-life options" },
-] as const;
-
-const DELIVERY_MODES = [
-  { label: "Hosted", detail: "intertexe.com/p/…" },
-  { label: "White-label", detail: "passport.yourbrand.com" },
-  { label: "Headless API", detail: "GET /v1/passport" },
-] as const;
-
 function StepIcon({ id }: { id: FlowStepId }) {
   const cls = "h-4 w-4";
   if (id === "source") {
@@ -304,43 +291,13 @@ export function DemoProductWorkflow() {
 
           {activeStep === "activate" ? (
           <WorkflowPanel step={FLOW_STEPS[4]}>
-            <div className="demo-workflow-consumer">
-              <div className="demo-workflow-consumer-scan">
-                <div className="demo-workflow-scan-tag">
-                  <span className="demo-workflow-scan-label">100% LINEN</span>
-                  <span className="demo-workflow-scan-hint">Scan the tag</span>
-                </div>
-                <span className="demo-workflow-flow-arrow demo-workflow-flow-arrow-inline" aria-hidden>→</span>
-                <div className="demo-editorial-phone demo-workflow-consumer-phone">
-                  <div className="demo-editorial-phone-notch" />
-                  <img src={DEMO_FEATURED.image} alt="" width={220} height={280} className="demo-editorial-phone-image" />
-                  <div className="demo-editorial-phone-body">
-                    <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--platform-quiet)]">Digital Product Passport</p>
-                    <p className="text-sm text-[var(--platform-ink)]" style={SERIF}>{DEMO_FEATURED.name}</p>
-                    <QRCodeCanvas value={passportUrl} size={40} marginSize={0} />
-                  </div>
-                </div>
-              </div>
-              <div className="demo-workflow-consumer-lanes">
-                {CONSUMER_LANES.map((lane) => (
-                  <div key={lane.label} className="demo-workflow-consumer-lane">
-                    <span className="demo-workflow-consumer-lane-dot" aria-hidden />
-                    <div>
-                      <p className="text-[11px] text-[var(--platform-ink)]">{lane.label}</p>
-                      <p className="text-[10px] text-[var(--platform-muted)]">{lane.detail}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="demo-workflow-delivery-row">
-                {DELIVERY_MODES.map((mode) => (
-                  <span key={mode.label} className="demo-editorial-delivery-chip">
-                    <span>{mode.label}</span>
-                    <span>{mode.detail}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
+            <img
+              src="/platform/demo-activate.png"
+              alt="INTERTEXE product record with preview QR and full source-to-next-life lifecycle — publish to activate across channels"
+              width={1672}
+              height={941}
+              className="w-full rounded-xl border border-[var(--platform-border)]"
+            />
           </WorkflowPanel>
           ) : null}
 
