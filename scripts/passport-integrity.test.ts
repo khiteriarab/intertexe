@@ -3,22 +3,22 @@ import { describe, it } from "node:test";
 import { auditCustomerZeroFixtures, auditPassportIntegrity } from "../lib/enterprise/passport-integrity";
 
 describe("passport integrity gate", () => {
-  it("passes aligned ITX-LIVE-01 turtleneck fixture", () => {
+  it("passes aligned ITX-LIVE-01 linen shirt fixture", () => {
     const result = auditPassportIntegrity({
       styleCode: "ITX-LIVE-01",
-      sku: "P01103203",
-      productName: "Turtleneck Wool and Cashmere Top",
-      brand: "Róhe",
-      category: "Knitwear",
-      composition: "70% Wool, 30% Cashmere",
-      imageUrl: "/khiteri/rohe-turtleneck.jpg",
+      sku: "P01152404-3",
+      productName: "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
+      brand: "God's True Cashmere",
+      category: "Shirt",
+      composition: "100% Linen",
+      imageUrl: "/khiteri/live/itx-live-01.jpg",
       traceNodes: [
-        { tier_label: "Raw material", facility_name: "Wool and cashmere fiber" },
-        { tier_label: "Manufacturing", facility_name: "Knit assembly" },
+        { tier_label: "Raw material", facility_name: "European flax cultivation" },
+        { tier_label: "Manufacturing", facility_name: "Shirt assembly" },
       ],
       journeyStages: [
-        { title: "Wool and cashmere fiber", detail: "Natural knit yarns" },
-        { title: "Knit assembly", detail: "Portugal" },
+        { title: "Flax cultivation", detail: "European linen fiber" },
+        { title: "Shirt assembly", detail: "Portugal" },
       ],
     });
     assert.equal(result.status, "valid");
@@ -28,11 +28,11 @@ describe("passport integrity gate", () => {
   it("blocks silk journey on linen product", () => {
     const result = auditPassportIntegrity({
       styleCode: "ITX-LIVE-01",
-      sku: "P01103203",
+      sku: "P01152404-3",
       productName: "Silk Evening Dress",
-      brand: "Róhe",
-      category: "Knitwear",
-      composition: "70% Wool, 30% Cashmere",
+      brand: "God's True Cashmere",
+      category: "Shirt",
+      composition: "100% Linen",
       traceNodes: [{ tier_label: "Raw material", facility_name: "Mulberry silk cultivation" }],
       journeyStages: [{ title: "Silk reeling", detail: "Mulberry silk" }],
     });

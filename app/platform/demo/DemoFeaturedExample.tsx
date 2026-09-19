@@ -14,7 +14,16 @@ type LiveProduct = (typeof liveProducts)[number];
 const FEATURED_COPY =
   "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
 
-/** Featured editor-pick clothing starts with Ganni Cotton Poplin Shirt. */
+/** Workspace Impact screenshots shown beside each featured product image. */
+const WORKSPACE_BY_STYLE: Record<string, string> = {
+  "ITX-LIVE-07": "/platform/demo/workspace-cotton-poplin-shirt.png",
+  "ITX-LIVE-01": "/platform/demo/workspace-gods-true-linen-shirt.png",
+  "ITX-LIVE-09": "/platform/demo/workspace-upside-daria-miniskirt.png",
+};
+
+const DEFAULT_WORKSPACE = "/platform/demo/workspace-cotton-poplin-shirt.png";
+
+/** Featured live HQ clothing starts with Walter Baker Cotton Poplin Shirt. */
 
 function publicIdForStyle(style: string): string {
   if (style === PASSPORT_CASE_STUDY.styleCode) return PASSPORT_CASE_STUDY.publicId;
@@ -32,6 +41,10 @@ function passportUrl(style: string): string {
   return `${getConsumerSiteUrl().replace(/\/$/, "")}${passportPath(style)}`;
 }
 
+function workspaceImageForStyle(style: string): string {
+  return WORKSPACE_BY_STYLE[style] || DEFAULT_WORKSPACE;
+}
+
 export function DemoFeaturedExample() {
   const samples = useMemo(
     () =>
@@ -45,6 +58,8 @@ export function DemoFeaturedExample() {
   const selected = samples.find((product) => product.style === selectedStyle) ?? samples[0];
 
   if (!selected) return null;
+
+  const workspaceSrc = workspaceImageForStyle(selected.style);
 
   return (
     <section id="passport" className="demo-editorial-passport scroll-mt-24">
@@ -103,10 +118,10 @@ export function DemoFeaturedExample() {
 
           <figure className="demo-editorial-passport-page m-0">
             <img
-              src="/platform/demo/workspace-cotton-poplin-shirt.png"
-              alt={`${selected.name} workspace preview`}
-              width={1448}
-              height={1006}
+              src={workspaceSrc}
+              alt={`${selected.name} Impact workspace — climate, PEF score, and publish readiness`}
+              width={1938}
+              height={1290}
               className="demo-editorial-passport-page-image"
             />
           </figure>
