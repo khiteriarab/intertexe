@@ -379,35 +379,37 @@
   color: #c9a962;
 }
 
-/* The mosaic is scaled from its top edge, so it overflows its layout box.
-   Reserve that overflow here or the bottom row sits under the statistics. */
+/* Mosaic scales from its top edge and overflows the layout box — reserve
+   only enough room for that overflow so the black band does not sit as a
+   tall shade above the gold stat lines. */
 .platform-showcase-grid-wrap {
-  margin-bottom: 4.5rem;
+  margin-bottom: 1.75rem;
+  overflow: visible;
 }
 
 @media (min-width: 768px) {
   .platform-showcase-grid-wrap {
-    margin-bottom: 6rem;
+    margin-bottom: 2.25rem;
   }
 }
 
 @media (min-width: 1280px) {
   .platform-showcase-grid-wrap {
-    margin-bottom: 7rem;
+    margin-bottom: 2.75rem;
   }
 }
 
 .platform-showcase-stats {
   width: min(1320px, 100%);
   margin-inline: auto;
-  padding-top: 3rem;
+  padding-top: 0.75rem;
   gap: 2.5rem 2rem;
 }
 
 @media (min-width: 768px) {
   .platform-showcase-stats {
     gap: 0 3.25rem;
-    padding-top: 3.5rem;
+    padding-top: 1rem;
   }
 }
 

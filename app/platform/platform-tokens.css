@@ -340,8 +340,10 @@
   width: 100vw;
   max-width: 100vw;
   margin-left: calc(50% - 50vw);
-  margin-bottom: 2.25rem;
-  overflow: hidden;
+  margin-bottom: 1.75rem;
+  /* Let the scaled mosaic paint down toward the gold lines; the hero clips
+     the 100vw side bleed so we do not need a solid black shade here. */
+  overflow: visible;
 }
 
 .platform-showcase-grid {
@@ -462,7 +464,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem 1.75rem;
-  padding-top: 2.25rem;
+  padding-top: 0.75rem;
 }
 
 @media (min-width: 768px) {
@@ -557,7 +559,7 @@
     width: 100%;
     max-width: 100%;
     margin-left: 0;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.85rem;
     overflow: visible;
   }
 
@@ -588,7 +590,7 @@
 
   .platform-showcase-stats {
     gap: 1.25rem 1rem;
-    padding-top: 1.25rem;
+    padding-top: 0.5rem;
   }
 
   .platform-showcase-stat-value {
