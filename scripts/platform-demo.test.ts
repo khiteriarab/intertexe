@@ -243,11 +243,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(workflow, /demo-source\.png/);
     assert.match(workflow, /demo-normalize\.png/);
     assert.match(workflow, /demo-validate\.png/);
+    assert.match(workflow, /demo-publish\.png/);
     assert.match(workflow, /demo-activate\.png/);
     assert.doesNotMatch(workflow, /IntersectionObserver/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-validate.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-publish.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-activate.png")));
     const quote = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoClosingQuote.tsx"), "utf8");
     assert.match(quote, /Data that moves fashion forward/);

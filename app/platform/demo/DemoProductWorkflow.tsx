@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { QRCodeCanvas } from "qrcode.react";
 import { useState, type ReactNode } from "react";
 import {
   demoCatalogStats,
@@ -37,8 +35,8 @@ export const FLOW_STEPS = [
     id: "publish",
     num: "04",
     title: "Publish",
-    headline: "The passport is ready.",
-    copy: "Create a digital product passport with QR resolution — composition, care, origin, traceability, and next-life options.",
+    headline: "Publish once. Power every channel.",
+    copy: "Turn approved product data into a digital product passport for your website, app, QR code, and partner channels.",
   },
   {
     id: "activate",
@@ -136,7 +134,6 @@ export function DemoProductWorkflow() {
   const featured = DEMO_FEATURED_PRODUCT;
   const stats = demoCatalogStats();
   const [activeStep, setActiveStep] = useState<FlowStepId>("source");
-  const passportUrl = "/platform/demo#passport";
 
   return (
     <section id="journey" className="demo-workflow-chart scroll-mt-24 border-y border-[var(--platform-border)]/70">
@@ -230,33 +227,13 @@ export function DemoProductWorkflow() {
 
           {activeStep === "publish" ? (
           <WorkflowPanel step={FLOW_STEPS[3]}>
-            <div className="demo-workflow-publish-grid">
-              <div className="demo-workflow-passport-publish">
-                <img src={DEMO_FEATURED.image} alt={DEMO_FEATURED.name} width={200} height={260} className="demo-workflow-passport-image" />
-                <div className="demo-workflow-passport-meta">
-                  <p className="text-[9px] tracking-[0.14em] uppercase text-[var(--platform-quiet)]">Digital Product Passport</p>
-                  <p className="text-base text-[var(--platform-ink)]" style={SERIF}>{DEMO_FEATURED.name}</p>
-                  <p className="text-xs text-[var(--platform-muted)]">{DEMO_FEATURED.composition}</p>
-                  <div className="demo-editorial-phone-tags mt-3">
-                    {["Care", "Origin", "Traceability", "Resale", "Recycle"].map((tag) => (
-                      <span key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="demo-workflow-qr-block">
-                  <QRCodeCanvas value={passportUrl} size={72} marginSize={1} />
-                  <p className="text-[9px] tracking-[0.1em] uppercase text-[var(--platform-muted)] mt-2">Scan to view</p>
-                  <Link href="/platform/demo#passport" className="text-[10px] text-[var(--platform-accent)] underline underline-offset-4">
-                    Open passport →
-                  </Link>
-                </div>
-              </div>
-              {PLATFORM_GRAPHICS.actPassport.ready ? (
-                <PlatformGraphic slot="actPassport" className="rounded-xl overflow-hidden border border-[var(--platform-border)]" />
-              ) : (
-                <img src="/platform/act-passport.png" alt="Publish passport workspace" className="w-full rounded-xl border border-[var(--platform-border)]" />
-              )}
-            </div>
+            <img
+              src="/platform/demo-publish.png"
+              alt="Publish once — digital product passport powering web, QR, mobile app, API, and retail channels"
+              width={1672}
+              height={941}
+              className="w-full rounded-xl border border-[var(--platform-border)]"
+            />
           </WorkflowPanel>
           ) : null}
 
