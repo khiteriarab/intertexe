@@ -118,20 +118,12 @@ export default function PlatformSolutionsPage() {
 
           <div className="solutions-shot">
             <Image
-              src="/platform/workspace-product-record.png"
-              alt="INTERTEXE product record with materials, traceability, and passport status."
-              width={1600}
-              height={1000}
+              src="/platform/solutions-governed-record.png"
+              alt="INTERTEXE consumer passport on mobile beside the product Impact workspace on desktop."
+              width={1672}
+              height={941}
               className="solutions-shot-main"
               sizes="(max-width: 899px) 94vw, 1100px"
-            />
-            <Image
-              src="/platform/workspace-issues-inbox.png"
-              alt="INTERTEXE issues inbox highlighting missing fields and conflicts."
-              width={900}
-              height={560}
-              className="solutions-shot-overlay"
-              sizes="(max-width: 899px) 60vw, 380px"
             />
           </div>
         </div>

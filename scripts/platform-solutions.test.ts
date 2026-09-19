@@ -52,8 +52,10 @@ describe("Platform solutions page", () => {
     assert.match(page, /Start with the problem you need to solve\./);
     assert.match(page, /Explore the platform/);
     assert.match(page, /Request a demo/);
-    assert.match(page, /workspace-product-record\.png/);
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/workspace-product-record.png")));
+    assert.match(page, /solutions-governed-record\.png/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/solutions-governed-record.png")));
+    assert.doesNotMatch(page, /workspace-product-record\.png/);
+    assert.doesNotMatch(page, /solutions-shot-overlay/);
   });
 
   it("keeps the public page free of pricing, API and internal language", () => {
