@@ -439,7 +439,7 @@ export async function handlePaddleWebhookEvent(
 }
 
 /**
- * Modular licence checkout for the public pricing configurator.
+ * Modular license checkout for the public pricing configurator.
  * No organization exists yet, so the transaction carries the selected modules and
  * the webhook/sales team resolves the workspace after payment.
  */

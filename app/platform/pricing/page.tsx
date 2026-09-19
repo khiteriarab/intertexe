@@ -10,7 +10,7 @@ import "./pricing.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Pricing — build your yearly licence",
+  title: "Pricing — build your yearly license",
   description:
     "Select the INTERTEXE modules you need. Priced modules show annual starting figures; lifecycle scope is set in your written proposal.",
   alternates: { canonical: "https://www.intertexe.com/platform/pricing" },
@@ -28,7 +28,7 @@ export default function PlatformPricingPage() {
         <div className="platform-lux-wrap">
           <div className="platform-pricing-head">
             <Eyebrow>Pricing</Eyebrow>
-            <Heading className="mb-4">Build your yearly licence.</Heading>
+            <Heading className="mb-4">Build your yearly license.</Heading>
             <Body className="mb-0">
               Select the modules you need. Priced modules show annual starting figures; Connected Product Lifecycle is
               scoped in your proposal.

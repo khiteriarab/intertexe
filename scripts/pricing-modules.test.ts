@@ -10,8 +10,8 @@ import {
   pricingModuleByKey,
 } from "../lib/enterprise/pricing-modules";
 
-describe("Modular licence pricing", () => {
-  it("publishes the six licence modules with annual starting figures in EUR", () => {
+describe("Modular license pricing", () => {
+  it("publishes the six license modules with annual starting figures in EUR", () => {
     assert.equal(PRICING_MODULES.length, 6);
     assert.equal(pricingModuleByKey("product_intelligence")?.startingEur, 3_000);
     assert.equal(pricingModuleByKey("traceability_compliance")?.startingEur, 5_000);

@@ -8,7 +8,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** Public module checkout — hands the selected licence modules to Paddle. */
+/** Public module checkout — hands the selected license modules to Paddle. */
 export async function POST(request: NextRequest) {
   if (!isPaddleConfigured()) {
     return NextResponse.json(
