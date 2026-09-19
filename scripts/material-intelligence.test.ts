@@ -368,5 +368,26 @@ describe("Lead capture", () => {
       assert.equal(demoLead.extras.company_type, "brand");
       assert.equal(demoLead.extras.country, "Spain");
     }
+
+    const pricedLead = parseLeadBody({
+      first_name: "Ada",
+      last_name: "Lovelace",
+      email: "ada@brand.com",
+      company: "Brand",
+      intent: "saas",
+      modules: "product_intelligence,traceability_compliance",
+      tier: "platform",
+      source_cta: "pricing_modules",
+    });
+    assert.equal("row" in pricedLead, true);
+    if ("row" in pricedLead) {
+      assert.equal(pricedLead.extras.tier, "platform");
+      assert.deepEqual(pricedLead.extras.modules, [
+        "product_intelligence",
+        "traceability_compliance",
+      ]);
+      assert.match(pricedLead.row.catalog_system || "", /modules:product_intelligence/);
+      assert.match(pricedLead.extras.modules_summary || "", /€8,000/);
+    }
   });
 });

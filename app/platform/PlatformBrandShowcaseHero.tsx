@@ -10,7 +10,17 @@ import {
 } from "../../lib/enterprise/platform-brand-showcase";
 import { SERIF } from "./platform-ui";
 
-function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: number }) {
+type FlipMode = "composition" | "brand";
+
+function ShowcaseTileCard({
+  tile,
+  delayMs,
+  flipMode,
+}: {
+  tile: ShowcaseTile;
+  delayMs: number;
+  flipMode: FlipMode;
+}) {
   const style = { animationDelay: `${delayMs}ms` } as React.CSSProperties;
 
   if (tile.kind === "brand") {
@@ -32,6 +42,20 @@ function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: numb
     />
   );
 
+  // Bottom row: turn to brand name only — no composition line.
+  if (flipMode === "brand") {
+    return (
+      <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+        <div className="platform-showcase-flip" style={style}>
+          <div className="platform-showcase-face platform-showcase-face--front">{photo}</div>
+          <div className="platform-showcase-face platform-showcase-face--back platform-showcase-face--brand">
+            <span className="platform-showcase-brand-label">{tile.brand}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!tile.composition) {
     return (
       <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
@@ -40,6 +64,7 @@ function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: numb
     );
   }
 
+  // Top row: turn to composition + verified meta.
   return (
     <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
       <div className="platform-showcase-flip" style={style}>
@@ -57,11 +82,24 @@ function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: numb
   );
 }
 
-function ShowcaseRow({ tiles, offset = 0 }: { tiles: ShowcaseTile[]; offset?: number }) {
+function ShowcaseRow({
+  tiles,
+  offset = 0,
+  flipMode,
+}: {
+  tiles: ShowcaseTile[];
+  offset?: number;
+  flipMode: FlipMode;
+}) {
   return (
     <div className={`platform-showcase-row ${offset ? "platform-showcase-row--offset" : ""}`}>
       {tiles.map((tile, index) => (
-        <ShowcaseTileCard key={`${tile.kind}-${tile.id}-${index}`} tile={tile} delayMs={(index + offset) * 180} />
+        <ShowcaseTileCard
+          key={`${tile.kind}-${tile.id}-${index}`}
+          tile={tile}
+          delayMs={(index + offset) * 180}
+          flipMode={flipMode}
+        />
       ))}
     </div>
   );
@@ -97,8 +135,8 @@ export function PlatformBrandShowcaseHero() {
         <div className="platform-showcase-hero-stage">
           <div className="platform-showcase-grid-wrap">
             <div className="platform-showcase-grid" aria-hidden>
-              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} />
-              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_B} offset={4} />
+              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} flipMode="composition" />
+              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_B} offset={4} flipMode="brand" />
             </div>
           </div>
         </div>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How to use INTERTEXE — Software guide</title>
+  <style>
+    :root {
+      --ink: #111514;
+      --muted: #5c5854;
+      --gold: #c9a962;
+      --paper: #faf9f6;
+      --line: rgba(17, 21, 20, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+    .eyebrow {
+      font-size: 0.6875rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin: 0 0 1rem;
+    }
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 400;
+      font-size: clamp(2rem, 5vw, 2.75rem);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin: 0 0 1rem;
+    }
+    h1 em { font-style: italic; }
+    .lede {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 0 0 2.5rem;
+    }
+    h2 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 400;
+      font-size: 1.45rem;
+      margin: 2.25rem 0 0.75rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+    h3 {
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--gold);
+    }
+    p, li { font-size: 0.975rem; color: #2a2826; }
+    ul { padding-left: 1.15rem; }
+    li { margin: 0.35rem 0; }
+    .pillars {
+      display: grid;
+      gap: 1rem;
+      margin: 1.25rem 0 0;
+    }
+    @media (min-width: 640px) {
+      .pillars { grid-template-columns: repeat(3, 1fr); }
+    }
+    .pillar {
+      border-top: 1px solid var(--gold);
+      padding-top: 0.85rem;
+    }
+    .pillar strong {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+    a { color: var(--ink); }
+    @media print {
+      body { background: #fff; }
+      .wrap { max-width: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">INTERTEXE platform</p>
+    <h1><em>How to use</em> INTERTEXE</h1>
+    <p class="lede">
+      A practical guide to the INTERTEXE software — product intelligence infrastructure for fashion.
+      One governed product record powers passports, compliance readiness, consumer experiences, and resale.
+    </p>
+
+    <h2>What INTERTEXE is</h2>
+    <p>
+      INTERTEXE is not merely a Digital Product Passport database. It turns fragmented product, material,
+      supplier and manufacturing data into one governed record — then publishes that record as the digital
+      product experience your customer actually sees.
+    </p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <strong>Govern</strong>
+        Connect PLM, ERP, spreadsheets and supplier files into one structured product record with evidence,
+        provenance and approval workflow.
+      </div>
+      <div class="pillar">
+        <strong>Publish</strong>
+        Turn approved data into passports, regulatory readiness and consumer-ready product experiences.
+      </div>
+      <div class="pillar">
+        <strong>Deliver</strong>
+        Hosted passport, white-label domain, or headless API into your existing app — from the same record.
+      </div>
+    </div>
+
+    <h2>How teams use the software</h2>
+    <h3>1. Bring the catalog in</h3>
+    <p>
+      Start with the files you already have. Upload or sync product rows, compositions, origins and supplier
+      notes. INTERTEXE preserves original source values while normalizing materials for downstream use.
+    </p>
+    <h3>2. Resolve gaps and conflicts</h3>
+    <p>
+      Missing composition totals, conflicting fiber strings and incomplete origin fields become an issues inbox —
+      not another spreadsheet. Approve an evidence-backed canonical record your teams can trust.
+    </p>
+    <h3>3. Benchmark materials</h3>
+    <p>
+      Compare fiber mix, completeness and passport readiness against governed peer segments. Use conversion
+      signals to see which compositions and categories outperform.
+    </p>
+    <h3>4. Publish the passport</h3>
+    <p>
+      Choose your carrier and delivery mode. Preview the consumer experience, then publish Digital Product
+      Passports from the same approved record — hosted by INTERTEXE, on your domain, or via API.
+    </p>
+    <h3>5. Extend into next life</h3>
+    <p>
+      When a garment moves on, the passport stays useful: resale value signals, route comparison, ownership
+      transfer and circular options attached to the same product identity.
+    </p>
+
+    <h2>Delivery modes</h2>
+    <ul>
+      <li><strong>Hosted</strong> — INTERTEXE templates; QR resolves to a passport we host.</li>
+      <li><strong>White label</strong> — Same data on passport.yourbrand.com.</li>
+      <li><strong>Headless API</strong> — Pull approved passport data into your app and tools.</li>
+    </ul>
+
+    <h2>Lifecycle at a glance</h2>
+    <p>
+      Manufacture → Trace → Passport → Environmental impact → Purchase → Own / repair → Resale value →
+      Resale → Next owner → End of life.
+    </p>
+    <p>
+      QR / NFC / RFID identifies the product and resolves to the live passport — certifications, calculations,
+      lifecycle events and resale history can evolve after manufacture.
+    </p>
+
+    <h2>Next step</h2>
+    <p>
+      Explore the live tour at <a href="/platform/demo">intertexe.com/platform/demo</a>, or
+      <a href="/platform/request">request a demo</a> for a walkthrough tailored to your catalog.
+    </p>
+
+    <p class="footer">
+      © INTERTEXE. This guide is informational. Regulatory readiness describes preparation status and field
+      completeness — not legal certification unless explicitly established.
+    </p>
+  </main>
+</body>
+</html>

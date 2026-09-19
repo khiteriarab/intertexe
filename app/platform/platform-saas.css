@@ -68,7 +68,7 @@ html:has(.platform-shell) body {
 .platform-kicker,
 .platform-band-kicker,
 .platform-shell .platform-showcase-hero-eyebrow,
-.platform-circular-banner-eyebrow {
+.platform-ebook-eyebrow {
   font-family: var(--itx-sans, sans-serif);
   font-size: var(--platform-kicker-size);
   letter-spacing: var(--platform-kicker-tracking);
@@ -693,46 +693,18 @@ html:has(.platform-shell) body {
   font-family: var(--itx-sans, sans-serif);
 }
 
-/* ── Dark final CTA ── */
+/* ── Dark final CTA — ebook ── */
 
-.platform-circular-banner-section {
+.platform-ebook-section {
   background: var(--platform-dark);
-  padding: 0;
 }
 
-.platform-circular-banner,
-.platform-circular-banner--wide {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  min-height: 24rem;
-  border-radius: 0;
-  border: 0;
-  box-shadow: none;
-}
-
-@media (min-width: 768px) {
-  .platform-circular-banner--wide {
-    min-height: 32rem;
-  }
-}
-
-.platform-circular-banner-gradient {
-  background: linear-gradient(90deg, rgba(10, 12, 15, 0.86) 0%, rgba(10, 12, 15, 0.4) 55%, rgba(10, 12, 15, 0.18) 100%);
-}
-
-.platform-circular-banner-title {
-  color: #fff;
-  font-size: var(--platform-display);
-}
-
-.platform-circular-banner-eyebrow {
+.platform-ebook-eyebrow {
   color: var(--platform-gold);
 }
 
-.platform-circular-banner-cta {
+.platform-ebook-submit {
   border-radius: var(--platform-radius);
-  background: #fff;
   box-shadow: none;
 }
 

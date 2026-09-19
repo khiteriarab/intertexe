@@ -32,7 +32,7 @@
 
 .platform-kicker,
 .platform-shell .platform-showcase-hero-eyebrow,
-.platform-circular-banner-eyebrow {
+.platform-ebook-eyebrow {
   font-family: var(--itx-sans, sans-serif);
   font-size: 0.6875rem;
   letter-spacing: 0.22em;
@@ -330,6 +330,14 @@
   transform: rotateY(180deg);
 }
 
+.platform-showcase-face--brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem;
+  background: rgba(16, 19, 18, 0.96);
+}
+
 @keyframes platform-showcase-turn {
   0%,
   40% {
@@ -379,35 +387,37 @@
   color: #c9a962;
 }
 
-/* The mosaic is scaled from its top edge, so it overflows its layout box.
-   Reserve that overflow here or the bottom row sits under the statistics. */
+/* Mosaic scales from its top edge and overflows the layout box — reserve
+   only enough room for that overflow so the black band does not sit as a
+   tall shade above the gold stat lines. */
 .platform-showcase-grid-wrap {
-  margin-bottom: 4.5rem;
+  margin-bottom: 1.75rem;
+  overflow: visible;
 }
 
 @media (min-width: 768px) {
   .platform-showcase-grid-wrap {
-    margin-bottom: 6rem;
+    margin-bottom: 2.25rem;
   }
 }
 
 @media (min-width: 1280px) {
   .platform-showcase-grid-wrap {
-    margin-bottom: 7rem;
+    margin-bottom: 2.75rem;
   }
 }
 
 .platform-showcase-stats {
   width: min(1320px, 100%);
   margin-inline: auto;
-  padding-top: 3rem;
+  padding-top: 0.75rem;
   gap: 2.5rem 2rem;
 }
 
 @media (min-width: 768px) {
   .platform-showcase-stats {
     gap: 0 3.25rem;
-    padding-top: 3.5rem;
+    padding-top: 1rem;
   }
 }
 
@@ -853,44 +863,18 @@
   color: var(--platform-muted);
 }
 
-/* ── Final CTA ── */
+/* ── Final CTA — ebook download ── */
 
-.platform-circular-banner-section {
+.platform-ebook-section {
   background: #101312;
-  padding: 0;
 }
 
-.platform-circular-banner,
-.platform-circular-banner--wide {
-  min-height: 28rem;
-  border-radius: 0;
+.platform-ebook-title {
+  font-size: clamp(2.1rem, 4vw, 2.85rem);
 }
 
-@media (min-width: 768px) {
-  .platform-circular-banner--wide {
-    min-height: 36rem;
-  }
-}
-
-.platform-circular-banner-title {
-  font-size: clamp(2.4rem, 5vw, 4.25rem);
-  max-width: 14ch;
-  color: #fff;
-}
-
-.platform-circular-banner-copy .platform-circular-banner-sub {
-  font-family: var(--itx-sans, sans-serif);
-  font-size: 1.05rem;
-  color: rgba(245, 243, 239, 0.78);
-  max-width: 28rem;
-  margin-top: 0.85rem;
-}
-
-.platform-circular-banner-cta {
+.platform-ebook-submit {
   border-radius: 2px;
-  background: #fff;
-  color: #101312;
-  letter-spacing: 0.12em;
 }
 
 /* ── See it live (/platform/demo) ── */
