@@ -5,7 +5,7 @@ export function DemoHero() {
   return (
     <section id="hero" className="demo-editorial-hero scroll-mt-24">
       <div className="demo-editorial-hero-inner max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-12 sm:pt-16 lg:pt-20 pb-10 lg:pb-16 overflow-visible">
-        <div className="demo-editorial-hero-layout lg:grid lg:grid-cols-[minmax(0,26%)_minmax(0,74%)] lg:gap-6 xl:gap-8 lg:items-center">
+        <div className="demo-editorial-hero-layout lg:grid lg:grid-cols-[minmax(0,30%)_minmax(0,70%)] lg:gap-4 xl:gap-6 lg:items-center">
           <div className="mb-10 lg:mb-0">
             <p className="text-[10px] tracking-[0.28em] uppercase text-[var(--platform-quiet)] mb-6">Live demo</p>
             <h1
@@ -34,8 +34,8 @@ export function DemoHero() {
             <img
               src="/platform/demo-hero-scanner.png"
               alt="INTERTEXE scanner app turning a garment tag into a digital product passport — from tag to passport, cleaner product data, better customer experience, and real sales potential"
-              width={1672}
-              height={941}
+              width={1600}
+              height={900}
               className="demo-editorial-hero-art-image"
               loading="eager"
             />

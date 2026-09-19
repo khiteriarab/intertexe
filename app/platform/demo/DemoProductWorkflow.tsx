@@ -250,8 +250,8 @@ export function DemoProductWorkflow() {
             <img
               src="/platform/demo-validate.png"
               alt="INTERTEXE product workspace with key indicators — traceability, compliance, recyclability, and environmental impact for a ready-to-publish record"
-              width={1672}
-              height={941}
+              width={1600}
+              height={900}
               className="w-full rounded-xl border border-[var(--platform-border)]"
             />
           </WorkflowPanel>
@@ -294,8 +294,8 @@ export function DemoProductWorkflow() {
             <img
               src="/platform/demo-activate.png"
               alt="INTERTEXE product record with preview QR and full source-to-next-life lifecycle — publish to activate across channels"
-              width={1672}
-              height={941}
+              width={1600}
+              height={900}
               className="w-full rounded-xl border border-[var(--platform-border)]"
             />
           </WorkflowPanel>
