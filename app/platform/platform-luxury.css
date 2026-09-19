@@ -283,6 +283,26 @@
   .platform-showcase-hero-stage {
     margin-top: 0.25rem;
   }
+
+  .platform-showcase-flip {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .platform-showcase-face--back {
+    display: none !important;
+  }
+
+  .platform-showcase-face--front {
+    display: block !important;
+    transform: none !important;
+  }
+
+  .platform-showcase-tile {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 .platform-showcase-hero-sub {
