@@ -258,7 +258,6 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);
     assert.match(featuredSection, /workspace-upside-daria-miniskirt/);
     assert.match(featuredSection, /WORKSPACE_BY_STYLE/);
-    assert.match(featuredSection, /platform-featured-demo-samples/);
     assert.match(featuredSection, /View full passport/);
     assert.doesNotMatch(featuredSection, /Try another product/);
     assert.doesNotMatch(featuredSection, /Explore a real example/);
@@ -267,20 +266,21 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cotton-poplin-shirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-gods-true-linen-shirt.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-upside-daria-miniskirt.png")));
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/ganni-poplin-shirt.jpg")));
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/rohe-turtleneck.jpg")));
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/magda-butrym-midi.jpg")));
-    const featuredSamples = fs.readFileSync(
-      path.join(process.cwd(), "lib/enterprise/fixtures/platform-featured-demo-samples.json"),
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-07.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-01.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/live/itx-live-09.jpg")));
+    const liveFixtures = fs.readFileSync(
+      path.join(process.cwd(), "lib/enterprise/fixtures/intertexe-live-10-products.json"),
       "utf8",
     );
-    assert.match(featuredSamples, /Ganni/);
-    assert.match(featuredSamples, /Róhe/);
-    assert.match(featuredSamples, /Magda Butrym/);
-    assert.match(featuredSamples, /ganni-poplin-shirt/);
+    assert.match(liveFixtures, /"brand": "Ganni"/);
+    assert.match(liveFixtures, /"brand": "Róhe"/);
+    assert.match(liveFixtures, /"brand": "Magda Butrym"/);
+    assert.match(liveFixtures, /itx-live-07\.jpg/);
+    assert.doesNotMatch(liveFixtures, /Walter Baker/);
     const caseStudy = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/passport-case-study.ts"), "utf8");
     assert.match(caseStudy, /brand: "Ganni"/);
-    assert.match(caseStudy, /ganni-poplin-shirt/);
+    assert.match(caseStudy, /itx-live-07\.jpg/);
     assert.doesNotMatch(caseStudy, /Walter Baker/);
     assert.match(featured, /ITX-4102/);
     assert.match(featured, /ITX-4102/);

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import featuredSamples from "../../../lib/enterprise/fixtures/platform-featured-demo-samples.json";
+import liveProducts from "../../../lib/enterprise/fixtures/intertexe-live-10-products.json";
 import { PASSPORT_CASE_STUDY, caseStudyPassportUrl } from "../../../lib/enterprise/passport-case-study";
 import { PLATFORM_FEATURED_EXAMPLE_STYLES } from "../../../lib/enterprise/platform-brand-showcase";
 import { getConsumerSiteUrl } from "../../../lib/platform-urls";
 import { SERIF } from "../platform-ui";
 
-type FeaturedProduct = (typeof featuredSamples)[number];
+type LiveProduct = (typeof liveProducts)[number];
 
 const FEATURED_COPY =
   "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
@@ -23,7 +23,7 @@ const WORKSPACE_BY_STYLE: Record<string, string> = {
 
 const DEFAULT_WORKSPACE = "/platform/demo/workspace-cotton-poplin-shirt.png";
 
-/** Featured editor-pick clothing starts with Ganni Cotton Poplin Shirt. */
+/** Featured live HQ clothing starts with Ganni Cotton Poplin Shirt. */
 
 function publicIdForStyle(style: string): string {
   if (style === PASSPORT_CASE_STUDY.styleCode) return PASSPORT_CASE_STUDY.publicId;
@@ -48,8 +48,8 @@ function workspaceImageForStyle(style: string): string {
 export function DemoFeaturedExample() {
   const samples = useMemo(
     () =>
-      PLATFORM_FEATURED_EXAMPLE_STYLES.map((style) => featuredSamples.find((row) => row.style === style)).filter(
-        (row): row is FeaturedProduct => Boolean(row),
+      PLATFORM_FEATURED_EXAMPLE_STYLES.map((style) => liveProducts.find((row) => row.style === style)).filter(
+        (row): row is LiveProduct => Boolean(row),
       ),
     [],
   );

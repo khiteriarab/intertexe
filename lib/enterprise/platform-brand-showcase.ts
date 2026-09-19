@@ -38,7 +38,7 @@ const SHOWCASE_STYLES = [
   "ITX-LIVE-02",
 ] as const;
 
-/** Three clothing records shown on /platform/demo — Ganni, Róhe, Magda Butrym editor-pick samples. */
+/** Three clothing records shown on /platform/demo — Ganni, Róhe, Magda Butrym from live HQ fixtures. */
 export const PLATFORM_FEATURED_EXAMPLE_STYLES = ["ITX-LIVE-07", "ITX-LIVE-01", "ITX-LIVE-09"] as const;
 
 function productTiles(): ShowcaseProductTile[] {

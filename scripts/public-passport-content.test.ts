@@ -31,16 +31,16 @@ describe("public passport content — data integrity", () => {
 
   it("exposes sell action in next life when passport is valid", () => {
     const content = buildConsumerPassportContent({
-      productName: "God's True Cashmere Brilliant Linen Shirt with Lapis Lazuli",
-      brand: "God's True Cashmere",
-      category: "Shirt",
+      productName: "Turtleneck Wool and Cashmere Top",
+      brand: "Róhe",
+      category: "Knitwear",
       styleCode: "ITX-LIVE-01",
-      sku: "P01152404-3",
+      sku: "P01103203",
       publicId: "itx_test",
-      snapshotFields: [{ key: "composition", value: "100% Linen" }],
+      snapshotFields: [{ key: "composition", value: "70% Wool, 30% Cashmere" }],
       traceNodes: [
-        { tier_label: "Raw material", facility_name: "European flax cultivation" },
-        { tier_label: "Manufacturing", facility_name: "Shirt assembly", country_code: "PT" },
+        { tier_label: "Raw material", facility_name: "Wool and cashmere fiber" },
+        { tier_label: "Manufacturing", facility_name: "Knitwear assembly", country_code: "PT" },
       ],
     });
     const sell = content.nextLife.find((item) => item.title === "Sell this item");
