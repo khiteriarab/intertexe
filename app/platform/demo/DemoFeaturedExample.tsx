@@ -12,7 +12,7 @@ import { SERIF } from "../platform-ui";
 type LiveProduct = (typeof liveProducts)[number];
 
 const FEATURED_COPY =
-  "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
+  "Pick a garment, scan the QR, and open the same record in the workspace — composition, origin, impact, and next-life options in one place.";
 
 /** Workspace Impact / Traceability screenshots shown beside each featured product image. */
 const WORKSPACE_BY_STYLE: Record<string, string> = {
@@ -63,9 +63,18 @@ export function DemoFeaturedExample() {
 
   return (
     <section id="passport" className="demo-editorial-passport scroll-mt-24">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 lg:py-20">
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-12 sm:py-16 lg:py-20">
+        <div className="demo-editorial-passport-intro">
+          <p className="demo-editorial-passport-eyebrow">See it live</p>
+          <p className="demo-editorial-passport-steps" aria-hidden>
+            <span>1 · Choose</span>
+            <span>2 · Scan</span>
+            <span>3 · Open the record</span>
+          </p>
+        </div>
+
         <div className="demo-editorial-passport-grid">
-          <div>
+          <div className="demo-editorial-passport-copy">
             <h2 className="text-[2rem] sm:text-[2.5rem] font-light leading-[1.08] mb-4" style={SERIF}>
               {selected.name}
             </h2>
@@ -104,6 +113,7 @@ export function DemoFeaturedExample() {
           </div>
 
           <figure className="demo-editorial-passport-lifestyle m-0">
+            <p className="demo-editorial-passport-caption">Physical product</p>
             <img
               src={selected.image_url}
               alt={selected.name}
@@ -112,11 +122,12 @@ export function DemoFeaturedExample() {
               className="demo-editorial-passport-lifestyle-image"
             />
             <div className="demo-editorial-passport-qr">
-              <QRCodeCanvas value={passportUrl(selected.style)} size={92} marginSize={1} />
+              <QRCodeCanvas value={passportUrl(selected.style)} size={84} marginSize={1} />
             </div>
           </figure>
 
           <figure className="demo-editorial-passport-page m-0">
+            <p className="demo-editorial-passport-caption">Workspace record</p>
             <img
               src={workspaceSrc}
               alt={`${selected.name} Impact workspace — climate, PEF score, and publish readiness`}

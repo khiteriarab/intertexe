@@ -270,6 +270,9 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(featuredSection, /workspace-upside-daria-miniskirt/);
     assert.match(featuredSection, /WORKSPACE_BY_STYLE/);
     assert.match(featuredSection, /View full passport/);
+    assert.match(featuredSection, /Physical product/);
+    assert.match(featuredSection, /Workspace record/);
+    assert.match(featuredSection, /See it live/);
     assert.doesNotMatch(featuredSection, /Try another product/);
     assert.doesNotMatch(featuredSection, /Explore a real example/);
     assert.match(featuredSection, /QRCodeCanvas/);
