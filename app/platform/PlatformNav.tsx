@@ -5,12 +5,10 @@ import { useEffect, useState } from "react";
 import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 
-export type PlatformNavKey = "demo" | "api" | "request" | "platform" | "login";
+export type PlatformNavKey = "demo" | "solutions" | "request" | "platform" | "login";
 
 const NAV = [
-  { href: "/platform", label: "Platform" },
-  { href: "/platform#how-it-works", label: "Solutions" },
-  { href: "/platform#delivery", label: "Digital Product Passport" },
+  { href: "/platform/solutions", label: "Solutions" },
   { href: "/platform/pricing", label: "Pricing" },
   { href: "/platform/demo", label: "See it live" },
 ] as const;
@@ -37,7 +35,8 @@ export function PlatformNav({
 
   const linkTone = (href: string) => {
     const isActive =
-      (active === "platform" && (href === "/platform" || href === "/platform#how-it-works")) ||
+      (active === "solutions" && href === "/platform/solutions") ||
+      (active === "request" && href === "/platform/pricing") ||
       (active === "demo" && href === "/platform/demo");
     return `platform-lux-nav-link ${isActive ? "is-active" : ""}`;
   };
