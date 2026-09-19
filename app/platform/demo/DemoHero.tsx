@@ -33,9 +33,9 @@ export function DemoHero() {
           <figure className="demo-editorial-hero-art m-0">
             <img
               src="/platform/demo-see-it-live.jpg"
-              alt="Scan a garment tag to open a digital product passport — shop today, care longer, resale tomorrow, a more circular future"
-              width={1600}
-              height={900}
+              alt="INTERTEXE scanner app turning a garment tag into a digital product passport — from tag to passport, cleaner product data, better customer experience, and real sales potential"
+              width={1672}
+              height={941}
               className="demo-editorial-hero-art-image"
               loading="eager"
             />
