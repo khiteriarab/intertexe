@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PILOT_PRODUCT_LIMIT, saasTierByKey } from "../../../lib/enterprise/pricing";
+import {
+  estimateModules,
+  formatEur,
+  leadModulesSummary,
+  parseModuleKeysParam,
+  pricingModuleByKey,
+} from "../../../lib/enterprise/pricing-modules";
 import { PLATFORM_LIVE_CATALOG } from "../../../lib/enterprise/platform-showcase";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformLeadForm } from "../PlatformLeadForm";
@@ -12,7 +19,14 @@ export const metadata: Metadata = {
   description: `Request a demo of INTERTEXE — start with ${PILOT_PRODUCT_LIMIT} products implemented free, or explore Professional, Platform, and Enterprise after qualification.`,
 };
 
-function requestCopy(intent: string, tier?: string) {
+function requestCopy(intent: string, tier?: string, modulesSummary?: string | null) {
+  if (modulesSummary) {
+    return {
+      eyebrow: "Your selection",
+      headline: "Request a proposal for your modules",
+      body: "We received the modules you selected on pricing. Share your catalog profile and the INTERTEXE team will reply with a written proposal — usually within one business day.",
+    };
+  }
   if (intent === "founding_pilot") {
     return {
       eyebrow: "Request access",
@@ -52,11 +66,14 @@ function requestCopy(intent: string, tier?: string) {
 export default async function PlatformRequestPage({
   searchParams,
 }: {
-  searchParams: Promise<{ intent?: string; cta?: string; tier?: string }>;
+  searchParams: Promise<{ intent?: string; cta?: string; tier?: string; modules?: string }>;
 }) {
   const params = await searchParams;
   const intent = params.intent || "snapshot";
   const tier = params.tier;
+  const moduleKeys = parseModuleKeysParam(params.modules);
+  const modulesSummary = leadModulesSummary(moduleKeys);
+  const estimate = estimateModules(moduleKeys);
   const source = params.cta || `request_${intent}`;
   const startedEvent =
     intent === "founding_pilot"
@@ -65,7 +82,7 @@ export default async function PlatformRequestPage({
         ? "platform_api_access_started"
         : "platform_snapshot_started";
 
-  const copy = requestCopy(intent, tier);
+  const copy = requestCopy(intent, tier, modulesSummary);
 
   return (
     <PlatformChrome active="request">
@@ -79,7 +96,33 @@ export default async function PlatformRequestPage({
             </h1>
             <p className="platform-request-body">{copy.body}</p>
 
-            {intent === "snapshot" ? (
+            {moduleKeys.length ? (
+              <div className="platform-request-modules">
+                <p className="platform-request-modules-kicker">Selected modules</p>
+                <ul className="platform-request-points">
+                  {moduleKeys.map((key) => {
+                    const mod = pricingModuleByKey(key);
+                    if (!mod) return null;
+                    return (
+                      <li key={key}>
+                        {mod.name}
+                        {mod.startingEur != null
+                          ? ` — from ${formatEur(mod.startingEur)} / year`
+                          : " — scoped in your proposal"}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {estimate.totalEur > 0 ? (
+                  <p className="platform-request-stat" style={SERIF}>
+                    From {formatEur(estimate.totalEur)} / year
+                    {estimate.requiresProposal ? " + custom scope" : ""}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {intent === "snapshot" && !moduleKeys.length ? (
               <>
                 <p className="platform-request-stat" style={SERIF}>
                   {PLATFORM_LIVE_CATALOG.productCount} live pilot products already governed in INTERTEXE.
@@ -111,7 +154,13 @@ export default async function PlatformRequestPage({
                 Tell us about your brand and catalog. The INTERTEXE team will review your profile and reply with next
                 steps — usually within one business day.
               </p>
-              <PlatformLeadForm intent={intent} sourceCta={source} tier={tier} variant="request" />
+              <PlatformLeadForm
+                intent={intent}
+                sourceCta={source}
+                tier={tier}
+                modules={moduleKeys}
+                variant="request"
+              />
             </div>
           </div>
         </div>

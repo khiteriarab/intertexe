@@ -137,3 +137,26 @@ export function modulesAreCheckoutReady(keys: readonly string[]): boolean {
   if (!pricedKeys.length || requiresProposal) return false;
   return pricedKeys.every((key) => Boolean(paddlePriceIdForModule(key)));
 }
+
+/** Parse `?modules=a,b,c` (or pipe-separated) into known module keys only. */
+export function parseModuleKeysParam(raw: string | null | undefined): PricingModuleKey[] {
+  if (!raw) return [];
+  const seen = new Set<PricingModuleKey>();
+  for (const part of raw.split(/[|,]/)) {
+    const key = part.trim();
+    if (!PRICING_MODULE_KEYS.includes(key as PricingModuleKey)) continue;
+    seen.add(key as PricingModuleKey);
+  }
+  return [...seen];
+}
+
+/** Compact summary stored on the lead and shown on the request form. */
+export function leadModulesSummary(keys: readonly string[]): string | null {
+  const mods = keys.map((key) => pricingModuleByKey(key)).filter((m): m is PricingModule => Boolean(m));
+  if (!mods.length) return null;
+  const estimate = estimateModules(keys);
+  const names = mods.map((m) => m.name).join("; ");
+  const priceBit = estimate.totalEur > 0 ? ` · from ${formatEur(estimate.totalEur)}/year` : "";
+  const customBit = estimate.requiresProposal ? " · includes custom-scoped modules" : "";
+  return `Modules: ${names}${priceBit}${customBit}`;
+}

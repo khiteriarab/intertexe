@@ -4,11 +4,16 @@ import { EMAIL_TYPES, PLATFORM_LEAD_CC, PLATFORM_LEAD_TO } from "../../../../lib
 import { getServerSupabase } from "../../../../lib/supabase-service-client";
 import { clientIpFromHeaders, demoRateLimit } from "../../../../lib/platform-demo-rate-limit";
 import { provisionPilotWorkspaceFromLead } from "../../../../lib/enterprise/provision-pilot-workspace";
+import {
+  leadModulesSummary,
+  parseModuleKeysParam,
+} from "../../../../lib/enterprise/pricing-modules";
 
 export const dynamic = "force-dynamic";
 
-const INTENTS = new Set(["snapshot", "founding_pilot", "api_access", "saas", "enterprise"]);
+const INTENTS = new Set(["snapshot", "founding_pilot", "api_access", "saas", "enterprise", "ebook"]);
 const COMPANY_TYPES = new Set(["brand", "retailer", "supplier", "other"]);
+const TIERS = new Set(["professional", "platform", "enterprise"]);
 
 export function cleanLeadField(v: unknown, max = 200) {
   return String(v || "").trim().slice(0, max);
@@ -28,6 +33,21 @@ export function parseLeadBody(body: Record<string, unknown>) {
     return { error: "Unknown request type." as const };
   }
   const companyTypeRaw = cleanLeadField(body.company_type, 40);
+  const tierRaw = cleanLeadField(body.tier, 40).toLowerCase();
+  const tier = TIERS.has(tierRaw) ? tierRaw : null;
+  const moduleKeys = parseModuleKeysParam(
+    Array.isArray(body.modules) ? body.modules.join(",") : cleanLeadField(body.modules, 240),
+  );
+  const modulesSummary = leadModulesSummary(moduleKeys);
+  const catalogFromForm = cleanLeadField(body.catalog_system, 120) || null;
+  // Persist pricing selection on the lead row (no dedicated column yet).
+  const pricingProfile = moduleKeys.length
+    ? `modules:${moduleKeys.join(",")}${tier ? `|tier:${tier}` : ""}`.slice(0, 200)
+    : tier
+      ? `Plan interest: ${tier}`
+      : null;
+  const catalog_system = catalogFromForm || pricingProfile;
+
   return {
     row: {
       first_name: firstName,
@@ -38,7 +58,7 @@ export function parseLeadBody(body: Record<string, unknown>) {
       company_website: cleanLeadField(body.company_website, 200) || null,
       product_count: cleanLeadField(body.product_count, 40) || null,
       sells_into_eu: cleanLeadField(body.sells_into_eu, 40) || null,
-      catalog_system: cleanLeadField(body.catalog_system, 120) || null,
+      catalog_system,
       intent,
       source_cta: cleanLeadField(body.source_cta, 80) || null,
     },
@@ -47,6 +67,9 @@ export function parseLeadBody(body: Record<string, unknown>) {
       country: cleanLeadField(body.country, 80) || null,
       company_type: COMPANY_TYPES.has(companyTypeRaw) ? companyTypeRaw : null,
       message: cleanLeadField(body.message, 1200) || null,
+      tier,
+      modules: moduleKeys,
+      modules_summary: modulesSummary,
     },
   };
 }
@@ -105,17 +128,22 @@ export async function POST(req: NextRequest) {
   const salesTo = process.env.PLATFORM_SALES_EMAIL || PLATFORM_LEAD_TO;
   const salesCc =
     salesTo.toLowerCase() === PLATFORM_LEAD_CC.toLowerCase() ? undefined : PLATFORM_LEAD_CC;
-  const tier = cleanLeadField(body.tier, 40);
+  const tier = extras.tier || cleanLeadField(body.tier, 40) || null;
+  const modulesSummary = extras.modules_summary;
   const intentLabel =
     intent === "founding_pilot"
       ? "Implementation & onboarding"
       : intent === "enterprise"
         ? "Enterprise (custom)"
-        : intent === "saas" || intent === "api_access"
-          ? tier
-            ? `SaaS — ${tier}`
-            : "Professional, Platform, or Enterprise"
-          : "10-product pilot workspace";
+        : intent === "ebook"
+          ? "Software guide ebook"
+          : intent === "saas" || intent === "api_access"
+            ? modulesSummary
+              ? "SaaS — selected modules"
+              : tier
+                ? `SaaS — ${tier}`
+                : "Professional, Platform, or Enterprise"
+            : "10-product pilot workspace";
   const companyTypeLabel =
     extras.company_type === "brand"
       ? "Fashion or textile brand"
@@ -134,9 +162,14 @@ export async function POST(req: NextRequest) {
     subject: `Platform lead: ${intentLabel} — ${company}`,
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
     html: `<p>${firstName} ${lastName} (${email}) at ${company} requested ${intentLabel}.</p>
-<p>Role: ${row.role || "—"}<br/>Phone: ${extras.phone || "—"}<br/>Country / region: ${extras.country || "—"}<br/>Company type: ${companyTypeLabel}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog: ${row.catalog_system || "—"}<br/>Message: ${extras.message || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
+<p>Role: ${row.role || "—"}<br/>Phone: ${extras.phone || "—"}<br/>Country / region: ${extras.country || "—"}<br/>Company type: ${companyTypeLabel}<br/>Website: ${row.company_website || "—"}<br/>Products: ${row.product_count || "—"}<br/>Sells into EU: ${row.sells_into_eu || "—"}<br/>Catalog / pricing profile: ${row.catalog_system || "—"}<br/>Plan tier: ${tier || "—"}<br/>Modules: ${modulesSummary || (extras.modules.length ? extras.modules.join(", ") : "—")}<br/>Message: ${extras.message || "—"}<br/>CTA: ${row.source_cta || "—"}</p>
 <p>No catalog file was accepted via the public form.</p>`,
-    metadata: { intent, company },
+    metadata: {
+      intent,
+      company,
+      tier: tier || "",
+      modules: extras.modules.join(","),
+    },
   }).catch(() => {});
 
   let pilotProvision: Awaited<ReturnType<typeof provisionPilotWorkspaceFromLead>> | null = null;
@@ -154,15 +187,24 @@ export async function POST(req: NextRequest) {
       ? pilotProvision.workspaceUrl
       : null;
 
+  const ebookGuideUrl = "https://intertexe.com/platform/intertexe-software-guide.html";
   await sendCustomerEmail({
     to: email,
-    subject: workspaceReady ? "Your INTERTEXE pilot workspace is ready" : "We received your INTERTEXE request",
+    subject: workspaceReady
+      ? "Your INTERTEXE pilot workspace is ready"
+      : intent === "ebook"
+        ? "Your INTERTEXE software guide"
+        : "We received your INTERTEXE request",
     emailType: EMAIL_TYPES.PLATFORM_LEAD,
     html: workspaceReady
       ? `<p>Your 10-product pilot workspace for ${company} is ready.</p>
 <p><a href="${workspaceReady}">Open your workspace</a> — set your password if this is your first sign-in, then import up to 10 products.</p>
 <p>Do not send confidential catalogs in email until we arrange secure transfer.</p>`
-      : `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for your 10-product pilot.</p>
+      : intent === "ebook"
+        ? `<p>Thanks for downloading the INTERTEXE software guide.</p>
+<p><a href="${ebookGuideUrl}">Open your guide</a> — a practical walkthrough of governed records, passports, delivery and resale.</p>
+<p>When you are ready, <a href="https://intertexe.com/platform/request">request a demo</a> with the INTERTEXE team.</p>`
+        : `<p>We received your request. The INTERTEXE team will review your catalog profile and reply with the next step for your 10-product pilot.</p>
 <p>Do not send confidential catalogs in email until we arrange secure transfer.</p>`,
     metadata: { intent: "confirmation", workspaceReady: Boolean(workspaceReady) },
   }).catch(() => {});
