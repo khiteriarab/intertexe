@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ENT_NAV_GROUP_ICONS, ENT_NAV_ITEM_ICONS } from "../../dashboard/components/EnterpriseNavIcons";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 import { Body, Eyebrow, Heading, SERIF } from "../platform-ui";
-import { LIFECYCLE_STAGES, SOLUTIONS } from "./solutions-data";
+import { LIFECYCLE_STAGES, SOLUTIONS, type SolutionCard } from "./solutions-data";
 import "./solutions.css";
 
 export const metadata: Metadata = {
@@ -14,15 +15,24 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.intertexe.com/platform/solutions" },
 };
 
+const SOLUTION_ICONS = {
+  ...ENT_NAV_ITEM_ICONS,
+  ...ENT_NAV_GROUP_ICONS,
+} as const;
+
 function SolutionCardBlock({
   card,
   size = "standard",
 }: {
-  card: (typeof SOLUTIONS)[number];
+  card: SolutionCard;
   size?: "feature" | "standard";
 }) {
+  const Icon = SOLUTION_ICONS[card.icon];
   return (
     <Link href={card.href} className={`solution-card solution-card--${size}`}>
+      <span className="solution-card-icon" aria-hidden>
+        <Icon />
+      </span>
       <p className="solution-card-label">{card.label}</p>
       <h3 className="solution-card-title" style={SERIF}>
         {card.title}

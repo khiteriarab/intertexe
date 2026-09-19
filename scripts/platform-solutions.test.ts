@@ -25,7 +25,12 @@ describe("Platform solutions page", () => {
     for (const solution of SOLUTIONS) {
       assert.ok(solution.tags.length >= 4, `${solution.key} needs capability tags`);
       assert.ok(solution.description.length < 260, `${solution.key} copy should stay short`);
+      assert.ok(solution.icon, `${solution.key} needs a dashboard icon`);
     }
+    assert.deepEqual(
+      SOLUTIONS.map((s) => s.icon),
+      ["core", "issues", "intelligence", "passports", "workflows", "suppliers"],
+    );
     assert.deepEqual(
       LIFECYCLE_STAGES.map((s) => s.stage),
       ["Create", "Prove", "Understand", "Publish", "Extend"],
@@ -36,7 +41,10 @@ describe("Platform solutions page", () => {
     assert.match(page, /solution-card--feature|size="feature"/);
     assert.match(page, /solutions-grid-stack/);
     assert.match(page, /solutions-grid--rest/);
+    assert.match(page, /solution-card-icon/);
+    assert.match(page, /SOLUTION_ICONS|ENT_NAV_ITEM_ICONS|ENT_NAV_GROUP_ICONS/);
     assert.match(css, /\.solutions-grid--rest \{[\s\S]*?repeat\(3, minmax\(0, 1fr\)\)/);
+    assert.match(css, /\.solution-card-icon/);
   });
 
   it("keeps white dominant with beige reserved for the hover accent", () => {

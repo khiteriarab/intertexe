@@ -5,6 +5,8 @@ export type SolutionCard = {
   description: string;
   tags: string[];
   href: string;
+  /** Dashboard sidebar icon key (EnterpriseNavIcons item or group). */
+  icon: "core" | "issues" | "intelligence" | "passports" | "workflows" | "suppliers";
 };
 
 /** Six commercial applications of the same governed product record. */
@@ -17,6 +19,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Turn fragmented materials, supplier data, specifications, certifications, and source files into structured product intelligence your teams can actually use.",
     tags: ["Product identity", "Materials + composition", "Supplier data", "Evidence", "Governed record"],
     href: "/platform/demo#journey",
+    icon: "core",
   },
   {
     key: "traceability",
@@ -26,6 +29,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Trace materials and manufacturing, identify evidence gaps, resolve conflicting data, and prepare product records for Digital Product Passports and evolving regulation.",
     tags: ["Traceability", "Evidence verification", "Compliance readiness", "DPP preparation", "Regulatory intelligence"],
     href: "/platform/demo#passport",
+    icon: "issues",
   },
   {
     key: "environmental",
@@ -35,6 +39,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Understand environmental performance across materials, sourcing, manufacturing, and lifecycle stages so teams can compare products, identify hotspots, and act earlier.",
     tags: ["Environmental impact", "Material benchmarking", "PEF-ready insights", "LCA inputs", "Impact hotspots"],
     href: "/platform/demo#journey",
+    icon: "intelligence",
   },
   {
     key: "passport",
@@ -44,6 +49,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Publish trusted product information for consumers, regulators, and partners through a persistent digital passport connected to the original governed record.",
     tags: ["Digital Product Passport", "Consumer transparency", "QR-ready", "Care information", "Verified product data"],
     href: "/platform#delivery",
+    icon: "passports",
   },
   {
     key: "lifecycle",
@@ -53,6 +59,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Extend product intelligence into care, repair, resale value, ownership transfer, circularity, and next-life experiences from the same record.",
     tags: ["Care + repair", "Resale value", "Ownership transfer", "Next life", "Circularity"],
     href: "/platform#delivery",
+    icon: "workflows",
   },
   {
     key: "supplier",
@@ -62,6 +69,7 @@ export const SOLUTIONS: SolutionCard[] = [
       "Centralize supplier records, certifications, documentation, sourcing evidence, and performance so teams can compare suppliers and see where action is needed.",
     tags: ["Supplier records", "Evidence status", "Scorecards", "Sourcing risk", "Compliance gaps"],
     href: "/platform/demo#journey",
+    icon: "suppliers",
   },
 ];
 

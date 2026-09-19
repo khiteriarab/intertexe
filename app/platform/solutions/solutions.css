@@ -114,6 +114,42 @@
   transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
 }
 
+.solution-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  margin-bottom: 1.35rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgba(15, 20, 18, 0.12);
+  background: #fff;
+  color: rgba(15, 20, 18, 0.72);
+  flex-shrink: 0;
+}
+
+.solution-card-icon .ent-nav-icon-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: block;
+}
+
+.solution-card:hover .solution-card-icon {
+  border-color: rgba(15, 20, 18, 0.18);
+  color: #101312;
+}
+
+.solution-card--feature .solution-card-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 1.6rem;
+}
+
+.solution-card--feature .solution-card-icon .ent-nav-icon-svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 @media (min-width: 900px) {
   .solution-card {
     padding: 2.25rem 2rem 1.9rem;
