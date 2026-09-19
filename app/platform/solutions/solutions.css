@@ -155,15 +155,18 @@
     padding: 2.25rem 2rem 1.9rem;
   }
 
-  /* The lead card spans two stacked cards, so centre its shorter content
-     instead of stranding the call to action at the bottom edge. */
+  /* Lead card spans two stacked cards — keep icon at the top of the box. */
   .solution-card--feature {
-    padding: 3rem 2.5rem;
-    justify-content: center;
+    padding: 2.5rem 2.5rem 2.25rem;
+    justify-content: flex-start;
   }
 
   .solution-card--feature .solution-card-cta {
-    margin-top: 0;
+    margin-top: auto;
+  }
+
+  .solution-card--feature .solution-card-icon {
+    margin-bottom: 2rem;
   }
 }
 
