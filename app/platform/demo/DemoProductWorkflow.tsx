@@ -227,21 +227,13 @@ export function DemoProductWorkflow() {
 
           {activeStep === "normalize" ? (
           <WorkflowPanel step={FLOW_STEPS[1]}>
-            <div className="demo-editorial-split">
-              <div className="demo-editorial-messy">
-                <p className="demo-editorial-split-label">Submitted</p>
-                {featured.source.main}
-              </div>
-              <span className="demo-workflow-flow-arrow demo-workflow-flow-arrow-inline" aria-hidden>→</span>
-              <div className="demo-editorial-clean">
-                <p className="demo-editorial-split-label demo-editorial-split-label--accent">INTERTEXE</p>
-                <p className="text-lg mb-3 text-[var(--platform-ink)]" style={SERIF}>{featured.name}</p>
-                <p className="text-sm mb-2 text-[var(--platform-muted)]">{featured.normalized.shell}</p>
-                <p className="text-sm mb-2 text-[var(--platform-muted)]">Origin · {featured.normalized.origin}</p>
-                <p className="text-sm mb-2 text-[var(--platform-muted)]">Identifier · {featured.normalized.identifier}</p>
-                <p className="text-xs text-[var(--platform-quiet)]">Evidence · Verified label · Source retained</p>
-              </div>
-            </div>
+            <img
+              src="/platform/demo-normalize.png"
+              alt="INTERTEXE issues workspace resolving a composition conflict — current approved vs incoming source with normalized-record recommendation"
+              width={1672}
+              height={941}
+              className="w-full rounded-xl border border-[var(--platform-border)]"
+            />
           </WorkflowPanel>
           ) : null}
 
