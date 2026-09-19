@@ -14,7 +14,7 @@ type LiveProduct = (typeof liveProducts)[number];
 const FEATURED_COPY =
   "See how a single product record unlocks composition data, origin, impact insights, and next-life options — all in one place.";
 
-/** Featured editor-pick clothing starts with Ganni Cotton Poplin Shirt. */
+/** Featured live HQ clothing starts with Walter Baker Cotton Poplin Shirt. */
 
 function publicIdForStyle(style: string): string {
   if (style === PASSPORT_CASE_STUDY.styleCode) return PASSPORT_CASE_STUDY.publicId;
