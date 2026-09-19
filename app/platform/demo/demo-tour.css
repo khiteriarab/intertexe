@@ -6,33 +6,34 @@
 
 .demo-editorial-hero-art {
   position: relative;
-  overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--platform-border) 70%, transparent);
-  background: #f3efe8;
-  min-height: 280px;
-  aspect-ratio: 16 / 10;
+  overflow: visible;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  min-height: 0;
+  aspect-ratio: auto;
+  box-shadow: none;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art {
-    min-height: 420px;
-    aspect-ratio: 16 / 11;
+    min-height: 0;
+    aspect-ratio: auto;
   }
 }
 
 .demo-editorial-hero-art-image {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Crop to hero scan → passport → lifecycle circles from editorial mock */
-  object-position: 62% 10%;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+  object-position: center center;
 }
 
 @media (max-width: 1023px) {
   .demo-editorial-hero-art-image {
-    object-position: 50% 8%;
+    object-position: center center;
   }
 }
 
