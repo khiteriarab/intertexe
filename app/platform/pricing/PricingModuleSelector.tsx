@@ -114,7 +114,7 @@ export function PricingModuleSelector({ checkoutEnabled }: { checkoutEnabled: bo
 
         <p className="pricing-config-note">
           Starting prices cover priced modules only. Connected Product Lifecycle is scoped with you. Your written
-          proposal also covers catalogue volume, reporting entities and supply-chain depth.
+          proposal also covers catalog volume, reporting entities and supply-chain depth.
         </p>
 
         {error ? <p className="pricing-config-error">{error}</p> : null}

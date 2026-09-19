@@ -1,5 +1,5 @@
 /**
- * Modular licence catalogue for the public pricing configurator.
+ * Modular license catalog for the public pricing configurator.
  *
  * Amounts are annual starting figures in EUR and are the single source of truth for
  * both the marketing page and Paddle checkout. Paddle stores billing only — product,
