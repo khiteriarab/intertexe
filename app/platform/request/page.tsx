@@ -96,14 +96,9 @@ export default async function PlatformRequestPage({
               </>
             ) : null}
 
-            <div className="platform-request-office">
-              <p className="platform-request-office-label">Barcelona</p>
-              <p className="platform-request-office-title">Platform office</p>
-              <p className="platform-request-office-detail">Barcelona, Spain</p>
-              <Link href="/platform/demo" className="platform-request-demo-link">
-                Prefer to explore first? See it live →
-              </Link>
-            </div>
+            <Link href="/platform/demo" className="platform-request-demo-link">
+              Prefer to explore first? See it live →
+            </Link>
           </div>
 
           <div className="platform-request-form-panel">

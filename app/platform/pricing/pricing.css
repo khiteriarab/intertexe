@@ -1,0 +1,274 @@
+/* Modular licence configurator — white, enterprise, beige only for selection. */
+
+.platform-pricing-page {
+  background: #ffffff;
+  padding: 4rem 0 5.5rem;
+}
+
+@media (min-width: 900px) {
+  .platform-pricing-page {
+    padding: 5.5rem 0 7rem;
+  }
+}
+
+.platform-pricing-head {
+  max-width: 44rem;
+  margin-bottom: 3rem;
+}
+
+.pricing-config {
+  display: grid;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+@media (min-width: 1000px) {
+  .pricing-config {
+    grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.65fr);
+    gap: 2.5rem;
+  }
+}
+
+.pricing-config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pricing-config-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 78px;
+  padding: 1.1rem 1.35rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 20, 18, 0.12);
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pricing-config-row:hover {
+  border-color: rgba(15, 20, 18, 0.28);
+}
+
+.pricing-config-row.is-selected {
+  background: var(--platform-accent-soft);
+  border-color: var(--platform-gold);
+  box-shadow: inset 0 0 0 1px var(--platform-gold);
+}
+
+.pricing-config-row:focus-visible {
+  outline: 2px solid var(--platform-gold);
+  outline-offset: 2px;
+}
+
+.pricing-config-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid rgba(15, 20, 18, 0.3);
+  border-radius: 2px;
+  background: #fff;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: #101312;
+}
+
+.pricing-config-row.is-selected .pricing-config-box {
+  background: #101312;
+  border-color: #101312;
+  color: #fff;
+}
+
+.pricing-config-copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.pricing-config-name {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--platform-ink);
+}
+
+.pricing-config-summary {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--platform-quiet);
+}
+
+.pricing-config-price {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.875rem;
+  color: var(--platform-ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-config-price-prefix,
+.pricing-config-price-term {
+  color: var(--platform-quiet);
+  font-size: 0.8125rem;
+}
+
+.pricing-config-custom {
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+@media (max-width: 640px) {
+  .pricing-config-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0.65rem;
+  }
+
+  .pricing-config-price {
+    grid-column: 2;
+    white-space: normal;
+  }
+}
+
+/* Summary card */
+
+.pricing-config-summary-card {
+  position: sticky;
+  top: 6.5rem;
+  padding: 1.75rem 1.5rem 1.5rem;
+  background: #101312;
+  color: #f5f3ef;
+  border-radius: 4px;
+}
+
+.pricing-config-summary-kicker {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.6);
+  margin-bottom: 1.15rem;
+}
+
+.pricing-config-total {
+  font-size: clamp(2.5rem, 4vw, 3.25rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-config-total-term {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.875rem;
+  color: rgba(245, 243, 239, 0.7);
+  margin-top: 0.35rem;
+}
+
+.pricing-config-count {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.8125rem;
+  color: rgba(245, 243, 239, 0.6);
+  margin-top: 0.75rem;
+  padding-bottom: 1.15rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pricing-config-lines {
+  margin: 0;
+  padding: 0.35rem 0 0;
+}
+
+.pricing-config-lines div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pricing-config-lines dt {
+  color: rgba(245, 243, 239, 0.78);
+}
+
+.pricing-config-lines dd {
+  margin: 0;
+  color: #f5f3ef;
+  text-align: right;
+}
+
+.pricing-config-note {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: rgba(245, 243, 239, 0.55);
+  margin: 1.25rem 0 1.5rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.pricing-config-error {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.8125rem;
+  color: #f0c9a8;
+  margin-bottom: 0.85rem;
+}
+
+.pricing-config-cta,
+.pricing-config-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.9rem 1.25rem;
+  border-radius: 2px;
+  border: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.pricing-config-cta {
+  background: #ffffff;
+  color: #101312;
+}
+
+.pricing-config-cta:hover:not(:disabled) {
+  background: var(--platform-accent-soft);
+}
+
+.pricing-config-cta:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.pricing-config-secondary {
+  margin-top: 0.65rem;
+  background: transparent;
+  color: rgba(245, 243, 239, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pricing-config-secondary:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}

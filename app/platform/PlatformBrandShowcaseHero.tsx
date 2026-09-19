@@ -8,7 +8,6 @@ import {
   PLATFORM_SHOWCASE_STATS,
   type ShowcaseTile,
 } from "../../lib/enterprise/platform-brand-showcase";
-import { PLATFORM_SALES_DEMO } from "../../lib/enterprise/passport-case-study";
 import { SERIF } from "./platform-ui";
 
 function ShowcaseTileCard({ tile, delayMs }: { tile: ShowcaseTile; delayMs: number }) {
@@ -96,31 +95,6 @@ export function PlatformBrandShowcaseHero() {
         </div>
 
         <div className="platform-showcase-hero-stage">
-          <aside className="platform-showcase-record" aria-label="Sample product record">
-            <p className="platform-showcase-record-kicker">Product record</p>
-            <p className="platform-showcase-record-name">
-              {PLATFORM_SALES_DEMO.brand}
-              <br />
-              {PLATFORM_SALES_DEMO.productName}
-            </p>
-            <p className="platform-showcase-record-row">
-              <span>Materials</span>
-              <span>Verified</span>
-            </p>
-            <p className="platform-showcase-record-row">
-              <span>Composition</span>
-              <span>{PLATFORM_SALES_DEMO.composition}</span>
-            </p>
-            <p className="platform-showcase-record-row">
-              <span>Traceability</span>
-              <span>Ready</span>
-            </p>
-            <p className="platform-showcase-record-row">
-              <span>Passport</span>
-              <span>Ready</span>
-            </p>
-          </aside>
-
           <div className="platform-showcase-grid-wrap">
             <div className="platform-showcase-grid" aria-hidden>
               <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} />
