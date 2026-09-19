@@ -30,7 +30,7 @@ export function PlatformChrome({
           <div className="platform-lux-footer-col">
             <p className="platform-lux-footer-heading">Platform</p>
             <Link href="/platform">Product Record</Link>
-            <Link href="/platform#delivery">DPP</Link>
+            <Link href="/platform/solutions">Solutions</Link>
             <Link href="/platform/pricing">Pricing</Link>
             <Link href="/platform/demo">See it live</Link>
           </div>

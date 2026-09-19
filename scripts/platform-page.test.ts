@@ -158,7 +158,7 @@ describe("Platform B2B sales page", () => {
     assert.match(nav, /Request a demo/);
     assert.match(nav, /Sign in/);
     assert.match(nav, /Solutions/);
-    assert.match(nav, /\/platform#how-it-works/);
+    assert.match(nav, /\/platform\/solutions/);
     assert.doesNotMatch(nav, /\/platform\/discover/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
@@ -326,7 +326,9 @@ describe("Platform B2B sales page", () => {
     assert.match(pillarsVisual, /Connected product lifecycle/);
     assert.match(pillarsVisual, /Learn more/);
     assert.match(pillarsVisual, /platform-product-pillar-mark/);
-    assert.match(pillarsVisual, /app-icon\.png/);
+    assert.match(pillarsVisual, /symbols\/story-product-identity\.png/);
+    assert.match(pillarsVisual, /symbols\/story-carrier-qr-nfc\.png/);
+    assert.match(pillarsVisual, /symbols\/story-delivery-channels\.png/);
     assert.doesNotMatch(pillarsVisual, /platform-product-pillar-visual/);
     assert.match(pillarsVisual, /\/platform\/demo#journey/);
     assert.match(pillarsVisual, /\/platform#delivery/);

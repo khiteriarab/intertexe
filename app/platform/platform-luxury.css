@@ -553,7 +553,7 @@
 .platform-product-pillars-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 2px;
+  gap: 1rem;
 }
 
 @media (min-width: 900px) {
@@ -571,7 +571,7 @@
   padding: 2.25rem 1.75rem 2rem;
   background: var(--platform-accent-soft);
   border: 0;
-  border-radius: 0;
+  border-radius: 14px;
 }
 
 @media (min-width: 900px) {
@@ -582,10 +582,20 @@
 }
 
 .platform-product-pillar-mark {
-  width: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
   height: 2.75rem;
-  border-radius: 2px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.85rem;
+  background: transparent;
+  border: 0;
+}
+
+.platform-product-pillar-mark img {
+  width: auto;
+  height: 100%;
+  object-fit: contain;
 }
 
 .platform-product-pillar-tag {
