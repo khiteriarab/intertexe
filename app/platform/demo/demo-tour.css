@@ -2,7 +2,7 @@
 
 .demo-editorial-hero {
   background: var(--platform-bg);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .demo-editorial-hero-layout {
@@ -24,15 +24,13 @@
   .demo-editorial-hero-art {
     min-height: 0;
     aspect-ratio: auto;
-    margin-right: -2.5rem;
-    margin-left: -1rem;
+    margin-right: -1.5rem;
   }
 }
 
 @media (min-width: 1280px) {
   .demo-editorial-hero-art {
-    margin-right: -4.5rem;
-    margin-left: -1.5rem;
+    margin-right: -2.5rem;
   }
 }
 
@@ -47,22 +45,22 @@
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art-image {
-    width: 132%;
+    width: 108%;
     max-width: none;
-    transform-origin: center right;
+    object-position: center right;
   }
 }
 
 @media (min-width: 1280px) {
   .demo-editorial-hero-art-image {
-    width: 142%;
+    width: 112%;
   }
 }
 
 @media (max-width: 1023px) {
   .demo-editorial-hero-art-image {
-    width: 112%;
-    max-width: 42rem;
+    width: 100%;
+    max-width: 36rem;
     margin-inline: auto;
     object-position: center center;
   }
