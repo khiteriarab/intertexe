@@ -286,9 +286,12 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /\.rail/);
     assert.match(followCss, /\.visualShell/);
     assert.match(followCss, /\.visualFrame/);
+    assert.match(followCss, /object-fit:\s*contain/);
+    assert.match(followCss, /height:\s*auto/);
     assert.match(followCss, /52vh|--ftr-stage-vh:\s*52vh/);
     assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
     assert.doesNotMatch(followCss, /min-height:\s*100vh/);
+    assert.doesNotMatch(followCss, /object-fit:\s*cover/);
     assert.doesNotMatch(followSection, /demo-workflow-rail-product/);
     assert.doesNotMatch(followSection, /Featured product/);
     assert.doesNotMatch(followSection, /demo-workflow-panel-inner/);
