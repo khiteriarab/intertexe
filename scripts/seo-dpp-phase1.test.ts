@@ -61,5 +61,7 @@ describe("SEO Phase 1 — DPP / B2B", () => {
     assert.match(how, /\/digital-product-passport/);
     assert.match(solutions, /\/digital-product-passport/);
     assert.match(about, /\/digital-product-passport/);
+    const clientApp = fs.readFileSync(path.join(root, "app/components/ClientApp.tsx"), "utf8");
+    assert.match(clientApp, /\/digital-product-passport/);
   });
 });

@@ -6,10 +6,11 @@ import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
 import { marketingPath } from "../../lib/enterprise-marketing/paths";
 
-export type PlatformNavKey = "demo" | "solutions" | "request" | "success-stories" | "platform" | "login";
+export type PlatformNavKey = "demo" | "solutions" | "request" | "success-stories" | "platform" | "login" | "dpp";
 
 const NAV = [
   { href: marketingPath("solutions"), label: "Solutions", key: "solutions" as const },
+  { href: "/digital-product-passport", label: "Digital Product Passport", key: "dpp" as const },
   { href: marketingPath("pricing"), label: "Pricing", key: "request" as const },
   { href: marketingPath("demo"), label: "See it live", key: "demo" as const },
   { href: marketingPath("success-stories"), label: "Success Stories", key: "success-stories" as const },
@@ -37,6 +38,7 @@ export function PlatformNav({
   const linkTone = (key: (typeof NAV)[number]["key"]) => {
     const isActive =
       (active === "solutions" && key === "solutions") ||
+      (active === "dpp" && key === "dpp") ||
       (active === "request" && key === "request") ||
       (active === "demo" && key === "demo") ||
       (active === "success-stories" && key === "success-stories");
