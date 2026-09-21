@@ -5,43 +5,67 @@
  * Usage: PADDLE_API_KEY=... npx tsx scripts/sync-paddle-catalog.ts
  *
  * Writes IDs to scripts/output/paddle-catalog-ids.json (gitignored output dir ok).
+ *
+ * Catalog matches public commercial model:
+ *   Foundation $499/mo + $1,500 implementation
+ *   Intelligence $1,250/mo + $3,500 implementation
+ *   Enterprise — manual / invoice (no Paddle subscription product)
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PLAN_DEFINITIONS } from "../lib/enterprise/plans.ts";
+import {
+  FOUNDATION_IMPLEMENTATION_USD,
+  FOUNDATION_MONTHLY_USD,
+  FOUNDATION_PRODUCT_LIMIT,
+  INTELLIGENCE_IMPLEMENTATION_USD,
+  INTELLIGENCE_MONTHLY_USD,
+  INTELLIGENCE_PRODUCT_LIMIT,
+} from "../lib/enterprise/pricing.ts";
 import { getPaddleApiBase, getPaddleEnvironment } from "../lib/enterprise/paddle.ts";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const CATALOG = [
   {
-    name: "INTERTEXE Professional",
-    description:
-      "Standard DPP and product passport infrastructure — up to 500 products, traceability, sustainability data, and standard API access.",
-    priceUsd: 499,
+    name: "INTERTEXE Foundation",
+    description: `Product data foundation — up to ${FOUNDATION_PRODUCT_LIMIT.toLocaleString("en-US")} products and passports, governed records, DPP publishing, and core transparency tools.`,
+    priceUsd: FOUNDATION_MONTHLY_USD,
     interval: "month" as const,
-    envKey: "PADDLE_PRICE_PLATFORM",
+    envKey: "PADDLE_PRICE_FOUNDATION",
+    legacyEnvKeys: ["PADDLE_PRICE_PLATFORM", "PADDLE_PRICE_SAAS_PLATFORM", "PADDLE_PRICE_SAAS_STARTER"],
     planKey: "professional" as const,
     kind: "subscription" as const,
   },
   {
-    name: "INTERTEXE Platform",
-    description:
-      "Advanced product intelligence — up to 2,000 products, white-label passports, circularity, integrations, and advanced analytics.",
-    priceUsd: 1250,
+    name: "INTERTEXE Intelligence",
+    description: `Product intelligence — up to ${INTELLIGENCE_PRODUCT_LIMIT.toLocaleString("en-US")} products and passports, white-label passports, API, circularity, and advanced analytics.`,
+    priceUsd: INTELLIGENCE_MONTHLY_USD,
     interval: "month" as const,
-    envKey: "PADDLE_PRICE_PROFESSIONAL",
+    envKey: "PADDLE_PRICE_INTELLIGENCE",
+    legacyEnvKeys: ["PADDLE_PRICE_PROFESSIONAL", "PADDLE_PRICE_SAAS_PROFESSIONAL", "PADDLE_PRICE_SAAS_GROWTH"],
     planKey: "platform" as const,
     kind: "subscription" as const,
   },
   {
-    name: "INTERTEXE Implementation",
-    description: "Catalog onboarding, data mapping, workspace configuration and implementation support.",
-    priceUsd: 5000,
+    name: "INTERTEXE Foundation Implementation",
+    description: "Connect, configure, and launch — Foundation implementation (migration, rules, publishing, training).",
+    priceUsd: FOUNDATION_IMPLEMENTATION_USD,
     interval: null,
-    envKey: "PADDLE_PRICE_IMPLEMENTATION",
+    envKey: "PADDLE_PRICE_IMPLEMENTATION_FOUNDATION",
+    legacyEnvKeys: [] as string[],
+    planKey: "founding_pilot" as const,
+    kind: "implementation" as const,
+  },
+  {
+    name: "INTERTEXE Intelligence Implementation",
+    description: "Connect, configure, and launch — Intelligence implementation (migration, rules, publishing, training).",
+    priceUsd: INTELLIGENCE_IMPLEMENTATION_USD,
+    interval: null,
+    envKey: "PADDLE_PRICE_IMPLEMENTATION_INTELLIGENCE",
+    legacyEnvKeys: [] as string[],
     planKey: "founding_pilot" as const,
     kind: "implementation" as const,
   },
@@ -83,13 +107,12 @@ function buildCommercialSummary(
     }
   >
 ) {
-  const paddleByPlan = new Map(
-    Object.entries(results).map(([, row]) => [row.plan, row])
-  );
+  const paddleByEnv = new Map(Object.entries(results).map(([, row]) => [row.envKey, row]));
 
   const rows: Array<Record<string, unknown>> = [
     {
       plan: "demo",
+      publicName: "10-product pilot",
       label: PLAN_DEFINITIONS.demo.label,
       paddleProduct: null,
       priceId: null,
@@ -98,58 +121,50 @@ function buildCommercialSummary(
       maxProducts: PLAN_DEFINITIONS.demo.maxProducts,
       maxHostedPassports: PLAN_DEFINITIONS.demo.maxHostedPassports,
       maxTeamMembers: PLAN_DEFINITIONS.demo.maxTeamMembers,
-      billing: "None — internal demo workspace",
-    },
-    {
-      plan: "platform",
-      label: PLAN_DEFINITIONS.platform.label,
-      paddleProduct: "INTERTEXE Platform",
-      priceId: paddleByPlan.get("platform")?.priceId ?? null,
-      envKey: "PADDLE_PRICE_PROFESSIONAL",
-      monthlyUsd: PLAN_DEFINITIONS.platform.monthlyUsd,
-      implementationUsd: PLAN_DEFINITIONS.platform.implementationUsd,
-      maxProducts: PLAN_DEFINITIONS.platform.maxProducts,
-      maxHostedPassports: PLAN_DEFINITIONS.platform.maxHostedPassports,
-      maxTeamMembers: PLAN_DEFINITIONS.platform.maxTeamMembers,
-      billing: "Paddle subscription",
+      billing: "none",
     },
     {
       plan: "professional",
+      publicName: "Foundation",
       label: PLAN_DEFINITIONS.professional.label,
-      paddleProduct: "INTERTEXE Professional",
-      priceId: paddleByPlan.get("professional")?.priceId ?? null,
-      envKey: "PADDLE_PRICE_PLATFORM",
+      paddleProduct: "INTERTEXE Foundation",
+      priceId: paddleByEnv.get("PADDLE_PRICE_FOUNDATION")?.priceId ?? null,
+      envKey: "PADDLE_PRICE_FOUNDATION",
       monthlyUsd: PLAN_DEFINITIONS.professional.monthlyUsd,
       implementationUsd: PLAN_DEFINITIONS.professional.implementationUsd,
+      implementationPriceId: paddleByEnv.get("PADDLE_PRICE_IMPLEMENTATION_FOUNDATION")?.priceId ?? null,
       maxProducts: PLAN_DEFINITIONS.professional.maxProducts,
       maxHostedPassports: PLAN_DEFINITIONS.professional.maxHostedPassports,
       maxTeamMembers: PLAN_DEFINITIONS.professional.maxTeamMembers,
-      billing: "Paddle subscription",
+      billing: "paddle",
     },
     {
-      plan: "founding_pilot",
-      label: PLAN_DEFINITIONS.founding_pilot.label,
-      paddleProduct: "INTERTEXE Implementation",
-      priceId: paddleByPlan.get("founding_pilot")?.priceId ?? null,
-      envKey: "PADDLE_PRICE_IMPLEMENTATION",
-      monthlyUsd: null,
-      implementationUsd: PLAN_DEFINITIONS.founding_pilot.implementationUsd,
-      maxProducts: PLAN_DEFINITIONS.founding_pilot.maxProducts,
-      maxHostedPassports: PLAN_DEFINITIONS.founding_pilot.maxHostedPassports,
-      maxTeamMembers: PLAN_DEFINITIONS.founding_pilot.maxTeamMembers,
-      billing: "Paddle one-time — does not activate subscription limits alone",
+      plan: "platform",
+      publicName: "Intelligence",
+      label: PLAN_DEFINITIONS.platform.label,
+      paddleProduct: "INTERTEXE Intelligence",
+      priceId: paddleByEnv.get("PADDLE_PRICE_INTELLIGENCE")?.priceId ?? null,
+      envKey: "PADDLE_PRICE_INTELLIGENCE",
+      monthlyUsd: PLAN_DEFINITIONS.platform.monthlyUsd,
+      implementationUsd: PLAN_DEFINITIONS.platform.implementationUsd,
+      implementationPriceId: paddleByEnv.get("PADDLE_PRICE_IMPLEMENTATION_INTELLIGENCE")?.priceId ?? null,
+      maxProducts: PLAN_DEFINITIONS.platform.maxProducts,
+      maxHostedPassports: PLAN_DEFINITIONS.platform.maxHostedPassports,
+      maxTeamMembers: PLAN_DEFINITIONS.platform.maxTeamMembers,
+      billing: "paddle",
     },
     {
       plan: "enterprise",
+      publicName: "Enterprise",
       label: PLAN_DEFINITIONS.enterprise.label,
       paddleProduct: null,
       priceId: null,
       monthlyUsd: null,
       implementationUsd: null,
-      maxProducts: PLAN_DEFINITIONS.enterprise.maxProducts,
-      maxHostedPassports: PLAN_DEFINITIONS.enterprise.maxHostedPassports,
-      maxTeamMembers: PLAN_DEFINITIONS.enterprise.maxTeamMembers,
-      billing: "Manual / invoice — set entitlements in obelisk-core",
+      maxProducts: null,
+      maxHostedPassports: null,
+      maxTeamMembers: null,
+      billing: "manual / invoice",
     },
   ];
 
@@ -157,7 +172,9 @@ function buildCommercialSummary(
 }
 
 async function main() {
-  console.log(`Paddle environment: ${getPaddleEnvironment()}`);
+  const env = getPaddleEnvironment();
+  console.log(`Syncing Paddle catalog (${env}) → Foundation / Intelligence + tiered implementation…`);
+
   const results: Record<
     string,
     {
@@ -171,7 +188,6 @@ async function main() {
       maxProducts?: number;
       maxHostedPassports?: number;
       maxTeamMembers?: number;
-      note?: string;
     }
   > = {};
 
@@ -182,17 +198,22 @@ async function main() {
         name: item.name,
         description: item.description,
         tax_category: "standard",
+        type: "standard",
       }),
     });
 
-    const priceBody: Record<string, unknown> = {
-      product_id: product.id,
-      description: item.name,
-      unit_price: {
-        amount: String(item.priceUsd * 100),
-        currency_code: "USD",
-      },
+    const unitPrice = {
+      amount: String(item.priceUsd * 100),
+      currency_code: "USD",
     };
+
+    const priceBody: Record<string, unknown> = {
+      description: item.name,
+      product_id: product.id,
+      unit_price: unitPrice,
+      quantity: { minimum: 1, maximum: 1 },
+    };
+
     if (item.interval) {
       priceBody.billing_cycle = { interval: item.interval, frequency: 1 };
     }
@@ -202,75 +223,58 @@ async function main() {
       body: JSON.stringify(priceBody),
     });
 
-    const plan = PLAN_DEFINITIONS[item.planKey];
-    results[item.name] = {
+    const def = PLAN_DEFINITIONS[item.planKey === "founding_pilot" ? "founding_pilot" : item.planKey];
+    results[item.envKey] = {
       productId: product.id,
       priceId: price.id,
       envKey: item.envKey,
       plan: item.planKey,
       kind: item.kind,
-      maxProducts: plan.maxProducts,
-      maxHostedPassports: plan.maxHostedPassports,
-      maxTeamMembers: plan.maxTeamMembers,
-      ...(item.kind === "subscription"
+      ...(item.interval
         ? { monthlyUsd: item.priceUsd }
-        : {
-            oneTimeUsd: item.priceUsd,
-            note: "One-time fee — does not set monthly subscription limits",
-          }),
+        : { oneTimeUsd: item.priceUsd }),
+      maxProducts: def.maxProducts ?? undefined,
+      maxHostedPassports: def.maxHostedPassports ?? undefined,
+      maxTeamMembers: def.maxTeamMembers ?? undefined,
     };
-    console.log(`${item.name}: product=${product.id} price=${price.id}`);
+
+    console.log(`${item.envKey}=${price.id}  # ${item.name}`);
+    for (const legacy of item.legacyEnvKeys) {
+      console.log(`# optional legacy alias: ${legacy}=${price.id}`);
+    }
   }
 
   const outDir = path.join(ROOT, "scripts/output");
   fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, "paddle-catalog-ids.json");
-  const demo = PLAN_DEFINITIONS.demo;
-  const envTemplate = {
-    PADDLE_ENV: getPaddleEnvironment(),
-    PADDLE_API_KEY: "<server-only — Paddle dashboard>",
-    PADDLE_WEBHOOK_SECRET: "<server-only — Paddle notifications>",
-    PADDLE_GRACE_PERIOD_DAYS: "14",
-    ...Object.fromEntries(Object.values(results).map((row) => [row.envKey, row.priceId])),
-  };
-
+  const commercial = buildCommercialSummary(results);
   fs.writeFileSync(
     outPath,
     JSON.stringify(
       {
-        documentPurpose:
-          "Single commercial + engineering reference: Paddle price IDs, list prices, and INTERTEXE-enforced limits.",
-        sourceOfTruth: {
-          entitlements: "lib/enterprise/plans.ts",
-          paddleBilling: "Paddle dashboard + env price IDs mapped in lib/enterprise/paddle.ts",
-          note: "Paddle stores billing only. Product/passport/team limits are enforced in obelisk-core, not in Paddle.",
-        },
         syncedAt: new Date().toISOString(),
-        environment: getPaddleEnvironment(),
-        commercialSummary: buildCommercialSummary(results),
-        results,
-        demoPlan: {
-          plan: "demo",
-          paddleProduct: null,
-          maxProducts: demo.maxProducts,
-          maxHostedPassports: demo.maxHostedPassports,
-          maxTeamMembers: demo.maxTeamMembers,
+        environment: env,
+        notes: {
+          paddleBilling: "Paddle dashboard + env price IDs mapped in lib/enterprise/paddle.ts",
+          publicNames: "Foundation / Intelligence / Enterprise",
+          entitlementKeys: "professional / platform / enterprise",
+          enterprise: "Manual / invoice — no Paddle subscription product",
         },
-        envTemplate,
+        commercial,
+        prices: results,
+        envSnippet: Object.values(results)
+          .map((r) => `${r.envKey}=${r.priceId}`)
+          .join("\n"),
         webhookUrl: "https://platform.intertexe.com/api/webhooks/paddle",
       },
       null,
       2
     )
   );
-  console.log(`\nWrote ${outPath}`);
-  console.log("\nAdd to .env.enterprise.local (server-side only):");
-  for (const row of Object.values(results)) {
-    console.log(`${row.envKey}=${row.priceId}`);
-  }
+  console.log(`Wrote ${outPath}`);
 }
 
 main().catch((err) => {
-  console.error(err instanceof Error ? err.message : err);
+  console.error(err);
   process.exit(1);
 });

@@ -1,6 +1,7 @@
 export type BrandTier = "anchor" | "material-strong" | "aspirational" | "accessible";
 
-export interface BrandProfile {
+/** Consumer fashion designer/label profile (not a SaaS organization). */
+export interface ConsumerBrandProfile {
   slug: string;
   name: string;
   tier: BrandTier;
@@ -34,7 +35,7 @@ export function getTierDescription(tier: BrandTier): string {
   return TIER_DESCRIPTIONS[tier];
 }
 
-export const BRAND_PROFILES: Record<string, BrandProfile> = {
+export const BRAND_PROFILES: Record<string, ConsumerBrandProfile> = {
   "khaite": {
     slug: "khaite",
     name: "Khaite",
@@ -821,11 +822,11 @@ export const BRAND_PROFILES: Record<string, BrandProfile> = {
   },
 };
 
-export function getBrandProfile(slug: string): BrandProfile | null {
+export function getConsumerBrandProfile(slug: string): ConsumerBrandProfile | null {
   return BRAND_PROFILES[slug] || null;
 }
 
-export function getBrandProfileByName(name: string): BrandProfile | null {
+export function getConsumerBrandProfileByName(name: string): ConsumerBrandProfile | null {
   const lower = name.toLowerCase().trim();
   for (const profile of Object.values(BRAND_PROFILES)) {
     if (profile.name.toLowerCase() === lower) return profile;
@@ -833,11 +834,25 @@ export function getBrandProfileByName(name: string): BrandProfile | null {
   return null;
 }
 
-export function getAllProfiles(): BrandProfile[] {
+
+/** @deprecated Prefer ConsumerBrandProfile */
+export type BrandProfile = ConsumerBrandProfile;
+
+/** @deprecated Prefer getConsumerBrandProfile */
+export function getBrandProfile(slug: string): ConsumerBrandProfile | null {
+  return getConsumerBrandProfile(slug);
+}
+
+/** @deprecated Prefer getConsumerBrandProfileByName */
+export function getBrandProfileByName(name: string): ConsumerBrandProfile | null {
+  return getConsumerBrandProfileByName(name);
+}
+
+export function getAllProfiles(): ConsumerBrandProfile[] {
   return Object.values(BRAND_PROFILES);
 }
 
-export function getProfilesByTier(tier: BrandTier): BrandProfile[] {
+export function getProfilesByTier(tier: BrandTier): ConsumerBrandProfile[] {
   return Object.values(BRAND_PROFILES).filter(p => p.tier === tier);
 }
 
@@ -862,7 +877,7 @@ export function getSimilarBrands(slug: string, count = 6): Array<{ name: string;
 
   scored.sort((a, b) => b.score - a.score);
 
-  const reasons: Record<string, (brand: BrandProfile, source: BrandProfile) => string> = {
+  const reasons: Record<string, (brand: ConsumerBrandProfile, source: ConsumerBrandProfile) => string> = {
     default: (b, s) => {
       const shared = b.materialStrengths.filter(m => s.materialStrengths.includes(m));
       if (shared.length >= 2) return `Shares ${s.name}'s strength in ${shared.slice(0, 2).join(" and ").toLowerCase()} with a ${getTierLabel(b.tier).toLowerCase()} approach.`;

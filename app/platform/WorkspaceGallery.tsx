@@ -294,7 +294,7 @@ export function DiscoverWorkspace() {
             </h2>
           </div>
           <a
-            href="/platform/request?intent=snapshot&cta=discover_needs"
+            href="/brands/request?intent=snapshot&cta=discover_needs"
             className="inline-flex items-center gap-2 rounded-md bg-[var(--platform-primary)] px-5 py-2.5 text-[13px] font-medium text-white min-h-[44px] hover:bg-[var(--platform-primary-hover)] w-fit"
           >
             Start with 10 products

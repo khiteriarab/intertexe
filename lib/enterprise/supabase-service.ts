@@ -1,10 +1,20 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getObeliskServiceClient } from "./client";
 
+/**
+ * Obelisk-core service client (throws if unset).
+ * Prefer getObeliskServiceClient() when a null client is acceptable.
+ * Uses the same URL≠consumer guard as lib/enterprise/client.ts.
+ */
 export function createEnterpriseServiceClient(): SupabaseClient {
-  const url = process.env.ENTERPRISE_SUPABASE_URL;
-  const key = process.env.ENTERPRISE_SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+  const client = getObeliskServiceClient();
+  if (!client) {
     throw new Error("Enterprise Supabase is not configured");
   }
-  return createClient(url, key);
+  return client;
+}
+
+/** @deprecated Prefer getObeliskServiceClient or createEnterpriseServiceClient */
+export function createObeliskServiceClient(): SupabaseClient {
+  return createEnterpriseServiceClient();
 }

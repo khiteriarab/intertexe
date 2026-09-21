@@ -36,12 +36,12 @@ export function PlatformHowItWorksSection() {
           <PlatformProductPillarsVisual variant="light" />
 
           <p className="mt-8 lg:mt-10 text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
-            <Link href="/platform/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
+            <Link href="/brands/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
               See it live
             </Link>{" "}
             with sample products, or{" "}
             <Link
-              href="/platform/request?intent=snapshot&cta=platform_breadth"
+              href="/brands/request?intent=snapshot&cta=platform_breadth"
               className="underline underline-offset-4 hover:text-[var(--platform-primary)]"
             >
               start with 10 of your own products

@@ -75,8 +75,23 @@ const nextConfig = {
       },
       {
         source: "/platform/api",
-        destination: "/platform",
+        destination: "/brands",
         permanent: true,
+      },
+      {
+        source: "/brands/see-it-live",
+        destination: "/brands/demo",
+        permanent: true,
+      },
+      {
+        source: "/platform/see-it-live",
+        destination: "/brands/demo",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/brands",
+        destination: "/dashboard/retail-brands",
+        permanent: false,
       },
     ];
   },
@@ -93,6 +108,16 @@ const nextConfig = {
         source: "/apple-app-site-association",
         headers: [
           { key: "Content-Type", value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=300" },
+        ],
+      },
+      {
+        // Serve the guide as a normal HTML page — filename Content-Disposition can make
+        // browsers open it as a data:text/html download instead of navigating.
+        source: "/platform/intertexe-software-guide.html",
+        headers: [
+          { key: "Content-Type", value: "text/html; charset=utf-8" },
+          { key: "Content-Disposition", value: "inline" },
           { key: "Cache-Control", value: "public, max-age=300" },
         ],
       },

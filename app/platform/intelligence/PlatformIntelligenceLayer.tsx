@@ -40,7 +40,7 @@ export function PlatformIntelligenceLayer() {
 
         <p className="mt-6 text-xs text-[var(--platform-quiet)] leading-relaxed max-w-3xl">
           Every recommendation links to governed evidence in your workspace.{" "}
-          <Link href="/platform/demo" className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
+          <Link href="/brands/demo" className="underline underline-offset-2 hover:text-[var(--platform-ink)]">
             Tour the live demo
           </Link>
           .

@@ -1,28 +1,39 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import Image from "next/image";
 import Link from "next/link";
+import { ENT_NAV_GROUP_ICONS, ENT_NAV_ITEM_ICONS } from "../../dashboard/components/EnterpriseNavIcons";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 import { Body, Eyebrow, Heading, SERIF } from "../platform-ui";
-import { LIFECYCLE_STAGES, SOLUTIONS } from "./solutions-data";
+import { LIFECYCLE_STAGES, SOLUTIONS, type SolutionCard } from "./solutions-data";
 import "./solutions.css";
 
 export const metadata: Metadata = {
   title: "Solutions — one product record, six ways to use it",
   description:
     "INTERTEXE connects product creation, traceability, environmental intelligence, compliance, consumer transparency, and next-life experiences through one governed product record.",
-  alternates: { canonical: "https://www.intertexe.com/platform/solutions" },
+  alternates: { canonical: marketingCanonical("solutions") },
 };
+
+const SOLUTION_ICONS = {
+  ...ENT_NAV_ITEM_ICONS,
+  ...ENT_NAV_GROUP_ICONS,
+} as const;
 
 function SolutionCardBlock({
   card,
   size = "standard",
 }: {
-  card: (typeof SOLUTIONS)[number];
+  card: SolutionCard;
   size?: "feature" | "standard";
 }) {
+  const Icon = SOLUTION_ICONS[card.icon];
   return (
     <Link href={card.href} className={`solution-card solution-card--${size}`}>
+      <span className="solution-card-icon" aria-hidden>
+        <Icon />
+      </span>
       <p className="solution-card-label">{card.label}</p>
       <h3 className="solution-card-title" style={SERIF}>
         {card.title}
@@ -60,11 +71,11 @@ export default function PlatformSolutionsPage() {
               transparency, and next-life experiences through one governed product record.
             </Body>
             <div className="solutions-intro-actions">
-              <Link href="/platform" className="solutions-cta-primary">
+              <Link href="/brands" className="solutions-cta-primary">
                 Explore the platform
                 <span aria-hidden>→</span>
               </Link>
-              <Link href="/platform/demo" className="solutions-cta-secondary">
+              <Link href="/brands/demo" className="solutions-cta-secondary">
                 See it live
               </Link>
             </div>
@@ -118,20 +129,12 @@ export default function PlatformSolutionsPage() {
 
           <div className="solutions-shot">
             <Image
-              src="/platform/workspace-product-record.png"
-              alt="INTERTEXE product record with materials, traceability, and passport status."
-              width={1600}
-              height={1000}
+              src="/platform/solutions-governed-record.png"
+              alt="INTERTEXE consumer passport on mobile beside the product Impact workspace on desktop."
+              width={1672}
+              height={941}
               className="solutions-shot-main"
               sizes="(max-width: 899px) 94vw, 1100px"
-            />
-            <Image
-              src="/platform/workspace-issues-inbox.png"
-              alt="INTERTEXE issues inbox highlighting missing fields and conflicts."
-              width={900}
-              height={560}
-              className="solutions-shot-overlay"
-              sizes="(max-width: 899px) 60vw, 380px"
             />
           </div>
         </div>
@@ -147,11 +150,11 @@ export default function PlatformSolutionsPage() {
             </Body>
           </div>
           <div className="solutions-close-actions">
-            <Link href="/platform" className="solutions-cta-primary">
+            <Link href="/brands" className="solutions-cta-primary">
               Explore the platform
               <span aria-hidden>→</span>
             </Link>
-            <Link href="/platform/request?intent=snapshot&cta=solutions" className="solutions-cta-secondary">
+            <Link href="/brands/request?intent=snapshot&cta=solutions" className="solutions-cta-secondary">
               Request a demo
             </Link>
           </div>

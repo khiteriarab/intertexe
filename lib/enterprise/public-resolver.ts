@@ -1,6 +1,6 @@
 import { filterFieldsForAccess } from "./access-classes";
 import { getEnterpriseServiceClient } from "./client";
-import { DEMO_BRAND_SLUG } from "./constants";
+import { DEMO_ORGANIZATION_SLUG } from "./constants";
 import { buildPassportPreviewContent } from "./passport-preview";
 import { buildConsumerPassportContent, type ConsumerPassportContent } from "./public-passport-content";
 import { loadProductExperienceConfig, type PassportExperienceConfig } from "./passport-experience";
@@ -320,7 +320,7 @@ export async function loadApprovedDemoSummary() {
   const { data: org } = await supabase
     .from("organizations")
     .select("id")
-    .eq("slug", DEMO_BRAND_SLUG)
+    .eq("slug", DEMO_ORGANIZATION_SLUG)
     .eq("is_demo", true)
     .eq("approved_for_public_demo", true)
     .maybeSingle();

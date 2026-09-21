@@ -140,7 +140,7 @@ export function MaterialBenchmarkModule({ benchmark }: { benchmark: PlatformBenc
     <article className="platform-intel-card platform-intel-card--benchmark">
       <header className="platform-intel-card-head">
         <p className="platform-intel-card-label">Material Benchmark</p>
-        <Link href="/platform/demo#benchmark" className="text-[10px] tracking-[0.1em] uppercase text-white/55 hover:text-white/85">
+        <Link href="/brands/demo#benchmark" className="text-[10px] tracking-[0.1em] uppercase text-white/55 hover:text-white/85">
           View full →
         </Link>
       </header>
@@ -363,7 +363,7 @@ export function EvidenceConfidenceCard({
           Sources: {evidenceSources.map((s) => s.label).join(" · ")}
         </p>
       ) : null}
-      <Link href="/platform/demo" className={`${platformLinkClass} inline-block mt-4 text-sm`}>
+      <Link href="/brands/demo" className={`${platformLinkClass} inline-block mt-4 text-sm`}>
         View evidence →
       </Link>
     </article>

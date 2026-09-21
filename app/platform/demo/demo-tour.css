@@ -2,37 +2,61 @@
 
 .demo-editorial-hero {
   background: var(--platform-bg);
+  overflow: hidden;
+}
+
+.demo-editorial-hero-layout {
+  overflow: visible;
 }
 
 .demo-editorial-hero-art {
   position: relative;
-  overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--platform-border) 70%, transparent);
-  background: #f3efe8;
-  min-height: 280px;
-  aspect-ratio: 16 / 10;
+  overflow: visible;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  min-height: 0;
+  aspect-ratio: auto;
+  box-shadow: none;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art {
-    min-height: 420px;
-    aspect-ratio: 16 / 11;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin-right: -1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-hero-art {
+    margin-right: -2.5rem;
   }
 }
 
 .demo-editorial-hero-art-image {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Crop to hero scan → passport → lifecycle circles from editorial mock */
-  object-position: 62% 10%;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+  object-position: center center;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-hero-art-image {
+    width: 100%;
+    max-width: none;
+    object-position: center right;
+  }
 }
 
 @media (max-width: 1023px) {
   .demo-editorial-hero-art-image {
-    object-position: 50% 8%;
+    width: 100%;
+    max-width: 36rem;
+    margin-inline: auto;
+    object-position: center center;
   }
 }
 
@@ -118,18 +142,54 @@
   background: var(--platform-bg);
 }
 
+.demo-editorial-passport-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.demo-editorial-passport-eyebrow {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+.demo-editorial-passport-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--platform-muted);
+}
+
 .demo-editorial-passport-grid {
   display: grid;
-  gap: 2rem;
+  gap: 1.75rem;
   align-items: start;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-passport-grid {
-    grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 0.95fr) minmax(0, 1.2fr);
-    gap: 1.75rem 2rem;
+    grid-template-columns: minmax(14rem, 0.62fr) minmax(0, 0.78fr) minmax(0, 1.55fr);
+    gap: 1.5rem 1.75rem;
     align-items: start;
   }
+}
+
+.demo-editorial-passport-caption {
+  margin: 0 0 0.65rem;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
 }
 
 .demo-editorial-passport-thumb {
@@ -176,8 +236,8 @@
 
 .demo-editorial-passport-lifestyle-image {
   width: 100%;
-  height: 100%;
-  max-height: 620px;
+  height: auto;
+  max-height: 560px;
   object-fit: cover;
   object-position: center top;
   border-radius: 0.35rem;
@@ -191,28 +251,41 @@
   transform: translateX(-50%);
   display: grid;
   place-items: center;
-  padding: 0.45rem;
+  padding: 0.4rem;
   background: #fff;
   border-radius: 0.35rem;
   box-shadow: 0 10px 28px rgba(22, 21, 19, 0.18);
 }
 
 .demo-editorial-passport-page {
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   border: 1px solid var(--platform-border);
   background: #f7f5f1;
-  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.06);
+  box-shadow: 0 28px 70px rgba(22, 21, 19, 0.08);
 }
 
 .demo-editorial-passport-page-image {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1448 / 1006;
+  min-height: 420px;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   object-position: top left;
   background: #f7f5f1;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-passport-page-image {
+    min-height: 520px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-passport-page-image {
+    min-height: 580px;
+  }
 }
 
 .demo-editorial-passport-card {

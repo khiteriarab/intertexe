@@ -1,4 +1,4 @@
-import { getServerSupabase } from "../supabase-service-client";
+import { getConsumerSupabase } from "../supabase-service-client";
 
 export type IdentityLinkRow = {
   id: string;
@@ -18,8 +18,9 @@ export type HandoffSessionRow = {
   revoked_at: string | null;
 };
 
+/** Identity links live on consumer/HQ Supabase — not obelisk. */
 function hq() {
-  return getServerSupabase();
+  return getConsumerSupabase();
 }
 
 export async function getActiveIdentityLinkByHqUserId(

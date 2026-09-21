@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireHqSession } from "../../../../../../../lib/dashboard/auth";
 import { getEnterpriseServiceClient, isEnterpriseConfigured } from "../../../../../../../lib/enterprise/client";
-import { provisionBrandOperator } from "../../../../../../../lib/enterprise/provision-brand-operator";
+import { provisionOrganizationOperator } from "../../../../../../../lib/enterprise/provision-organization-operator";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    const result = await provisionBrandOperator({
+    const result = await provisionOrganizationOperator({
       client: supabase,
       organizationId: id,
       email,

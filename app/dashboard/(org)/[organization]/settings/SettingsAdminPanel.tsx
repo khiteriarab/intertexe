@@ -242,7 +242,7 @@ export function SettingsAdminPanel({
                 onClick={() => startPaddleCheckout("platform")}
                 data-testid="btn-paddle-platform"
               >
-                {checkoutBusy === "platform" ? "Opening…" : "Upgrade to Platform"}
+                {checkoutBusy === "platform" ? "Opening…" : "Upgrade to Intelligence"}
               </button>
             )}
           </div>

@@ -33,7 +33,7 @@ let cachedService: SupabaseClient | null = null;
 let cachedAnon: SupabaseClient | null = null;
 
 /** Service-role client for obelisk-core only. Never falls back to consumer HQ keys. */
-export function getEnterpriseServiceClient(): SupabaseClient | null {
+export function getObeliskServiceClient(): SupabaseClient | null {
   const url = enterpriseUrl();
   const key = enterpriseServiceKey();
   if (!url || !key) return null;
@@ -44,7 +44,12 @@ export function getEnterpriseServiceClient(): SupabaseClient | null {
   return cachedService;
 }
 
-export function getEnterpriseAnonClient(): SupabaseClient | null {
+/** @deprecated Prefer getObeliskServiceClient — same obelisk-core service client. */
+export function getEnterpriseServiceClient(): SupabaseClient | null {
+  return getObeliskServiceClient();
+}
+
+export function getObeliskAnonClient(): SupabaseClient | null {
   const url = enterpriseUrl();
   const key = enterpriseAnonKey();
   if (!url || !key) return null;
@@ -53,6 +58,11 @@ export function getEnterpriseAnonClient(): SupabaseClient | null {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return cachedAnon;
+}
+
+/** @deprecated Prefer getObeliskAnonClient */
+export function getEnterpriseAnonClient(): SupabaseClient | null {
+  return getObeliskAnonClient();
 }
 
 /**
@@ -71,11 +81,11 @@ export function createEphemeralEnterpriseAnonClient(): SupabaseClient {
 }
 
 /** User-scoped obelisk-core client. RLS applies. Never use this with the service-role key. */
-export function getEnterpriseUserClient(accessToken: string): SupabaseClient {
+export function getObeliskUserClient(accessToken: string): SupabaseClient {
   const url = enterpriseUrl();
   const key = enterpriseAnonKey();
   if (!url || !key) {
-    throw new Error("Enterprise user client requires ENTERPRISE_SUPABASE_URL and ENTERPRISE_SUPABASE_ANON_KEY.");
+    throw new Error("Obelisk user client requires ENTERPRISE_SUPABASE_URL and ENTERPRISE_SUPABASE_ANON_KEY.");
   }
   const token = accessToken.trim();
   if (!token) throw new Error("Enterprise user JWT is required.");
@@ -83,4 +93,9 @@ export function getEnterpriseUserClient(accessToken: string): SupabaseClient {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
+}
+
+/** @deprecated Prefer getObeliskUserClient */
+export function getEnterpriseUserClient(accessToken: string): SupabaseClient {
+  return getObeliskUserClient(accessToken);
 }

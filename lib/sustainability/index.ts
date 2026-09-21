@@ -6,4 +6,4 @@ export { buildCircularity } from "./circularity";
 export { buildConsumerSustainabilityProfile } from "./sustainability-profile";
 export { buildIntertexeProductPassport } from "./passport-structure";
 export { loadProductSustainabilityData } from "./load-product-data";
-export { loadBrandSustainabilityAnalytics } from "./brand-analytics";
+export { loadOrganizationSustainabilityAnalytics, loadBrandSustainabilityAnalytics } from "./organization-analytics";

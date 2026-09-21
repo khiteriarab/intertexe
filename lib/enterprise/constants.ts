@@ -3,7 +3,10 @@ import { HQ_NAV } from "../dashboard/constants";
 export const ENTERPRISE_SESSION_COOKIE = "enterprise_session";
 export const ENTERPRISE_ORG_COOKIE = "enterprise_organization";
 export const CUSTOMER_ZERO_SLUG = "intertexe";
-export const DEMO_BRAND_SLUG = "intertexe-demo";
+/** Demo organization tenant on obelisk-core (not a consumer fashion designer). */
+export const DEMO_ORGANIZATION_SLUG = "intertexe-demo";
+/** @deprecated Prefer DEMO_ORGANIZATION_SLUG */
+export const DEMO_BRAND_SLUG = DEMO_ORGANIZATION_SLUG;
 
 /** Staff handoff JWTs are app-expired after this many seconds even if GoTrue's access token is longer. */
 export const ENTERPRISE_HANDOFF_TTL_SECONDS = 15 * 60;

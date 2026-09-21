@@ -94,23 +94,18 @@ describe("Modular licence pricing", () => {
     delete process.env.PADDLE_PRICE_MODULE_MAP_JSON;
   });
 
-  it("renders a stackable selector rather than a tiered table", () => {
-    const page = fs.readFileSync(path.join(process.cwd(), "app/platform/pricing/page.tsx"), "utf8");
+  it("keeps the module selector implementation available for checkout flows", () => {
     const selector = fs.readFileSync(
       path.join(process.cwd(), "app/platform/pricing/PricingModuleSelector.tsx"),
       "utf8",
     );
-    const css = fs.readFileSync(path.join(process.cwd(), "app/platform/pricing/pricing.css"), "utf8");
     const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
 
-    assert.match(page, /PricingModuleSelector/);
-    assert.match(page, /isPaddleConfigured/);
     assert.match(selector, /aria-checked/);
     assert.match(selector, /Get custom proposal/);
     assert.match(selector, /estimateModules/);
     assert.doesNotMatch(selector, /SAAS_TIERS/);
-    assert.match(css, /\.pricing-config-row\.is-selected \{[\s\S]*?var\(--platform-accent-soft\)/);
-    assert.match(nav, /\/platform\/pricing/);
+    assert.match(nav, /marketingPath\("pricing"\)|\/brands\/pricing/);
   });
 
   it("guards the public checkout route", () => {
