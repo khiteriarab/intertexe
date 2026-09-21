@@ -259,13 +259,17 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(workflow, /demo-measure\.png/);
     assert.doesNotMatch(workflow, /demo-workflow-rail-product/);
     assert.doesNotMatch(workflow, /Featured product/);
-    assert.doesNotMatch(workflow, /IntersectionObserver/);
+    assert.match(workflow, /IntersectionObserver/);
+    assert.match(workflow, /demo-flow-pin|demo-flow-marker|demo-flow-sticky/);
     assert.doesNotMatch(workflow, /demo-workflow-panel-inner/);
     assert.match(workflow, /Six ways teams work the record/);
     const flowCss = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/demo-tour.css"), "utf8");
     assert.match(flowCss, /\.demo-flow-rail-indicator/);
     assert.match(flowCss, /\.demo-flow-visual/);
     assert.match(flowCss, /\.demo-flow-copy/);
+    assert.match(flowCss, /\.demo-flow-pin/);
+    assert.match(flowCss, /\.demo-flow-sticky/);
+    assert.match(flowCss, /\.demo-flow-marker/);
     assert.doesNotMatch(workflow, /rounded-xl border border-\[var\(--platform-border\)\]/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
