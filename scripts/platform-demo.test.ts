@@ -268,7 +268,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(workflow, /FollowTheRecordSection/);
     assert.match(followSection, /activeIndex|goToStep/);
     assert.match(followSection, /STAGE_VH\s*=\s*48|48vh/);
-    assert.match(followSection, /demo-source|active\.image|item\.image/);
+    assert.match(followSection, /demo-source|stage\.image|active\.image|item\.image/);
     assert.match(followData, /id: "source"/);
     assert.match(followData, /Fragmented inputs, one product\./);
     assert.match(followData, /Claims become evidence-backed\./);
@@ -288,9 +288,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /\.visualFrame/);
     assert.match(followCss, /object-fit:\s*contain/);
     // Artwork must fill the sticky right pane (not a capped centered island).
-    assert.match(followCss, /\.visualFrame img \{[\s\S]*?height:\s*100%/);
-    assert.match(followCss, /\.left \{[\s\S]*?justify-content:\s*flex-start/);
-    assert.match(followCss, /\.rail \{[\s\S]*?flex:\s*0 0 auto/);
+    assert.match(followCss, /\.stageBaseImage \{[\s\S]*?height:\s*100%/);
+    assert.match(followCss, /\.visualShell \{[\s\S]*?flex:\s*1/);
     assert.match(followCss, /\.strip \{[\s\S]*?width:\s*100%/);
     assert.doesNotMatch(followCss, /width:\s*min\(100%,\s*980px\)/);
     assert.doesNotMatch(followCss, /max-height:\s*68vh/);
@@ -299,6 +298,24 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(followCss, /object-fit:\s*cover/);
     assert.doesNotMatch(followCss, /\.visualGlow/);
     assert.match(followSection, /stageCopyDesktop/);
+    assert.match(followCss, /\.left \{[\s\S]*?justify-content:\s*flex-start/);
+    assert.match(followCss, /\.rail \{[\s\S]*?flex:\s*0 0 auto/);
+    // Motion overlay infrastructure (SOURCE / NORMALIZE first pass)
+    assert.match(followSection, /StageInteractiveOverlay|StageOverlays/);
+    assert.match(followSection, /interactiveOverlay|stageBaseImage/);
+    assert.match(followCss, /\.interactiveOverlay/);
+    assert.match(followCss, /\.stageBaseImage/);
+    assert.match(followCss, /\.mobileTabs/);
+    const overlays = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/StageOverlays.tsx"),
+      "utf8",
+    );
+    assert.match(overlays, /SourceOverlay|SOURCES CONNECTED|Sources connected/i);
+    assert.match(overlays, /Normalize composition for Silk Midi Skirt/);
+    assert.match(overlays, /92 SE 8 EA/);
+    assert.match(overlays, /92% Silk/);
+    assert.match(overlays, /CHAR_MS\s*=\s*45|45/);
+    assert.match(overlays, /Source preserved|SOURCE PRESERVED/i);
     // Normalize artwork should be RGBA with transparency for Attio-style floating panels
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     const normalizeBuf = fs.readFileSync(path.join(process.cwd(), "public/platform/demo-normalize.png"));

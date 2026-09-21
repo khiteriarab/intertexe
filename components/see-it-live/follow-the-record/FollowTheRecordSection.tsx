@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SERIF } from "../../../app/platform/platform-ui";
 import { FOLLOW_HEADER, FOLLOW_STAGES, type FollowStageId } from "./follow-the-record-data";
+import { StageInteractiveOverlay } from "./StageOverlays";
 import styles from "./FollowTheRecordSection.module.css";
 
 /** Short scroll triggers — states, not full-page slides. */
@@ -43,30 +44,36 @@ function StageRail({
   );
 }
 
-function StageVisual({ stageId }: { stageId: FollowStageId }) {
+function StageVisual({ stageId, active }: { stageId: FollowStageId; active: boolean }) {
   const reducedMotion = useReducedMotion();
-  const active = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
+  const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
 
   return (
     <div className={styles.visualShell} aria-live="polite">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          key={active.id}
+          key={stage.id}
           className={styles.visualFrame}
           initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={reducedMotion ? undefined : { opacity: 0, y: -12, scale: 0.99 }}
           transition={{ duration: 0.55, ease }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- original demo stage PNGs */}
-          <img
-            src={active.image}
-            alt={active.alt}
-            width={1672}
-            height={941}
-            decoding="async"
-            fetchPriority="high"
-          />
+          <div className={styles.stageVisual}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- original demo stage PNGs */}
+            <img
+              className={styles.stageBaseImage}
+              src={stage.image}
+              alt={stage.alt}
+              width={1672}
+              height={941}
+              decoding="async"
+              fetchPriority="high"
+            />
+            <div className={styles.interactiveOverlay}>
+              <StageInteractiveOverlay stageId={stage.id} active={active} />
+            </div>
+          </div>
         </motion.div>
       </AnimatePresence>
     </div>
@@ -100,13 +107,92 @@ function StageCopy({ stageId }: { stageId: FollowStageId }) {
   );
 }
 
+function MobileStageVisual({ stageId }: { stageId: FollowStageId }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [active, setActive] = useState(false);
+  const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && entry.intersectionRatio >= 0.5) {
+          setActive(true);
+        }
+      },
+      { threshold: [0.5] },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [stageId]);
+
+  return (
+    <div ref={ref} className={styles.mobileVisual}>
+      <div className={styles.stageVisual}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className={styles.stageBaseImage}
+          src={stage.image}
+          alt={stage.alt}
+          width={1672}
+          height={941}
+          decoding="async"
+        />
+        <div className={styles.interactiveOverlay}>
+          <StageInteractiveOverlay stageId={stage.id} active={active} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileStageTabs({
+  activeId,
+  onSelect,
+}: {
+  activeId: FollowStageId;
+  onSelect: (id: FollowStageId) => void;
+}) {
+  const listRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const root = listRef.current;
+    if (!root) return;
+    const btn = root.querySelector<HTMLButtonElement>(`[data-stage="${activeId}"]`);
+    btn?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [activeId]);
+
+  return (
+    <nav className={styles.mobileTabs} aria-label="Follow the record stages" ref={listRef}>
+      {FOLLOW_STAGES.map((stage) => {
+        const active = stage.id === activeId;
+        return (
+          <button
+            key={stage.id}
+            type="button"
+            data-stage={stage.id}
+            className={`${styles.mobileTab}${active ? ` ${styles.mobileTabActive}` : ""}`}
+            onClick={() => onSelect(stage.id)}
+            aria-current={active ? "step" : undefined}
+          >
+            {stage.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
 /**
  * See It Live — Attio-style sticky scrollytelling.
  * Short scroll triggers swap one pinned visual; left rail stays fixed.
+ * Motion overlays animate story beats on SOURCE / NORMALIZE (first pass).
  */
 export function FollowTheRecordSection() {
   const reducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [mobileActiveId, setMobileActiveId] = useState<FollowStageId>("source");
   const pinRef = useRef<HTMLDivElement | null>(null);
   const stage = FOLLOW_STAGES[activeIndex] ?? FOLLOW_STAGES[0];
 
@@ -148,6 +234,30 @@ export function FollowTheRecordSection() {
     window.scrollTo({ top: target, behavior: reducedMotion ? "auto" : "smooth" });
   }
 
+  function goToMobileStage(id: FollowStageId) {
+    setMobileActiveId(id);
+    document.getElementById(`journey-${id}`)?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
+
+  useEffect(() => {
+    const nodes = FOLLOW_STAGES.map((s) => document.getElementById(`journey-${s.id}`)).filter(
+      (n): n is HTMLElement => Boolean(n),
+    );
+    if (nodes.length === 0) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        const id = visible?.target.id.replace("journey-", "") as FollowStageId | undefined;
+        if (id && FOLLOW_STAGES.some((s) => s.id === id)) setMobileActiveId(id);
+      },
+      { threshold: [0.35, 0.55], rootMargin: "-20% 0px -40% 0px" },
+    );
+    nodes.forEach((n) => io.observe(n));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <section id="journey" className={`${styles.section} scroll-mt-24`} aria-labelledby="follow-record-heading">
       <div
@@ -173,7 +283,7 @@ export function FollowTheRecordSection() {
             </div>
 
             <div className={styles.right}>
-              <StageVisual stageId={stage.id} />
+              <StageVisual stageId={stage.id} active />
               {/* Stage headlines are baked into the PNGs — keep live text for screen readers only. */}
               <div className={styles.stageCopyDesktop}>
                 <StageCopy stageId={stage.id} />
@@ -195,19 +305,21 @@ export function FollowTheRecordSection() {
             <span aria-hidden>→</span>
           </Link>
         </header>
+
+        <div className={styles.mobileTabsSticky}>
+          <MobileStageTabs activeId={mobileActiveId} onSelect={goToMobileStage} />
+        </div>
+
         {FOLLOW_STAGES.map((item) => (
           <article key={item.id} className={styles.mobileStage} id={`journey-${item.id}`}>
             <p className={styles.stageMeta}>
-              {item.number} {item.label}
+              {item.number} · {item.label}
             </p>
-            <h3 className={styles.stageHeadline} style={SERIF}>
+            <h3 className={styles.mobileStageHeadline} style={SERIF}>
               {item.headline}
             </h3>
-            <p className={styles.stageBody}>{item.body}</p>
-            <div className={styles.mobileVisual}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.image} alt={item.alt} width={1672} height={941} decoding="async" />
-            </div>
+            <p className={styles.mobileStageBody}>{item.body}</p>
+            <MobileStageVisual stageId={item.id} />
           </article>
         ))}
       </div>
