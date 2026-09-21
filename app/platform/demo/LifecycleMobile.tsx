@@ -22,7 +22,7 @@ export function LifecycleMobile({
           className="plc-mobile-rail-fill"
           style={{
             height: `${drawProgress * 100}%`,
-            transition: reducedMotion ? undefined : "height 1s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: reducedMotion ? undefined : "height 0.9s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
         />
       </div>
@@ -30,16 +30,16 @@ export function LifecycleMobile({
       {LIFECYCLE_STAGES.map((stage, index) => {
         const active = index === activeIndex;
         return (
-          <div key={stage.id} className={`plc-mobile-item${active ? " is-active" : ""}`} role="listitem">
-            <button type="button" className="plc-mobile-label" onClick={() => onSelect(index)}>
-              <span className="plc-label-num">{stage.number}</span>
-              <span className="plc-label-title" style={SERIF}>
+          <div key={stage.id} className={`plc-mobile-row${active ? " is-active" : ""}`} role="listitem">
+            <button type="button" className="plc-mobile-stage" onClick={() => onSelect(index)}>
+              <span className="plc-stage-num">{stage.number}</span>
+              <span className="plc-stage-title" style={SERIF}>
                 {stage.title}
               </span>
-              <span className="plc-label-short">{stage.shortDescription}</span>
+              <span className="plc-stage-desc">{stage.shortDescription}</span>
             </button>
             {active ? (
-              <div className="plc-mobile-editorial">
+              <div className="plc-mobile-detail">
                 <LifecycleEditorial stage={stage} reducedMotion={reducedMotion} />
               </div>
             ) : null}
