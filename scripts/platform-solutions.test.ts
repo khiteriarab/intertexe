@@ -70,10 +70,11 @@ describe("Platform solutions page", () => {
     assert.doesNotMatch(page, /solutions-shot-overlay/);
   });
 
-  it("keeps the public page free of pricing, API and internal language", () => {
+  it("keeps the public page free of module pricing and API language", () => {
     assert.doesNotMatch(page, /\bAPI\b/);
     assert.doesNotMatch(page, /module/i);
-    assert.doesNotMatch(page, /€|pricing/i);
+    assert.doesNotMatch(page, /€/);
+    assert.match(page, /Explore pricing/);
   });
 
   it("trims the navigation to Solutions, Pricing and See it live", () => {
