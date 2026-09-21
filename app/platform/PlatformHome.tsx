@@ -1,17 +1,17 @@
 import { SalesHeroSection } from "./sales-home-sections";
 import { PlatformCircularWardrobeBanner } from "./PlatformCircularWardrobeBanner";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
-import { HomepageLifecycleSection } from "../../components/home/lifecycle/HomepageLifecycleSection";
+import { LifecycleOverviewSection } from "../../components/home/lifecycle/LifecycleOverviewSection";
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: platform hero → lifecycle explainer → pillars → guide.
+ * Journey: platform hero → seven-stage lifecycle overview → pillars → guide.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
       <SalesHeroSection />
-      <HomepageLifecycleSection />
+      <LifecycleOverviewSection />
       <PlatformHowItWorksSection />
       <PlatformCircularWardrobeBanner />
     </div>
