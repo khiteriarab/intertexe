@@ -787,7 +787,248 @@
   }
 }
 
-/* Scroll workflow chart — sticky rail + product panels */
+/* Follow the Record — Attio-style sequence: left rail + open stage pane */
+
+.demo-flow {
+  --flow-bg: #fcfbf8;
+  --flow-ink: #1f1f1c;
+  --flow-muted: #6b6760;
+  --flow-line: #e8e4dc;
+  --flow-gold: #c4a574;
+
+  background: var(--flow-bg);
+  color: var(--flow-ink);
+  border-top: 1px solid var(--flow-line);
+  padding: 0 0 5rem;
+}
+
+.demo-flow-intro {
+  width: min(1120px, calc(100% - 3.5rem));
+  margin: 0 auto;
+  padding: 3.5rem 0 2.5rem;
+}
+
+.demo-flow-eyebrow {
+  margin: 0 0 0.75rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--flow-muted);
+}
+
+.demo-flow-heading {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(1.85rem, 3.4vw, 2.55rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--flow-ink);
+}
+
+.demo-flow-lede {
+  margin: 0.9rem 0 0;
+  max-width: 34rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--flow-muted);
+}
+
+.demo-flow-layout {
+  width: min(1240px, calc(100% - 3.5rem));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-layout {
+    grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr);
+    gap: 3.5rem;
+    align-items: start;
+  }
+}
+
+.demo-flow-rail {
+  position: sticky;
+  top: 6.25rem;
+}
+
+.demo-flow-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-list {
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    border-left: 1px solid var(--flow-line);
+    padding-bottom: 0;
+  }
+}
+
+.demo-flow-rail-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: auto;
+  padding: 0.55rem 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+  color: #a8a49c;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-btn {
+    width: 100%;
+    padding: 0.85rem 0 0.85rem 1.15rem;
+    white-space: normal;
+  }
+}
+
+.demo-flow-rail-btn:hover {
+  color: var(--flow-ink);
+}
+
+.demo-flow-rail-btn.is-active {
+  color: var(--flow-ink);
+}
+
+.demo-flow-rail-indicator {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-indicator {
+    display: block;
+    width: 2px;
+    margin: 0.15rem 0 0.15rem -1.15rem;
+    background: transparent;
+    border-radius: 1px;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+
+  .demo-flow-rail-btn.is-active .demo-flow-rail-indicator {
+    background: var(--flow-gold);
+  }
+}
+
+.demo-flow-rail-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.demo-flow-rail-btn.is-active .demo-flow-rail-label {
+  font-weight: 500;
+}
+
+.demo-flow-rail-num {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.demo-flow-stage {
+  min-width: 0;
+}
+
+.demo-flow-stage-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.demo-flow-visual {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--flow-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.demo-flow-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.demo-flow-copy {
+  padding: 1.65rem 0 0;
+  border-top: 1px solid var(--flow-line);
+  margin-top: 1.65rem;
+  max-width: 36rem;
+}
+
+.demo-flow-meta {
+  margin: 0 0 0.55rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--flow-muted);
+}
+
+.demo-flow-title {
+  margin: 0 0 0.55rem;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--flow-ink);
+}
+
+.demo-flow-body {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--flow-muted);
+}
+
+@media (max-width: 959px) {
+  .demo-flow-intro,
+  .demo-flow-layout {
+    width: calc(100% - 2rem);
+  }
+
+  .demo-flow-rail-btn.is-active {
+    background: rgba(196, 165, 116, 0.1);
+    border-radius: 2px;
+  }
+
+  .demo-flow {
+    padding-bottom: 3.5rem;
+  }
+}
+
+/* Legacy scroll workflow chart — sticky rail + product panels */
 .demo-workflow-chart {
   background: var(--platform-bg);
 }

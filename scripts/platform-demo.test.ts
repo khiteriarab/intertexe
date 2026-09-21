@@ -246,8 +246,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(demo, /DemoScrollyJourney/);
     assert.doesNotMatch(demo, /DemoCatalogGrid/);
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
-    assert.match(workflow, /activeStep === "source"/);
-    assert.match(workflow, /activeStep === "normalize"/);
+    assert.match(workflow, /activeStep === "source"|activeStep === item\.id|id: "source"/);
+    assert.match(workflow, /demo-flow-rail|demo-flow-stage/);
     assert.match(workflow, /demo-source\.png/);
     assert.match(workflow, /demo-normalize\.png/);
     assert.match(workflow, /demo-validate\.png/);
@@ -257,6 +257,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(workflow, /demo-workflow-rail-product/);
     assert.doesNotMatch(workflow, /Featured product/);
     assert.doesNotMatch(workflow, /IntersectionObserver/);
+    assert.doesNotMatch(workflow, /demo-workflow-panel-inner/);
+    assert.match(workflow, /Six ways teams work the record/);
+    const flowCss = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/demo-tour.css"), "utf8");
+    assert.match(flowCss, /\.demo-flow-rail-indicator/);
+    assert.match(flowCss, /\.demo-flow-visual/);
+    assert.match(flowCss, /\.demo-flow-copy/);
+    assert.doesNotMatch(workflow, /rounded-xl border border-\[var\(--platform-border\)\]/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-validate.png")));
