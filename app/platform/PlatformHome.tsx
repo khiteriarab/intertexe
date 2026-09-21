@@ -5,7 +5,8 @@ import { LifecycleOverviewSection } from "../../components/home/lifecycle/Lifecy
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: platform hero → seven-stage lifecycle overview → pillars → guide.
+ * Journey: platform hero → homepage lifecycle hub (7 stages) → pillars → guide.
+ * Attio Follow the Record rail lives on /brands/demo only.
  */
 export function PlatformHome() {
   return (
