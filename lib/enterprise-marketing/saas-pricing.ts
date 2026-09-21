@@ -186,7 +186,7 @@ export const PUBLIC_PRICING_PLANS: PublicPricingPlan[] = [
     legacyPlanKey: "enterprise",
     name: "Enterprise",
     monthlyUSD: null,
-    commitmentMonths: 11,
+    commitmentMonths: 12,
     implementationFeeUSD: null,
     implementationFromUSD: 5_000,
     productLimit: null,
@@ -631,7 +631,7 @@ export const PRICING_FEATURE_GROUPS: PricingFeatureGroup[] = [
       {
         id: "commitment",
         label: "Commitment term",
-        values: { foundation: "6 months", intelligence: "6 months", enterprise: "11 months" },
+        values: { foundation: "6 months", intelligence: "6 months", enterprise: "12 months" },
       },
       {
         id: "billing",
@@ -690,7 +690,7 @@ export const PRICING_BILLING_POINTS: Array<{ title: string; copy: string }> = [
   },
   {
     title: "Fixed commitment",
-    copy: "Foundation and Intelligence require a six-month commitment. Enterprise agreements use an eleven-month initial commitment.",
+    copy: "Foundation and Intelligence require a six-month commitment. Enterprise agreements use a twelve-month initial commitment.",
   },
   {
     title: "One-time implementation",
@@ -717,7 +717,7 @@ export const PRICING_FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: "Are invoices monthly?",
-    a: "Yes. Subscription charges are invoiced every month. Foundation and Intelligence use a fixed six-month commitment; Enterprise uses an eleven-month initial commitment.",
+    a: "Yes. Subscription charges are invoiced every month. Foundation and Intelligence use a fixed six-month commitment; Enterprise uses a twelve-month initial commitment.",
   },
   {
     q: "Are prices shown in euros fixed?",
