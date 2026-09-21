@@ -104,7 +104,7 @@ const FAQ = [
 
 export default function DigitalProductPassportLandingPage() {
   return (
-    <PlatformChrome active="solutions">
+    <PlatformChrome active="dpp">
       <PlatformViewTracker event="platform_dpp_landing_view" />
       <JsonLd
         data={softwareApplicationJsonLd({

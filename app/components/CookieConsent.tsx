@@ -5,7 +5,7 @@ import Link from "next/link";
 import { isPlatformHost } from "@/lib/dashboard/constants";
 import { META_PIXEL_CONSENT_EVENT, META_PIXEL_CONSENT_KEY } from "../../lib/meta-pixel";
 
-const HIDE_PREFIXES = ["/brands", "/platform", "/partners", "/khiteri", "/dashboard", "/press-kit"];
+const HIDE_PREFIXES = ["/brands", "/platform", "/partners", "/khiteri", "/dashboard", "/press-kit", "/digital-product-passport"];
 
 function hideCookieBanner(pathname: string) {
   if (pathname === "/p" || pathname.startsWith("/p/")) return true;
