@@ -1,0 +1,463 @@
+/* Three-moment wireframe only — map / transition / walkthrough */
+
+.lcv2-wire {
+  --bg: #faf7f2;
+  --ink: #111111;
+  --muted: #3d3a36;
+  --quiet: #5a564f;
+  --faint: #9a948a;
+  --line: #d4cdc2;
+  --accent: #c4a574;
+  --gold: #c9a962;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.lcv2-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 0.6rem 1rem;
+  background: #101312;
+  color: #f5f3ef;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.lcv2-section-tag {
+  margin: 0 0 1.25rem;
+  padding: 0.35rem 0.55rem;
+  display: inline-block;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--quiet);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.lcv2-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+}
+
+@media (min-width: 768px) {
+  .lcv2-wrap {
+    padding: 3.75rem 2rem 6rem;
+  }
+}
+
+.lcv2-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+.lcv2-h1 {
+  margin: 0 0 1rem;
+  font-size: clamp(2.1rem, 3.8vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: -0.022em;
+  max-width: 16ch;
+}
+
+.lcv2-lede {
+  margin: 0 0 2.5rem;
+  max-width: 40rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ── A. MAP ── */
+
+.lcv2-map {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  aspect-ratio: 1180 / 540;
+  border: 1px dashed rgba(17, 17, 17, 0.14);
+  background: var(--bg);
+}
+
+.lcv2-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.lcv2-path-base {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lcv2-path-active {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lcv2-path-exit {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.75;
+  stroke-dasharray: 3 5;
+}
+
+.lcv2-anchor {
+  fill: var(--bg);
+  stroke: #b5aea3;
+  stroke-width: 1.5;
+}
+
+.lcv2-anchor.is-on {
+  fill: var(--accent);
+  stroke: #a88955;
+}
+
+.lcv2-micro {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.lcv2-micro-t {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  fill: var(--quiet);
+}
+
+.lcv2-lab {
+  position: absolute;
+  width: 10.5rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.lcv2-lab--above {
+  transform: translate(-50%, calc(-100% - 0.85rem));
+}
+
+.lcv2-lab--below {
+  transform: translate(-50%, 0.9rem);
+}
+
+.lcv2-lab-n {
+  display: block;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  color: var(--faint);
+  margin-bottom: 0.15rem;
+}
+
+.lcv2-lab.is-on .lcv2-lab-n {
+  color: var(--accent);
+}
+
+.lcv2-lab-t {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--quiet);
+}
+
+.lcv2-lab.is-on .lcv2-lab-t {
+  color: var(--ink);
+}
+
+.lcv2-lab-d {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--faint);
+}
+
+.lcv2-map-dims {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.45rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* ── B. TRANSITION ── */
+
+.lcv2-bridge {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 260px;
+  padding: 0 0 1.5rem;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 1.25rem 1.75rem;
+  align-items: start;
+}
+
+.lcv2-bridge-rail {
+  position: relative;
+  justify-self: center;
+  width: 1.75px;
+  height: 100%;
+  min-height: 240px;
+  background: linear-gradient(to bottom, var(--gold), var(--gold));
+}
+
+.lcv2-bridge-rail::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg);
+  border: 1.5px solid var(--gold);
+}
+
+.lcv2-bridge-copy {
+  padding-top: 4.5rem;
+  max-width: 34rem;
+}
+
+.lcv2-bridge-h {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.55rem, 2.4vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.lcv2-bridge-p {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.lcv2-bridge-note {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+
+/* ── C. WALKTHROUGH ── */
+
+.lcv2-walk {
+  max-width: 1280px;
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid transparent;
+}
+
+.lcv2-walk-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.lcv2-walk-rail {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.lcv2-walk-rail::before {
+  content: "";
+  position: absolute;
+  left: 0.4rem;
+  top: -2.5rem;
+  bottom: 0.5rem;
+  width: 1.75px;
+  background: var(--gold);
+}
+
+.lcv2-walk-rail ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1.6rem;
+}
+
+.lcv2-walk-rail li {
+  position: relative;
+  min-height: 3.2rem;
+}
+
+.lcv2-walk-rail li::before {
+  content: "";
+  position: absolute;
+  left: -1.28rem;
+  top: 0.4rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: var(--bg);
+}
+
+.lcv2-walk-rail li.is-on::before {
+  background: var(--accent);
+}
+
+.lcv2-walk-n {
+  display: block;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  margin-bottom: 0.15rem;
+}
+
+.lcv2-walk-t {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.95rem;
+  color: var(--quiet);
+}
+
+.lcv2-walk-rail li.is-on .lcv2-walk-t {
+  color: var(--ink);
+}
+
+.lcv2-stage {
+  position: sticky;
+  top: 6.5rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: #fff;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+}
+
+.lcv2-stage-inner {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(-6%, -4%, 0) scale(1.12);
+  transform-origin: 35% 40%;
+}
+
+.lcv2-stage-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  display: block;
+}
+
+.lcv2-cursor {
+  position: absolute;
+  left: 42%;
+  top: 48%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(17, 17, 17, 0.85);
+  box-shadow: 0 0 0 2px #fff;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+.lcv2-anno {
+  position: absolute;
+  left: 48%;
+  top: 42%;
+  z-index: 3;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid rgba(17, 17, 17, 0.2);
+  background: rgba(250, 247, 242, 0.95);
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.lcv2-highlight {
+  position: absolute;
+  left: 28%;
+  top: 36%;
+  width: 38%;
+  height: 22%;
+  border: 1.5px solid var(--accent);
+  background: rgba(196, 165, 116, 0.08);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.lcv2-stage-meta {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.65rem;
+  z-index: 4;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--quiet);
+  background: rgba(250, 247, 242, 0.9);
+  padding: 0.25rem 0.4rem;
+}
+
+.lcv2-ascii {
+  margin: 2.5rem 0 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: rgba(255, 255, 255, 0.45);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--muted);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+@media (max-width: 1023px) {
+  .lcv2-walk-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .lcv2-stage {
+    position: relative;
+    top: auto;
+  }
+
+  .lcv2-lab {
+    display: none;
+  }
+}
