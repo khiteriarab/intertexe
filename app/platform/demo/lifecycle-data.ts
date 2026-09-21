@@ -23,29 +23,28 @@ export type LifecycleStageId =
   | "use-learn"
   | "repair-recirculate";
 
-/** Desktop map positions in % of the canvas (origin top-left). */
-export type LifecycleMapPoint = { x: number; y: number };
+/** Marker anchor in the desktop canvas (px within 1320×720 view). */
+export type LifecyclePoint = { x: number; y: number };
 
 export type LifecycleStage = {
   id: LifecycleStageId;
   number: string;
   title: string;
-  /** Inactive / compact supporting line */
   shortDescription: string;
-  /** Full active explanation */
   description: string;
   terms: LifecycleTerm[];
   visualType: LifecycleVisualType;
-  /** Desktop node center */
-  map: LifecycleMapPoint;
+  point: LifecyclePoint;
 };
 
 /**
- * Map geometry (desktop):
- * 01 → 02 → 03
- *            ↓
- * 07 ← 06 ← 05 ← 04
+ * Serpentine geometry (canvas 1320 × 720):
+ * top L→R: 01 → 02 → 03
+ * drop: 03 → 04
+ * bottom R→L: 04 → 05 → 06 → 07
  */
+export const LIFECYCLE_CANVAS = { width: 1320, height: 720 } as const;
+
 export const LIFECYCLE_STAGES: LifecycleStage[] = [
   {
     id: "source-make",
@@ -53,7 +52,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     title: "Source & Make",
     shortDescription: "Materials, suppliers, manufacturing.",
     description:
-      "Capture how the product begins: materials, suppliers, components and manufacturing.",
+      "Capture how the product begins across materials, suppliers, components and manufacturing.",
     terms: [
       { label: "Raw Materials" },
       { label: "Suppliers", href: marketingPath("supplier-data") },
@@ -61,7 +60,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Supply Chain Tiers" },
     ],
     visualType: "converge",
-    map: { x: 12, y: 22 },
+    point: { x: 160, y: 148 },
   },
   {
     id: "clean-connect",
@@ -77,7 +76,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Product Master Data", href: marketingPath("product-intelligence") },
     ],
     visualType: "normalize",
-    map: { x: 42, y: 22 },
+    point: { x: 560, y: 148 },
   },
   {
     id: "trace-prove",
@@ -92,7 +91,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Supplier Evidence" },
     ],
     visualType: "trace",
-    map: { x: 78, y: 22 },
+    point: { x: 1060, y: 148 },
   },
   {
     id: "check-prepare",
@@ -100,7 +99,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     title: "Check & Prepare",
     shortDescription: "Close gaps. Ready for DPP.",
     description:
-      "Identify missing information and prepare products for sustainability, compliance and Digital Product Passport requirements.",
+      "Identify missing information and prepare the product for sustainability, regulatory and Digital Product Passport requirements.",
     terms: [
       { label: "ESPR" },
       { label: "Compliance" },
@@ -108,7 +107,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Audit Evidence" },
     ],
     visualType: "checklist",
-    map: { x: 78, y: 72 },
+    point: { x: 1060, y: 520 },
   },
   {
     id: "passport-publish",
@@ -116,7 +115,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     title: "Passport & Publish",
     shortDescription: "Governed identity, published.",
     description:
-      "Turn the verified product record into a Digital Product Passport and distribute governed information through connected channels.",
+      "Turn the verified record into a Digital Product Passport and distribute governed information through connected channels.",
     terms: [
       { label: "Digital Product Passport", href: marketingPath("digital-product-passport") },
       { label: "Unique Product ID" },
@@ -124,7 +123,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Interoperability" },
     ],
     visualType: "publish",
-    map: { x: 50, y: 72 },
+    point: { x: 720, y: 520 },
   },
   {
     id: "use-learn",
@@ -132,7 +131,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     title: "Use & Learn",
     shortDescription: "Intelligence from every channel.",
     description:
-      "Use the same product intelligence across consumer experiences, retail and analytics, and learn from the data it generates.",
+      "Use the same product intelligence across consumer experiences, retail and analytics and learn from the data it generates.",
     terms: [
       { label: "Consumer Experience" },
       { label: "Analytics" },
@@ -140,7 +139,7 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "Supplier Performance", href: marketingPath("supplier-data") },
     ],
     visualType: "signals",
-    map: { x: 28, y: 72 },
+    point: { x: 400, y: 520 },
   },
   {
     id: "repair-recirculate",
@@ -156,31 +155,29 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
       { label: "End of Life" },
     ],
     visualType: "loop",
-    map: { x: 10, y: 72 },
+    point: { x: 160, y: 520 },
   },
 ];
 
-/** Cubic paths between consecutive map points (viewBox 0 0 100 100). */
-export function lifecycleConnectorPath(from: LifecycleMapPoint, to: LifecycleMapPoint): string {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  // Vertical drop from TRACE → CHECK: mild S
-  if (Math.abs(dx) < 8 && dy > 20) {
-    return `M ${from.x} ${from.y} C ${from.x + 6} ${from.y + dy * 0.35}, ${to.x - 6} ${to.y - dy * 0.35}, ${to.x} ${to.y}`;
-  }
-  // Horizontal with slight bow
-  const midY = (from.y + to.y) / 2 + (from.y < 40 ? -2 : 2);
-  return `M ${from.x} ${from.y} C ${from.x + dx * 0.4} ${midY}, ${to.x - dx * 0.4} ${midY}, ${to.x} ${to.y}`;
+/** Continuous serpentine ribbon through all marker centers. */
+export function buildLifecycleRibbonPath(stages: LifecycleStage[] = LIFECYCLE_STAGES): string {
+  const [a, b, c, d, e, f, g] = stages.map((s) => s.point);
+  return [
+    `M ${a.x} ${a.y}`,
+    `C ${a.x + 120} ${a.y}, ${b.x - 120} ${b.y}, ${b.x} ${b.y}`,
+    `C ${b.x + 140} ${b.y}, ${c.x - 140} ${c.y}, ${c.x} ${c.y}`,
+    `C ${c.x} ${c.y + 110}, ${d.x} ${d.y - 110}, ${d.x} ${d.y}`,
+    `C ${d.x - 110} ${d.y}, ${e.x + 110} ${e.y}, ${e.x} ${e.y}`,
+    `C ${e.x - 100} ${e.y}, ${f.x + 100} ${f.y}, ${f.x} ${f.y}`,
+    `C ${f.x - 90} ${f.y}, ${g.x + 90} ${g.y}, ${g.x} ${g.y}`,
+  ].join(" ");
 }
 
-export const LIFECYCLE_CONNECTORS = LIFECYCLE_STAGES.slice(0, -1).map((stage, i) => {
-  const next = LIFECYCLE_STAGES[i + 1];
-  return {
-    id: `${stage.id}__${next.id}`,
-    d: lifecycleConnectorPath(stage.map, next.map),
-    fromIndex: i,
-    toIndex: i + 1,
-  };
-});
+export const LIFECYCLE_RIBBON_D = buildLifecycleRibbonPath();
 
-export const LIFECYCLE_STEP_MS = 1800;
+/** Travel duration between stages (ms). */
+export const LIFECYCLE_TRAVEL_MS = 1050;
+/** Dwell on an active stage (ms). */
+export const LIFECYCLE_DWELL_MS = 2000;
+/** Pause after manual click before autoplay resumes (ms). */
+export const LIFECYCLE_RESUME_MS = 4500;
