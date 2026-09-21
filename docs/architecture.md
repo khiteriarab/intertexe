@@ -2,6 +2,17 @@
 
 Onboarding map for engineers. For fashion-brand vs organization naming, see [`brand-domain-naming-audit.md`](./brand-domain-naming-audit.md). For hosts and cookies, see [`b2b-entry-architecture.md`](./b2b-entry-architecture.md) (sales path is `/brands`).
 
+## Start here
+
+- **Consumer product** → `app/` consumer routes (`designers`, `shop`, …) / catalog helpers in `lib/` (`brand-*`, `catalog-*`, …)
+- **Enterprise SaaS** → `app/dashboard/(org)/` / `lib/enterprise/`
+- **Internal HQ** → `app/dashboard/(app)/` / `lib/dashboard/`
+
+- **Consumer DB** → `getConsumerSupabase`
+- **Enterprise DB** → `getObeliskServiceClient`
+
+Treat this layout as the baseline. Do not restructure unless a product feature, deployment need, security issue, or extraction task requires it.
+
 ## Surfaces (one line each)
 
 | Surface | What it is | Where to look |
