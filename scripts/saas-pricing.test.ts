@@ -73,16 +73,10 @@ describe("Public SaaS pricing presentation", () => {
     assert.match(experience, /PRICING_FEATURE_GROUPS/);
     assert.match(experience, /Show differences only/);
     assert.match(experience, /saas-pricing-plan-tabs/);
-    assert.match(experience, /Implementation &amp; Support|Implementation & Support/);
-    assert.match(experience, /We configure INTERTEXE around your business/);
-    assert.match(experience, /not a fee for us to manually type in your catalogue/);
+    assert.doesNotMatch(experience, /We configure INTERTEXE around your business/);
+    assert.doesNotMatch(experience, /saas-pricing-impl/);
+    assert.doesNotMatch(experience, /PRICING_IMPLEMENTATION_STAGES/);
     assert.match(experience, /How billing works/);
-    // Mid-page Implementation block removed — narrative lives after Compare.
-    const implIdx = experience.indexOf("pricing-impl-heading");
-    const compareIdx = experience.indexOf("pricing-compare-heading");
-    const billingIdx = experience.indexOf("pricing-billing-heading");
-    assert.ok(compareIdx > 0 && implIdx > compareIdx, "Implementation & Support should follow Compare");
-    assert.ok(billingIdx > implIdx, "Billing should follow Implementation & Support");
     assert.equal(PUBLIC_PRICING_PLANS[2].commitmentMonths, 12);
     assert.match(brands, /Foundation, Intelligence, Enterprise/);
     assert.match(css, /\.saas-pricing-card/);
@@ -93,5 +87,8 @@ describe("Public SaaS pricing presentation", () => {
     assert.match(config, /It is not a fee for us to manually type in your catalogue/);
     assert.match(config, /PRICING_BILLING_POINTS/);
     assert.match(config, /What counts as an active product record/);
+    // Implementation fees remain in the comparison matrix, not a separate narrative block.
+    assert.match(config, /label: "Implementation & Support"/);
+    assert.match(config, /One-time implementation/);
   });
 });
