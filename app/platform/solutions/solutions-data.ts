@@ -24,7 +24,7 @@ export const SOLUTIONS: SolutionCard[] = [
   {
     key: "traceability",
     label: "Traceability + compliance",
-    title: "Know where every product came from.",
+    title: "Know where every product came from — and whether it is ready.",
     description:
       "Trace materials and manufacturing, identify evidence gaps, resolve conflicting data, and prepare product records for Digital Product Passports and evolving regulation.",
     tags: ["Traceability", "Evidence verification", "Compliance readiness", "DPP preparation", "Regulatory intelligence"],
@@ -46,8 +46,8 @@ export const SOLUTIONS: SolutionCard[] = [
     label: "Digital Product Passport",
     title: "Turn approved data into a living product identity.",
     description:
-      "Publish trusted product information for consumers, regulators, and partners through a persistent digital passport connected to the original governed record.",
-    tags: ["Digital Product Passport", "Consumer transparency", "QR-ready", "Care information", "Verified product data"],
+      "Publish trusted product information for consumers, regulators, and partners through a persistent digital passport — hosted by INTERTEXE, white-labeled for your brand, or connected through API — from the same governed record.",
+    tags: ["Digital Product Passport", "Hosted · white label · API", "QR · NFC · RFID", "Consumer transparency", "Verified product data"],
     href: "/brands/digital-product-passport",
     icon: "passports",
   },
@@ -56,7 +56,7 @@ export const SOLUTIONS: SolutionCard[] = [
     label: "Connected product lifecycle",
     title: "Keep the product record working after the first sale.",
     description:
-      "Extend product intelligence into care, repair, resale value, ownership transfer, circularity, and next-life experiences from the same record.",
+      "Extend product intelligence into care, repair, resale value, ownership transfer, circularity, and next-life experiences — delivered through passport, QR, or your own channels from the same record.",
     tags: ["Care + repair", "Resale value", "Ownership transfer", "Next life", "Circularity"],
     href: "/brands/solutions",
     icon: "workflows",

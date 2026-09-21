@@ -245,13 +245,14 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /headless API/i);
   });
 
-  it("keeps detailed comparison off the home page; FAQ lives on Solutions", () => {
+  it("keeps detailed comparison and FAQ off the home page; Solutions has no FAQ block", () => {
     const solutionsPage = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/page.tsx"), "utf8");
     assert.match(faq, /more transparent industry/i);
     assert.match(faq, /does not fabricate product data/i);
     assert.match(faq, /headless API/i);
     assert.doesNotMatch(home, /PlatformFaq/);
-    assert.match(solutionsPage, /PlatformFaq/);
+    assert.doesNotMatch(solutionsPage, /PlatformFaq/);
+    assert.doesNotMatch(solutionsPage, /SalesDeliverySection/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
     assert.match(page, /dynamic = "force-static"/);
