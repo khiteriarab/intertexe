@@ -5,23 +5,21 @@ import { useEffect, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { SERIF } from "../platform-ui";
 import { LIFECYCLE_STAGES, LIFECYCLE_STEP_MS } from "./lifecycle-data";
-import { LifecyclePath } from "./LifecyclePath";
-import { LifecycleStep } from "./LifecycleStep";
+import { LifecycleMap } from "./LifecycleMap";
 import "./lifecycle.css";
 
 export function ProductLifecycleSection() {
   const reducedMotion = useReducedMotion() ?? false;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    if (reducedMotion) return;
+    if (reducedMotion || paused) return;
     const id = window.setInterval(() => {
       setActiveIndex((i) => (i + 1) % LIFECYCLE_STAGES.length);
     }, LIFECYCLE_STEP_MS);
     return () => window.clearInterval(id);
-  }, [reducedMotion]);
-
-  const progress = (activeIndex + 1) / LIFECYCLE_STAGES.length;
+  }, [reducedMotion, paused]);
 
   return (
     <section id="hero" className="plc-section scroll-mt-24" aria-labelledby="plc-heading">
@@ -41,26 +39,30 @@ export function ProductLifecycleSection() {
               See a live product →
             </Link>
             <Link href="#journey" className="demo-editorial-btn-text">
-              Or explore the workflow
+              Or explore how teams use it
             </Link>
           </div>
         </header>
 
-        <div className="plc-timeline" role="list">
-          <div className="plc-path-slot">
-            <LifecyclePath progress={progress} reducedMotion={reducedMotion} />
-          </div>
-
-          {LIFECYCLE_STAGES.map((stage, index) => (
-            <LifecycleStep
-              key={stage.id}
-              stage={stage}
-              index={index}
-              active={activeIndex === index}
-              onSelect={() => setActiveIndex(index)}
-            />
-          ))}
+        <div
+          className="plc-canvas"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setPaused(false);
+          }}
+        >
+          <LifecycleMap
+            activeIndex={activeIndex}
+            onSelect={setActiveIndex}
+            reducedMotion={reducedMotion}
+          />
         </div>
+
+        <p className="plc-footnote">
+          How a product and its data move through INTERTEXE — distinct from the workflow walkthrough below.
+        </p>
       </div>
     </section>
   );

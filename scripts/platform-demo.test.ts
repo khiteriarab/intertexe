@@ -267,11 +267,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
     assert.match(lifecycle, /From material to next life/);
-    assert.match(lifecycle, /LifecyclePath/);
+    assert.match(lifecycle, /LifecycleMap/);
     assert.match(lifecycleData, /Source & Make/);
     assert.match(lifecycleData, /Repair & Recirculate/);
+    assert.match(lifecycleData, /shortDescription/);
     assert.match(lifecycleData, /id: "source-make"/);
     assert.match(lifecycleData, /id: "repair-recirculate"/);
+    assert.match(lifecycleData, /LIFECYCLE_CONNECTORS/);
     assert.equal([...lifecycleData.matchAll(/id: "[a-z-]+"/g)].length, 7);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
