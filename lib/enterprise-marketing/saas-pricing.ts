@@ -668,18 +668,18 @@ export const PRICING_IMPLEMENTATION_STAGES: Array<{
 }> = [
   {
     step: "01",
-    title: "Connect",
-    copy: "Bring in product, material, supplier and existing system data.",
+    title: "Architect & connect",
+    copy: "Configure your account and data model, map existing product fields into INTERTEXE, and connect Shopify, PIM, ERP, CSV, or API workflows where they apply.",
   },
   {
     step: "02",
-    title: "Configure",
-    copy: "INTERTEXE structures your environment, data rules, workflows and publishing settings.",
+    title: "Structure & publish",
+    copy: "Set up materials, supplier, certification, lifecycle, and passport structures — including DPP templates and publishing logic — then test QR and passport outputs.",
   },
   {
     step: "03",
-    title: "Launch",
-    copy: "Validate the setup, train your team and begin publishing governed product intelligence.",
+    title: "Validate & hand over",
+    copy: "Validate the first product batch, resolve data-quality gaps, train your team, and QA before launch so you can manage or sync additional products yourselves.",
   },
 ];
 
@@ -694,7 +694,7 @@ export const PRICING_BILLING_POINTS: Array<{ title: string; copy: string }> = [
   },
   {
     title: "One-time implementation",
-    copy: "Implementation is charged separately at the beginning of the engagement.",
+    copy: "A separate fee to configure INTERTEXE around your business and get you production-ready — not to manually enter your catalogue.",
   },
   {
     title: "USD pricing",
@@ -709,7 +709,7 @@ export const PRICING_BILLING_POINTS: Array<{ title: string; copy: string }> = [
 export const PRICING_FAQ: Array<{ q: string; a: string }> = [
   {
     q: "Why is there an implementation fee?",
-    a: "It covers migration, configuration, and training: connecting product, material, and supplier data; structuring rules, workflows, and publishing; validating the workspace; and preparing your team so INTERTEXE is ready to operate — not provisioned empty.",
+    a: "It is how we configure INTERTEXE around your business and get you production-ready: account and data architecture, field mapping, materials/supplier/certification/lifecycle/passport structures, system connections (Shopify, PIM, ERP, CSV, API where applicable), DPP templates and publishing logic, QR and passport testing, first-batch validation, data-quality fixes, team training, and pre-launch QA. After that foundation, your team manages or syncs additional products. It is not a fee for us to manually type in your catalogue.",
   },
   {
     q: "Can I cancel before my commitment ends?",

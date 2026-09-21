@@ -73,12 +73,16 @@ describe("Public SaaS pricing presentation", () => {
     assert.match(experience, /PRICING_FEATURE_GROUPS/);
     assert.match(experience, /Show differences only/);
     assert.match(experience, /saas-pricing-plan-tabs/);
-    assert.match(experience, /Implementation that gets your data ready to work/);
+    assert.match(experience, /We configure INTERTEXE around your business/);
+    assert.match(experience, /not a fee for us to manually type in your catalogue/);
     assert.match(experience, /How billing works/);
     assert.match(brands, /Foundation, Intelligence, Enterprise/);
     assert.match(css, /\.saas-pricing-card/);
     assert.match(css, /\.saas-pricing-plan-tabs/);
     assert.match(config, /PRICING_IMPLEMENTATION_STAGES/);
+    assert.match(config, /Architect & connect/);
+    assert.match(config, /not to manually enter your catalogue/);
+    assert.match(config, /It is not a fee for us to manually type in your catalogue/);
     assert.match(config, /PRICING_BILLING_POINTS/);
     assert.match(config, /What counts as an active product record/);
   });

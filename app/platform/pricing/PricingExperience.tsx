@@ -104,11 +104,12 @@ export function PricingExperience() {
           <div className="saas-pricing-section-head">
             <Eyebrow>Implementation</Eyebrow>
             <Heading id="pricing-impl-heading" className="mb-4">
-              Implementation that gets your data ready to work.
+              We configure INTERTEXE around your business.
             </Heading>
             <Body className="mb-0">
-              The fee is professional services — migration, configuration, and launch — not a random setup
-              charge for an empty workspace.
+              The one-time fee gets you production-ready: architecture, field mapping, system connections, passport
+              structures, first-batch validation, and team training — so you can manage or sync products yourselves.
+              It is not a fee for us to manually type in your catalogue.
             </Body>
           </div>
 
