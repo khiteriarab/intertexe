@@ -54,7 +54,7 @@ export function PlatformCircularWardrobeBanner() {
         <div className="platform-ebook-copy">
           <p className="platform-ebook-eyebrow">INTERTEXE platform</p>
           <h2 id="platform-ebook-title" className="platform-ebook-title" style={SERIF}>
-            <em>Ebook</em> download
+            <em>Guide</em> download
           </h2>
           <p className="platform-ebook-sub">
             A practical guide to using INTERTEXE software — from governed product records to Digital Product

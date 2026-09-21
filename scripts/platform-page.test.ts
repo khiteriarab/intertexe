@@ -87,7 +87,7 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(home, /from \".\/sales-sections\"/);
     assert.doesNotMatch(home, /SalesPlatformBreadthSection/);
     assert.doesNotMatch(home, /PlatformProofSection/);
-    assert.match(home, /PlatformFaq/);
+    assert.doesNotMatch(home, /PlatformFaq/);
     assert.doesNotMatch(home, /SalesStartFreeSection/);
     assert.match(home, /PlatformCircularWardrobeBanner/);
     assert.match(requestPage, /platform-request-page/);
@@ -119,8 +119,9 @@ describe("Platform B2B sales page", () => {
     const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
     assert.match(banner, /Request a demo/);
     assert.match(banner, /\/brands\/request/);
-    assert.match(banner, /Ebook/);
+    assert.match(banner, /Guide/);
     assert.match(banner, /platform-ebook/);
+    assert.doesNotMatch(banner, /<em>Ebook<\/em>/);
     assert.doesNotMatch(banner, /Build the record your product deserves/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /flipMode="composition"/);
@@ -199,11 +200,13 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /headless API/i);
   });
 
-  it("keeps detailed comparison off the home page but includes FAQ", () => {
+  it("keeps detailed comparison off the home page; FAQ lives on Solutions", () => {
+    const solutionsPage = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/page.tsx"), "utf8");
     assert.match(faq, /more transparent industry/i);
     assert.match(faq, /does not fabricate product data/i);
     assert.match(faq, /headless API/i);
-    assert.match(home, /PlatformFaq/);
+    assert.doesNotMatch(home, /PlatformFaq/);
+    assert.match(solutionsPage, /PlatformFaq/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
     assert.match(page, /dynamic = "force-static"/);

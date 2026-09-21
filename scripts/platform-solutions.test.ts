@@ -59,6 +59,8 @@ describe("Platform solutions page", () => {
     const close = fs.readFileSync(path.join(process.cwd(), "app/platform/SolutionsClose.tsx"), "utf8");
     assert.match(page, /SolutionsClose/);
     assert.match(page, /SalesDeliverySection/);
+    assert.match(page, /PlatformFaq/);
+    assert.match(page, /<SalesDeliverySection\s*\/>[\s\S]*<PlatformFaq\s*\/>[\s\S]*<SolutionsClose/);
     assert.doesNotMatch(page, /One governed record\. Every stage connected\./);
     assert.doesNotMatch(page, /solutions-governed-record\.png/);
     assert.match(close, /One product record\. Every use case connected\./);
