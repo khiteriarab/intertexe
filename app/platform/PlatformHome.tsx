@@ -5,13 +5,13 @@ import { HomepageLifecycleSection } from "../../components/home/lifecycle/Homepa
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: lifecycle explainer (Kessler rhythm) → dark product intelligence → pillars → guide.
+ * Journey: platform hero → lifecycle explainer → pillars → guide.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
-      <HomepageLifecycleSection />
       <SalesHeroSection />
+      <HomepageLifecycleSection />
       <PlatformHowItWorksSection />
       <PlatformCircularWardrobeBanner />
     </div>
