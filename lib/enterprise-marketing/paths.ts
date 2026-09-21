@@ -13,6 +13,7 @@ export const MARKETING_RESERVED_SEGMENTS = [
   "demo",
   "see-it-live",
   "request",
+  "success-stories",
   "product-intelligence",
   "traceability",
   "environmental-intelligence",
