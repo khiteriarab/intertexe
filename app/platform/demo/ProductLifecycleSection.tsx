@@ -76,14 +76,14 @@ export function ProductLifecycleSection() {
 
     const tick = () => {
       if (Date.now() < pauseUntil.current) {
-        schedule(tick, 400);
+        schedule(tick, 350);
         return;
       }
       const next = (activeIndex + 1) % LIFECYCLE_STAGES.length;
       if (next === 0) {
         setPhase("travel");
         setDrawProgress(0);
-        schedule(() => goTo(0, { travel: true }), 260);
+        schedule(() => goTo(0, { travel: true }), 200);
         return;
       }
       goTo(next, { travel: true });
@@ -147,10 +147,6 @@ export function ProductLifecycleSection() {
           reducedMotion={reducedMotion}
           onSelect={(i) => goTo(i, { manual: true })}
         />
-
-        <p className="plc-footnote">
-          How a product and its data move through INTERTEXE — separate from the workflow walkthrough below.
-        </p>
       </div>
     </section>
   );

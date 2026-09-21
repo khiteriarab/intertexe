@@ -8,17 +8,9 @@ import {
   LIFECYCLE_STAGES,
   LIFECYCLE_TRAVEL_MS,
   LIFECYCLE_VIEW,
-  type LifecycleStage,
+  pointAtProgress,
+  stageAnchor,
 } from "./lifecycle-data";
-
-function labelStyle(stage: LifecycleStage): CSSProperties {
-  const { x, y, label } = stage.anchor;
-  const base: CSSProperties = { left: x, top: y };
-  if (label === "above") return { ...base, transform: "translate(-50%, calc(-100% - 18px))" };
-  if (label === "below") return { ...base, transform: "translate(-50%, 18px)" };
-  if (label === "right") return { ...base, transform: "translate(16px, -50%)", textAlign: "left" };
-  return { ...base, transform: "translate(calc(-100% - 16px), -50%)", textAlign: "right" };
-}
 
 export function LifecycleDiagram({
   activeIndex,
@@ -33,15 +25,15 @@ export function LifecycleDiagram({
 }) {
   const { width, height } = LIFECYCLE_VIEW;
   const clamped = Math.min(1, Math.max(0, drawProgress));
-  const active = LIFECYCLE_STAGES[activeIndex];
+  const traveler = pointAtProgress(clamped);
 
   return (
-    <div className="plc-diagram" style={{ aspectRatio: `${width} / ${height}` }}>
-      <svg className="plc-diagram-svg" viewBox={`0 0 ${width} ${height}`} aria-hidden>
-        <path className="plc-path-base" d={LIFECYCLE_PATH_D} fill="none" />
+    <div className="plc-track" style={{ aspectRatio: `${width} / ${height}` }}>
+      <svg className="plc-track-svg" viewBox={`0 0 ${width} ${height}`} aria-hidden>
+        <path className="plc-track-base" d={LIFECYCLE_PATH_D} fill="none" />
         {reducedMotion ? (
           <path
-            className="plc-path-accent"
+            className="plc-track-accent"
             d={LIFECYCLE_PATH_D}
             fill="none"
             pathLength={1}
@@ -50,7 +42,7 @@ export function LifecycleDiagram({
           />
         ) : (
           <motion.path
-            className="plc-path-accent"
+            className="plc-track-accent"
             d={LIFECYCLE_PATH_D}
             fill="none"
             pathLength={1}
@@ -60,67 +52,60 @@ export function LifecycleDiagram({
           />
         )}
 
-        <text className="plc-watermark" x={width / 2} y={height / 2 + 8} textAnchor="middle">
-          INTERTEXE
-        </text>
-
-        <g className="plc-ambient">
-          <circle cx="880" cy="145" r="18" fill="none" strokeWidth="1" />
-          <circle cx="896" cy="160" r="11" fill="none" strokeWidth="1" />
-          <circle cx="200" cy="470" r="16" fill="none" strokeWidth="1" />
-        </g>
-
-        {LIFECYCLE_STAGES.map((stage, i) => {
+        {LIFECYCLE_STAGES.map((_, i) => {
+          const { x, y } = stageAnchor(i);
           const lit = clamped >= i / Math.max(1, LIFECYCLE_STAGES.length - 1) - 0.001;
           const isActive = i === activeIndex;
           return (
             <circle
-              key={stage.id}
-              className={`plc-dot${lit ? " is-lit" : ""}${isActive ? " is-active" : ""}`}
-              cx={stage.anchor.x}
-              cy={stage.anchor.y}
-              r={isActive ? 6 : 3.5}
+              key={LIFECYCLE_STAGES[i].id}
+              className={`plc-anchor${lit ? " is-lit" : ""}${isActive ? " is-active" : ""}`}
+              cx={x}
+              cy={y}
+              r={isActive ? 5.5 : 3.5}
             />
           );
         })}
+
+        <motion.circle
+          className="plc-traveler"
+          r="5"
+          initial={false}
+          animate={{ cx: traveler.x, cy: traveler.y }}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : { duration: LIFECYCLE_TRAVEL_MS / 1000, ease: [0.4, 0, 0.2, 1] }
+          }
+        />
       </svg>
 
-      <div className="plc-labels">
+      <div className="plc-stages">
         {LIFECYCLE_STAGES.map((stage, index) => {
-          const isActive = index === activeIndex;
+          const { x, y } = stageAnchor(index);
+          const active = index === activeIndex;
+          const style: CSSProperties = {
+            left: `${(x / width) * 100}%`,
+            top: `${(y / height) * 100}%`,
+          };
           return (
             <button
               key={stage.id}
               type="button"
-              className={`plc-label plc-label--${stage.anchor.label}${isActive ? " is-active" : ""}`}
-              style={labelStyle(stage)}
+              className={`plc-stage plc-stage--${stage.labelSide}${active ? " is-active" : ""}`}
+              style={style}
               onClick={() => onSelect(index)}
-              aria-current={isActive ? "step" : undefined}
+              aria-current={active ? "step" : undefined}
             >
-              <span className="plc-label-num">{stage.number}</span>
-              <span className="plc-label-title" style={SERIF}>
+              <span className="plc-stage-num">{stage.number}</span>
+              <span className="plc-stage-title" style={SERIF}>
                 {stage.title}
               </span>
-              <span className="plc-label-short">{stage.shortDescription}</span>
+              <span className="plc-stage-desc">{stage.shortDescription}</span>
             </button>
           );
         })}
       </div>
-
-      <div className="plc-dot-hits">
-        {LIFECYCLE_STAGES.map((stage, index) => (
-          <button
-            key={`hit-${stage.id}`}
-            type="button"
-            className="plc-dot-hit"
-            style={{ left: stage.anchor.x, top: stage.anchor.y }}
-            onClick={() => onSelect(index)}
-            aria-label={stage.title}
-          />
-        ))}
-      </div>
-
-      <span className="sr-only">Current stage: {active.title}</span>
     </div>
   );
 }
