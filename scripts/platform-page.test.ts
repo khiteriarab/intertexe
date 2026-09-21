@@ -62,6 +62,7 @@ describe("Platform B2B sales page", () => {
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(homeSections, /PlatformBrandShowcaseHero/);
+    assert.match(home, /HomepageHeroLifecycleBridge/);
     assert.match(home, /PlatformHowItWorksSection/);
     assert.doesNotMatch(home, /PlatformFabricCinema/);
     const saasCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-saas.css"), "utf8");
@@ -69,6 +70,7 @@ describe("Platform B2B sales page", () => {
     assert.match(chrome, /platform-saas\.css/);
     assert.match(chrome, /platform-luxury\.css/);
     assert.match(home, /HomepageLifecycleSection/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-bridge.png")));
     assert.doesNotMatch(howItWorks, /ProductLifecycleSystem/);
     assert.doesNotMatch(howItWorks, /ProductLifecycleMap/);
     assert.doesNotMatch(howItWorks, /HomepageLifecycleSection/);

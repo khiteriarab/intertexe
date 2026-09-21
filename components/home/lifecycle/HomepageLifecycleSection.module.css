@@ -11,7 +11,7 @@
   background: var(--hlc-bg);
   color: var(--hlc-ink);
   font-family: var(--itx-sans, sans-serif);
-  padding: clamp(5.5rem, 10vw, 8.5rem) 0;
+  padding: clamp(3.5rem, 7vw, 6.5rem) 0 clamp(5.5rem, 10vw, 8.5rem);
 }
 
 .shell {
