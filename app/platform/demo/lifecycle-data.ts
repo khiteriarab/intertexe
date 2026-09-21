@@ -1,9 +1,18 @@
 import { marketingPath } from "../../../lib/enterprise-marketing/paths";
 
-export type LifecycleChip = {
+export type LifecycleTerm = {
   label: string;
   href?: string;
 };
+
+export type LifecycleVisualType =
+  | "converge"
+  | "normalize"
+  | "trace"
+  | "checklist"
+  | "publish"
+  | "signals"
+  | "loop";
 
 export type LifecycleStageId =
   | "source-make"
@@ -14,99 +23,164 @@ export type LifecycleStageId =
   | "use-learn"
   | "repair-recirculate";
 
+/** Desktop map positions in % of the canvas (origin top-left). */
+export type LifecycleMapPoint = { x: number; y: number };
+
 export type LifecycleStage = {
   id: LifecycleStageId;
+  number: string;
   title: string;
-  copy: string;
-  chips: LifecycleChip[];
-  statusLine: string;
+  /** Inactive / compact supporting line */
+  shortDescription: string;
+  /** Full active explanation */
+  description: string;
+  terms: LifecycleTerm[];
+  visualType: LifecycleVisualType;
+  /** Desktop node center */
+  map: LifecycleMapPoint;
 };
 
+/**
+ * Map geometry (desktop):
+ * 01 → 02 → 03
+ *            ↓
+ * 07 ← 06 ← 05 ← 04
+ */
 export const LIFECYCLE_STAGES: LifecycleStage[] = [
   {
     id: "source-make",
+    number: "01",
     title: "Source & Make",
-    copy: "Capture how the product begins: materials, suppliers, components and manufacturing.",
-    chips: [
+    shortDescription: "Materials, suppliers, manufacturing.",
+    description:
+      "Capture how the product begins: materials, suppliers, components and manufacturing.",
+    terms: [
       { label: "Raw Materials" },
       { label: "Suppliers", href: marketingPath("supplier-data") },
       { label: "Manufacturing" },
       { label: "Supply Chain Tiers" },
     ],
-    statusLine: "Inputs converging into one product identity",
+    visualType: "converge",
+    map: { x: 12, y: 22 },
   },
   {
     id: "clean-connect",
+    number: "02",
     title: "Clean & Connect",
-    copy: "Bring fragmented product information together, clean it, standardize it and connect it to one trusted product record.",
-    chips: [
+    shortDescription: "One trusted product record.",
+    description:
+      "Bring fragmented product information together, standardize it and connect it to one trusted product record.",
+    terms: [
       { label: "PLM / PIM / ERP" },
       { label: "Data Normalization" },
       { label: "Material Composition" },
       { label: "Product Master Data", href: marketingPath("product-intelligence") },
     ],
-    statusLine: "Fragmented fields resolving into a governed record",
+    visualType: "normalize",
+    map: { x: 42, y: 22 },
   },
   {
     id: "trace-prove",
+    number: "03",
     title: "Trace & Prove",
-    copy: "Connect claims to evidence so teams can prove where products and materials came from.",
-    chips: [
+    shortDescription: "Claims linked to evidence.",
+    description: "Connect product and material claims to evidence across the supply chain.",
+    terms: [
       { label: "Traceability", href: marketingPath("traceability") },
       { label: "Chain of Custody" },
       { label: "Provenance" },
       { label: "Supplier Evidence" },
     ],
-    statusLine: "Evidence linked to every material claim",
+    visualType: "trace",
+    map: { x: 78, y: 22 },
   },
   {
     id: "check-prepare",
+    number: "04",
     title: "Check & Prepare",
-    copy: "Identify missing information and prepare the product for sustainability, regulatory and Digital Product Passport requirements.",
-    chips: [
+    shortDescription: "Close gaps. Ready for DPP.",
+    description:
+      "Identify missing information and prepare products for sustainability, compliance and Digital Product Passport requirements.",
+    terms: [
       { label: "ESPR" },
       { label: "Compliance" },
       { label: "DPP Readiness", href: marketingPath("digital-product-passport") },
       { label: "Audit Evidence" },
     ],
-    statusLine: "Gaps closing · readiness improving",
+    visualType: "checklist",
+    map: { x: 78, y: 72 },
   },
   {
     id: "passport-publish",
+    number: "05",
     title: "Passport & Publish",
-    copy: "Turn the verified product record into a Digital Product Passport and publish it through connected channels.",
-    chips: [
+    shortDescription: "Governed identity, published.",
+    description:
+      "Turn the verified product record into a Digital Product Passport and distribute governed information through connected channels.",
+    terms: [
       { label: "Digital Product Passport", href: marketingPath("digital-product-passport") },
       { label: "Unique Product ID" },
       { label: "QR / NFC" },
       { label: "Interoperability" },
     ],
-    statusLine: "One record → QR, web, and API",
+    visualType: "publish",
+    map: { x: 50, y: 72 },
   },
   {
     id: "use-learn",
+    number: "06",
     title: "Use & Learn",
-    copy: "Use the product record across consumers, retail and analytics, and learn from the intelligence it generates.",
-    chips: [
+    shortDescription: "Intelligence from every channel.",
+    description:
+      "Use the same product intelligence across consumer experiences, retail and analytics, and learn from the data it generates.",
+    terms: [
       { label: "Consumer Experience" },
       { label: "Analytics" },
       { label: "Material Benchmark" },
       { label: "Supplier Performance", href: marketingPath("supplier-data") },
     ],
-    statusLine: "Signals returning to the governed record",
+    visualType: "signals",
+    map: { x: 28, y: 72 },
   },
   {
     id: "repair-recirculate",
+    number: "07",
     title: "Repair & Recirculate",
-    copy: "Keep the record useful after the first sale through care, repair, resale, reuse and end-of-life.",
-    chips: [
+    shortDescription: "Useful beyond first sale.",
+    description:
+      "Keep the product record useful beyond the first sale through care, repair, resale, reuse and end-of-life.",
+    terms: [
       { label: "Care & Repair", href: marketingPath("solutions") },
       { label: "Resale" },
       { label: "Reuse" },
       { label: "End of Life" },
     ],
-    statusLine: "The record stays alive after first sale",
+    visualType: "loop",
+    map: { x: 10, y: 72 },
   },
 ];
 
-export const LIFECYCLE_STEP_MS = 1600;
+/** Cubic paths between consecutive map points (viewBox 0 0 100 100). */
+export function lifecycleConnectorPath(from: LifecycleMapPoint, to: LifecycleMapPoint): string {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  // Vertical drop from TRACE → CHECK: mild S
+  if (Math.abs(dx) < 8 && dy > 20) {
+    return `M ${from.x} ${from.y} C ${from.x + 6} ${from.y + dy * 0.35}, ${to.x - 6} ${to.y - dy * 0.35}, ${to.x} ${to.y}`;
+  }
+  // Horizontal with slight bow
+  const midY = (from.y + to.y) / 2 + (from.y < 40 ? -2 : 2);
+  return `M ${from.x} ${from.y} C ${from.x + dx * 0.4} ${midY}, ${to.x - dx * 0.4} ${midY}, ${to.x} ${to.y}`;
+}
+
+export const LIFECYCLE_CONNECTORS = LIFECYCLE_STAGES.slice(0, -1).map((stage, i) => {
+  const next = LIFECYCLE_STAGES[i + 1];
+  return {
+    id: `${stage.id}__${next.id}`,
+    d: lifecycleConnectorPath(stage.map, next.map),
+    fromIndex: i,
+    toIndex: i + 1,
+  };
+});
+
+export const LIFECYCLE_STEP_MS = 1800;
