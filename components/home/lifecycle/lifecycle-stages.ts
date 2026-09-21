@@ -15,12 +15,13 @@ export type LifecycleStage = {
   description: string;
   chips: string[];
   visualType: LifecycleStageVisual;
-  /** Desktop placement around the hub (percent of map frame) */
-  position: { top?: string; left?: string; right?: string; bottom?: string; textAlign?: "left" | "right" | "center" };
+  image: string;
+  alt: string;
 };
 
 /**
  * Exact INTERTEXE seven-stage lifecycle — do not rename or collapse.
+ * Attio-style Follow the Record rail uses these labels + copy.
  */
 export const LIFECYCLE_STAGES: LifecycleStage[] = [
   {
@@ -31,17 +32,20 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     description: "Capture how the product begins across materials, suppliers, components, and manufacturing.",
     chips: ["Style + BOM", "Supplier + PO", "Evidence", "Composition"],
     visualType: "source",
-    position: { top: "4%", left: "2%", textAlign: "left" },
+    image: "/platform/demo-source.png",
+    alt: "Fragmented inputs converging into one INTERTEXE product record",
   },
   {
     id: "clean",
     number: "02",
     title: "Clean & Connect",
     subtitle: "One trusted product record",
-    description: "Bring fragmented product information together, standardize it, and connect it into one trusted product record.",
+    description:
+      "Bring fragmented product information together, standardize it, and connect it into one trusted product record.",
     chips: ["Composition"],
     visualType: "clean",
-    position: { top: "2%", left: "38%", textAlign: "center" },
+    image: "/platform/demo-normalize.png",
+    alt: "Messy product strings becoming a structured governed record",
   },
   {
     id: "trace",
@@ -51,27 +55,32 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     description: "Connect product and material claims to evidence across the supply chain.",
     chips: ["Traceability", "Chain of Custody", "Provenance", "Supplier Evidence"],
     visualType: "trace",
-    position: { top: "8%", right: "2%", textAlign: "right" },
+    image: "/platform/demo-validate.png",
+    alt: "Claims linked to evidence on the governed product record",
   },
   {
     id: "prepare",
     number: "04",
     title: "Check & Prepare",
     subtitle: "Compliance + DPP readiness",
-    description: "Resolve gaps, review product readiness, and prepare records for Digital Product Passport and compliance workflows.",
+    description:
+      "Resolve gaps, review product readiness, and prepare records for Digital Product Passport and compliance workflows.",
     chips: ["Review", "Resolved", "Ready", "Incomplete → Ready"],
     visualType: "prepare",
-    position: { top: "42%", right: "1%", textAlign: "right" },
+    image: "/platform/demo-validate.png",
+    alt: "Product readiness and compliance preparation",
   },
   {
     id: "publish",
     number: "05",
     title: "Passport & Publish",
     subtitle: "Governed identity distributed",
-    description: "Turn the governed product record into a Digital Product Passport and distribute it across consumer and operational channels.",
+    description:
+      "Turn the governed product record into a Digital Product Passport and distribute it across consumer and operational channels.",
     chips: ["QR", "Web", "API", "Retail"],
     visualType: "publish",
-    position: { bottom: "6%", right: "4%", textAlign: "right" },
+    image: "/platform/demo-publish.png",
+    alt: "Digital Product Passport distributed across channels",
   },
   {
     id: "learn",
@@ -81,16 +90,19 @@ export const LIFECYCLE_STAGES: LifecycleStage[] = [
     description: "Capture signals from product use and engagement, then feed them back into the record.",
     chips: ["Higher than peer median", "Engagement", "Scan activity", "Use signals"],
     visualType: "learn",
-    position: { bottom: "4%", left: "28%", textAlign: "left" },
+    image: "/platform/demo-measure.png",
+    alt: "Usage and engagement signals feeding back into the record",
   },
   {
     id: "recirculate",
     number: "07",
     title: "Repair & Recirculate",
     subtitle: "Beyond first sale",
-    description: "Keep the product record useful after publish so it can support care, repair, resale, reuse, and next-life pathways.",
+    description:
+      "Keep the product record useful after publish so it can support care, repair, resale, reuse, and next-life pathways.",
     chips: ["Repair", "Resale", "Reuse"],
     visualType: "recirculate",
-    position: { bottom: "22%", left: "2%", textAlign: "left" },
+    image: "/platform/demo-activate.png",
+    alt: "Product record supporting care, repair, resale, and next life",
   },
 ];
