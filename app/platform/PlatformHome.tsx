@@ -5,14 +5,14 @@ import ProductLifecycleMap from "./ProductLifecycleMap";
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: lifecycle system map → dark product intelligence → pillars → guide CTA.
+ * Journey: platform hero → lifecycle system map → pillars → guide CTA.
  * FAQ and consumer delivery live on Solutions. Live tour on /brands/demo.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
-      <ProductLifecycleMap />
       <SalesHeroSection />
+      <ProductLifecycleMap />
       <PlatformHowItWorksSection />
       <PlatformCircularWardrobeBanner />
     </div>
