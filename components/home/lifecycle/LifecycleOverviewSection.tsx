@@ -8,9 +8,9 @@ import { LIFECYCLE_STAGES } from "./lifecycle-stages";
 import styles from "./LifecycleOverviewSection.module.css";
 
 /**
- * Homepage lifecycle — Attio / Follow the Record format:
- * left stage rail + dominant right visual, pinned in-container until the last stage.
- * Exact seven INTERTEXE stages. Not a left-copy / right-hub map.
+ * Homepage lifecycle — Attio vertical graph:
+ * left stage rail + dominant right visual, pinned until the last stage.
+ * Radial hub map removed. Exact seven INTERTEXE stage wording.
  */
 export function LifecycleOverviewSection() {
   const reducedMotion = useReducedMotion();
