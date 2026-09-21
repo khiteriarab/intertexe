@@ -9,10 +9,11 @@ import {
   LIFECYCLE_RESUME_MS,
   LIFECYCLE_STAGES,
   LIFECYCLE_TRAVEL_MS,
+  progressForStage,
 } from "./lifecycle-data";
-import { LifecycleCanvas } from "./LifecycleCanvas";
+import { LifecycleDiagram } from "./LifecycleDiagram";
+import { LifecycleEditorial } from "./LifecycleEditorial";
 import { LifecycleMobile } from "./LifecycleMobile";
-import { progressForStage } from "./LifecycleRibbon";
 import "./lifecycle.css";
 
 type Phase = "dwell" | "travel";
@@ -79,11 +80,10 @@ export function ProductLifecycleSection() {
         return;
       }
       const next = (activeIndex + 1) % LIFECYCLE_STAGES.length;
-      // Soft reset when looping: briefly fade progress then travel
       if (next === 0) {
         setPhase("travel");
         setDrawProgress(0);
-        schedule(() => goTo(0, { travel: true }), 280);
+        schedule(() => goTo(0, { travel: true }), 260);
         return;
       }
       goTo(next, { travel: true });
@@ -93,7 +93,6 @@ export function ProductLifecycleSection() {
     return clearTimers;
   }, [activeIndex, phase, reducedMotion, goTo, schedule, clearTimers]);
 
-  // Reduced motion: simple dwell advance
   useEffect(() => {
     if (!reducedMotion) return;
     const id = window.setInterval(() => {
@@ -107,6 +106,8 @@ export function ProductLifecycleSection() {
     return () => window.clearInterval(id);
   }, [reducedMotion]);
 
+  const stage = LIFECYCLE_STAGES[activeIndex];
+
   return (
     <section id="hero" className="plc-section scroll-mt-24" aria-labelledby="plc-heading">
       <div className="plc-wrap">
@@ -117,7 +118,7 @@ export function ProductLifecycleSection() {
           </h1>
           <p className="plc-lede">
             INTERTEXE connects the information behind a product from sourcing and manufacturing through product
-            data, traceability, compliance and Digital Product Passports, and keeps that record useful through
+            data, traceability, compliance and Digital Product Passports, then keeps that record useful through
             use, repair, resale and end-of-life.
           </p>
           <div className="plc-intro-actions">
@@ -130,12 +131,15 @@ export function ProductLifecycleSection() {
           </div>
         </header>
 
-        <LifecycleCanvas
-          activeIndex={activeIndex}
-          drawProgress={drawProgress}
-          reducedMotion={reducedMotion}
-          onSelect={(i) => goTo(i, { manual: true })}
-        />
+        <div className="plc-desktop">
+          <LifecycleDiagram
+            activeIndex={activeIndex}
+            drawProgress={drawProgress}
+            reducedMotion={reducedMotion}
+            onSelect={(i) => goTo(i, { manual: true })}
+          />
+          <LifecycleEditorial stage={stage} reducedMotion={reducedMotion} />
+        </div>
 
         <LifecycleMobile
           activeIndex={activeIndex}
