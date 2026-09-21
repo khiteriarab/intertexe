@@ -16,6 +16,18 @@ type LifecycleStage = {
   terms: string[];
 };
 
+type RecordState = {
+  composition: string;
+  sourceData: string;
+  evidence: string;
+  traceability: string;
+  compliance: string;
+  passport: string;
+  readiness: number;
+  optionalInsight?: string;
+  optionalLifecycleState?: string;
+};
+
 const STAGES: LifecycleStage[] = [
   {
     id: "source",
@@ -80,6 +92,88 @@ const STAGES: LifecycleStage[] = [
   },
 ];
 
+/** Stage-driven nucleus state — content evolves; card shell stays fixed. */
+const RECORD_STATES: RecordState[] = [
+  {
+    composition: "Incoming values",
+    sourceData: "Connecting",
+    evidence: "Pending",
+    traceability: "Incomplete",
+    compliance: "Review",
+    passport: "Draft",
+    readiness: 26,
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Pending",
+    traceability: "Incomplete",
+    compliance: "Review",
+    passport: "Draft",
+    readiness: 46,
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Linked",
+    traceability: "Verified",
+    compliance: "Review",
+    passport: "Draft",
+    readiness: 67,
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Linked",
+    traceability: "Verified",
+    compliance: "Ready",
+    passport: "Draft",
+    readiness: 86,
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Linked",
+    traceability: "Verified",
+    compliance: "Ready",
+    passport: "Published",
+    readiness: 94,
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Linked",
+    traceability: "Verified",
+    compliance: "Ready",
+    passport: "Published",
+    readiness: 94,
+    optionalInsight: "Benchmark signal received",
+  },
+  {
+    composition: "96% Silk · 4% Elastane",
+    sourceData: "Connected",
+    evidence: "Linked",
+    traceability: "Verified",
+    compliance: "Ready",
+    passport: "Published",
+    readiness: 94,
+    optionalInsight: "Benchmark signal received",
+    optionalLifecycleState: "Next-life record active",
+  },
+];
+
+const GOOD_STATUSES = new Set(["Connected", "Linked", "Verified", "Ready", "Published"]);
+
+const FIELD_MOTION = {
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -3 },
+  transition: { duration: 0.28 },
+};
+
+const DWELL_MS = 2200;
+const RESUME_MS = 6000;
+
 function StageLabel({
   stage,
   active,
@@ -105,34 +199,52 @@ function StageLabel({
   );
 }
 
-function SourceStack({ active }: { active: boolean }) {
+function AnimatedValue({ value, className }: { value: string; className?: string }) {
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.span key={value} className={className} {...FIELD_MOTION}>
+        {value}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
+
+function SourceStack({ active, settled }: { active: boolean; settled: boolean }) {
   const sources = [
     ["PLM", "Style + BOM"],
     ["ERP", "Supplier + PO"],
-    ["XLS", "Composition"],
-    ["PDF", "Evidence"],
+    ["SUPPLIER", "Evidence"],
+    ["CSV", "Composition"],
   ];
+  const lit = active || settled;
 
   return (
     <div className={styles.sourceStack}>
       {sources.map(([type, value], index) => (
         <motion.div
           key={type}
-          className={styles.sourceRow}
-          animate={active ? { x: 0, opacity: 1 } : { x: index % 2 === 0 ? -5 : 5, opacity: 0.64 }}
-          transition={{ duration: 0.45, delay: active ? index * 0.06 : 0 }}
+          className={`${styles.sourceRow} ${active ? styles.sourceRowActive : ""}`}
+          animate={
+            lit
+              ? { x: 0, opacity: 1 }
+              : { x: index % 2 === 0 ? -4 : 4, opacity: 0.62 }
+          }
+          transition={{ duration: 0.38, delay: active ? index * 0.075 : 0 }}
         >
           <span className={styles.sourceType}>{type}</span>
-          <span>{value}</span>
-          <span className={styles.sourceArrow}>→</span>
+          <span className={styles.sourceValue}>{value}</span>
+          <span className={styles.sourceArrow} aria-hidden>
+            →
+          </span>
         </motion.div>
       ))}
     </div>
   );
 }
 
-function NormalizeVisual({ active }: { active: boolean }) {
+function NormalizeVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
   const messy = ["Silk 96%", "96 silk", "SILK:96", "96% Seide"];
+  const clean = resolved;
 
   return (
     <div className={styles.normalizeVisual}>
@@ -140,8 +252,13 @@ function NormalizeVisual({ active }: { active: boolean }) {
         {messy.map((item, index) => (
           <motion.span
             key={item}
-            animate={active ? { x: 8, opacity: 0.28 } : { x: index % 2 === 0 ? -4 : 5, opacity: 0.7 }}
-            transition={{ duration: 0.5 }}
+            className={styles.messyItem}
+            animate={
+              clean
+                ? { x: 10, opacity: 0.22 }
+                : { x: index % 2 === 0 ? -3 : 4, opacity: 0.72 }
+            }
+            transition={{ duration: 0.42, delay: active ? index * 0.04 : 0 }}
           >
             {item}
           </motion.span>
@@ -150,113 +267,205 @@ function NormalizeVisual({ active }: { active: boolean }) {
 
       <motion.div
         className={styles.normalizeArrow}
-        animate={{ opacity: active ? 1 : 0.35, scaleX: active ? 1 : 0.75 }}
+        animate={{ opacity: clean ? 1 : 0.35, scaleX: clean ? 1 : 0.7 }}
+        transition={{ duration: 0.35 }}
       >
         →
       </motion.div>
 
       <motion.div
-        className={styles.cleanValue}
+        className={`${styles.cleanValue} ${clean ? styles.cleanValueActive : ""}`}
         animate={{
-          borderColor: active ? "rgba(196,165,116,.72)" : "rgba(25,25,22,.12)",
-          backgroundColor: active ? "rgba(196,165,116,.08)" : "rgba(255,255,255,.48)",
+          borderColor: clean ? "rgba(201,169,98,.55)" : "rgba(23,25,23,.12)",
+          backgroundColor: clean ? "rgba(196,165,116,.08)" : "#ffffff",
         }}
+        transition={{ duration: 0.35 }}
       >
         <span>COMPOSITION</span>
-        <strong>96% Silk · 4% Elastane</strong>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.strong key={clean ? "clean" : "pending"} {...FIELD_MOTION}>
+            {clean ? "96% Silk · 4% Elastane" : "Awaiting normalize"}
+          </motion.strong>
+        </AnimatePresence>
       </motion.div>
     </div>
   );
 }
 
-function GovernedRecord({ activeStage }: { activeStage: number }) {
-  const evidence = activeStage >= 2;
-  const ready = activeStage >= 3;
-  const published = activeStage >= 4;
-  const readiness = [24, 42, 61, 82, 94, 94, 94][activeStage];
-
+function StatusCell({ label, value }: { label: string; value: string }) {
+  const good = GOOD_STATUSES.has(value);
   return (
-    <motion.div className={styles.record} animate={{ y: activeStage === 3 ? -3 : 0 }} transition={{ duration: 0.4 }}>
-      <div className={styles.recordHeader}>
-        <div>
-          <span className={styles.recordEyebrow}>GOVERNED PRODUCT RECORD</span>
-          <h3 style={SERIF}>Silk Midi Skirt</h3>
-          <span className={styles.recordId}>ITX-4102</span>
-        </div>
-        <div className={styles.productSilhouette}>
-          <div />
-        </div>
+    <div className={styles.statusCell}>
+      <span className={styles.statusLabel}>{label}</span>
+      <div className={styles.statusValueRow}>
+        <span className={`${styles.statusDot} ${good ? styles.statusDotGood : ""}`} aria-hidden />
+        <AnimatedValue value={value} className={good ? styles.statusGood : styles.statusPending} />
       </div>
-
-      <div className={styles.recordComposition}>
-        <span>MATERIAL COMPOSITION</span>
-        <strong>{activeStage >= 1 ? "96% Silk · 4% Elastane" : "Incoming source values"}</strong>
-      </div>
-
-      <div className={styles.recordStatuses}>
-        <div>
-          <span>Evidence</span>
-          <strong className={evidence ? styles.statusGood : ""}>{evidence ? "Linked" : "Pending"}</strong>
-        </div>
-        <div>
-          <span>Traceability</span>
-          <strong className={evidence ? styles.statusGood : ""}>{evidence ? "Verified" : "Incomplete"}</strong>
-        </div>
-        <div>
-          <span>Compliance</span>
-          <strong className={ready ? styles.statusGood : ""}>{ready ? "Ready" : "Review"}</strong>
-        </div>
-        <div>
-          <span>Passport</span>
-          <strong className={published ? styles.statusGood : ""}>{published ? "Published" : "Draft"}</strong>
-        </div>
-      </div>
-
-      <div className={styles.readinessHeader}>
-        <span>Record readiness</span>
-        <strong>{readiness}%</strong>
-      </div>
-
-      <div className={styles.readinessTrack}>
-        <motion.div
-          className={styles.readinessFill}
-          animate={{ width: `${readiness}%` }}
-          transition={{ type: "spring", stiffness: 70, damping: 18 }}
-        />
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
-function EvidenceLayer({ active }: { active: boolean }) {
+function GovernedRecord({
+  activeStage,
+  onHoverChange,
+}: {
+  activeStage: number;
+  onHoverChange: (hovered: boolean) => void;
+}) {
+  const state = RECORD_STATES[activeStage] ?? RECORD_STATES[0];
+  const published = state.passport === "Published";
+
+  return (
+    <div
+      className={styles.record}
+      onMouseEnter={() => onHoverChange(true)}
+      onMouseLeave={() => onHoverChange(false)}
+    >
+      <div className={styles.recordHeader}>
+        <div className={styles.recordHeaderCopy}>
+          <span className={styles.recordEyebrow}>GOVERNED PRODUCT RECORD</span>
+          <h3 className={styles.recordName}>Silk Midi Skirt</h3>
+          <div className={styles.recordMeta}>
+            <span className={styles.recordId}>ITX-4102</span>
+            <span className={styles.recordDivider} aria-hidden>
+              ·
+            </span>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={`${state.readiness}-${published}`}
+                className={published ? styles.recordLive : styles.recordBuilding}
+                {...FIELD_MOTION}
+              >
+                {published ? "Live" : "Building"}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        </div>
+        <div className={styles.recordHeaderStat}>
+          <span>READINESS</span>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.strong key={state.readiness} {...FIELD_MOTION}>
+              {state.readiness}%
+            </motion.strong>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className={styles.recordBody}>
+        <div className={styles.recordComposition}>
+          <span>MATERIAL COMPOSITION</span>
+          <AnimatedValue value={state.composition} className={styles.recordCompositionValue} />
+        </div>
+
+        <div className={styles.recordStatuses}>
+          <StatusCell label="SOURCE DATA" value={state.sourceData} />
+          <StatusCell label="EVIDENCE" value={state.evidence} />
+          <StatusCell label="TRACEABILITY" value={state.traceability} />
+          <StatusCell label="COMPLIANCE" value={state.compliance} />
+          <StatusCell label="PASSPORT" value={state.passport} />
+          <div className={styles.statusCell}>
+            <span className={styles.statusLabel}>SYSTEM</span>
+            <div className={styles.statusValueRow}>
+              <span
+                className={`${styles.statusDot} ${published ? styles.statusDotGood : ""}`}
+                aria-hidden
+              />
+              <AnimatedValue
+                value={published ? "Published" : "Assembling"}
+                className={published ? styles.statusGood : styles.statusPending}
+              />
+            </div>
+          </div>
+        </div>
+
+        <AnimatePresence initial={false}>
+          {state.optionalInsight ? (
+            <motion.div
+              key="insight"
+              className={styles.recordInsight}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span>INTELLIGENCE</span>
+              <strong>{state.optionalInsight}</strong>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <AnimatePresence initial={false}>
+          {state.optionalLifecycleState ? (
+            <motion.div
+              key="lifecycle"
+              className={styles.recordLifecycle}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span>LIFECYCLE</span>
+              <strong>{state.optionalLifecycleState}</strong>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <div className={styles.readinessBlock}>
+          <div className={styles.readinessHeader}>
+            <span>RECORD READINESS</span>
+            <strong>{state.readiness}%</strong>
+          </div>
+          <div className={styles.readinessTrack}>
+            <motion.div
+              className={styles.readinessFill}
+              animate={{ width: `${state.readiness}%` }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EvidenceLayer({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const items = ["Supplier declaration", "Origin evidence", "Chain of custody"];
+  const lit = active || resolved;
+
   return (
     <div className={styles.evidenceLayer}>
-      <motion.div className={styles.evidenceItem} animate={{ opacity: active ? 1 : 0.42, x: active ? 0 : -5 }}>
-        <span className={styles.evidenceDot} />
-        Supplier declaration
-      </motion.div>
-      <motion.div
-        className={styles.evidenceItem}
-        animate={{ opacity: active ? 1 : 0.42, x: active ? 0 : -5 }}
-        transition={{ delay: 0.08 }}
-      >
-        <span className={styles.evidenceDot} />
-        Origin evidence
-      </motion.div>
-      <motion.div
-        className={styles.evidenceItem}
-        animate={{ opacity: active ? 1 : 0.42, x: active ? 0 : -5 }}
-        transition={{ delay: 0.16 }}
-      >
-        <span className={styles.evidenceDot} />
-        Chain of custody
-      </motion.div>
+      <svg className={styles.evidenceLines} viewBox="0 0 120 140" aria-hidden="true">
+        {items.map((_, index) => (
+          <motion.path
+            key={index}
+            d={`M18 ${28 + index * 42} H118`}
+            fill="none"
+            stroke={lit ? "rgba(201,169,98,.7)" : "rgba(23,25,23,.12)"}
+            strokeWidth="1"
+            initial={false}
+            animate={{ pathLength: lit ? 1 : 0.35, opacity: lit ? 1 : 0.45 }}
+            transition={{ duration: 0.65, delay: active ? index * 0.07 : 0 }}
+          />
+        ))}
+      </svg>
+      {items.map((label, index) => (
+        <motion.div
+          key={label}
+          className={`${styles.evidenceItem} ${lit ? styles.evidenceItemActive : ""}`}
+          animate={{ opacity: lit ? 1 : 0.58, x: lit ? 0 : -4 }}
+          transition={{ duration: 0.35, delay: active ? index * 0.07 : 0 }}
+        >
+          <span className={styles.evidenceDot} />
+          {label}
+        </motion.div>
+      ))}
     </div>
   );
 }
 
-function ReadinessLayer({ active }: { active: boolean }) {
+function ReadinessLayer({ active, resolved }: { active: boolean; resolved: boolean }) {
   const checks = ["Required fields", "Evidence", "Traceability", "DPP readiness"];
+  const lit = active || resolved;
 
   return (
     <div className={styles.readinessLayer}>
@@ -264,16 +473,18 @@ function ReadinessLayer({ active }: { active: boolean }) {
         <motion.div
           key={check}
           className={styles.readinessCheck}
-          animate={{ opacity: active ? 1 : 0.5 }}
-          transition={{ delay: active ? index * 0.08 : 0 }}
+          animate={{ opacity: lit ? 1 : 0.58 }}
+          transition={{ delay: active ? index * 0.08 : 0, duration: 0.3 }}
         >
           <motion.span
+            className={styles.readinessMark}
             animate={{
-              backgroundColor: active && index < 4 ? "#c4a574" : "rgba(25,25,22,.10)",
-              borderColor: active && index < 4 ? "#c4a574" : "rgba(25,25,22,.18)",
+              backgroundColor: lit ? "#c9a962" : "transparent",
+              borderColor: lit ? "#c9a962" : "rgba(23,25,23,.22)",
             }}
+            transition={{ duration: 0.28, delay: active ? index * 0.08 : 0 }}
           >
-            {active ? "✓" : ""}
+            {lit ? "✓" : ""}
           </motion.span>
           {check}
         </motion.div>
@@ -282,12 +493,13 @@ function ReadinessLayer({ active }: { active: boolean }) {
   );
 }
 
-function PublishingNetwork({ active }: { active: boolean }) {
-  const outputs = ["DPP", "QR", "WEB", "API", "RETAIL"];
+function PublishingNetwork({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const outputs = ["DPP", "QR / NFC", "WEB", "API", "RETAIL"];
+  const lit = active || resolved;
 
   return (
     <div className={styles.publishNetwork}>
-      <div className={styles.publishCore}>
+      <div className={`${styles.publishCore} ${lit ? styles.publishCoreActive : ""}`}>
         <span>PRODUCT</span>
         <strong>ITX-4102</strong>
       </div>
@@ -304,11 +516,11 @@ function PublishingNetwork({ active }: { active: boolean }) {
             key={d}
             d={d}
             fill="none"
-            stroke={active ? "rgba(196,165,116,.72)" : "rgba(25,25,22,.12)"}
-            strokeWidth="1.4"
+            stroke={lit ? "rgba(201,169,98,.78)" : "rgba(23,25,23,.12)"}
+            strokeWidth="1.25"
             initial={false}
-            animate={{ pathLength: active ? 1 : 0.42, opacity: active ? 1 : 0.42 }}
-            transition={{ duration: 0.7, delay: active ? index * 0.05 : 0 }}
+            animate={{ pathLength: lit ? 1 : 0.38, opacity: lit ? 1 : 0.4 }}
+            transition={{ duration: 0.72, delay: active ? index * 0.055 : 0 }}
           />
         ))}
       </svg>
@@ -317,8 +529,9 @@ function PublishingNetwork({ active }: { active: boolean }) {
         {outputs.map((item, index) => (
           <motion.div
             key={item}
-            animate={{ opacity: active ? 1 : 0.5, x: active ? 0 : 5 }}
-            transition={{ delay: active ? index * 0.05 : 0 }}
+            className={`${styles.publishEndpoint} ${lit ? styles.publishEndpointActive : ""}`}
+            animate={{ opacity: lit ? 1 : 0.55, x: lit ? 0 : 4 }}
+            transition={{ delay: active ? 0.2 + index * 0.05 : 0, duration: 0.32 }}
           >
             {item}
           </motion.div>
@@ -328,7 +541,9 @@ function PublishingNetwork({ active }: { active: boolean }) {
   );
 }
 
-function IntelligenceVisual({ active }: { active: boolean }) {
+function IntelligenceVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const lit = active || resolved;
+
   return (
     <div className={styles.intelligenceVisual}>
       <div className={styles.metricTop}>
@@ -339,48 +554,79 @@ function IntelligenceVisual({ active }: { active: boolean }) {
       <div className={styles.benchmarkTrack}>
         <motion.div
           className={styles.benchmarkFill}
-          animate={{ width: active ? "76%" : "48%" }}
-          transition={{ duration: 0.7 }}
+          animate={{ width: lit ? "76%" : "48%" }}
+          transition={{ duration: 0.65 }}
         />
-        <span className={styles.peerMedian} />
+        <span className={styles.peerMedian} title="Peer median" />
+        <motion.span
+          className={styles.goldMarker}
+          animate={{ left: lit ? "76%" : "48%", opacity: lit ? 1 : 0.45 }}
+          transition={{ duration: 0.65 }}
+        />
       </div>
 
       <div className={styles.signalRows}>
-        <span>
-          Passport activity
-          <motion.i animate={{ width: active ? "68%" : "30%" }} />
-        </span>
-        <span>
-          Supplier readiness
-          <motion.i animate={{ width: active ? "83%" : "40%" }} />
-        </span>
-        <span>
-          Record quality
-          <motion.i animate={{ width: active ? "91%" : "52%" }} />
-        </span>
+        {[
+          ["Passport activity", 68, 30],
+          ["Supplier readiness", 83, 40],
+          ["Record quality", 91, 52],
+        ].map(([label, on, off], index) => (
+          <span key={label as string}>
+            {label}
+            <motion.i
+              animate={{ width: lit ? `${on}%` : `${off}%` }}
+              transition={{ duration: 0.55, delay: active ? index * 0.05 : 0 }}
+            />
+          </span>
+        ))}
+      </div>
+
+      <div className={styles.returnSignals} aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className={styles.returnDot}
+            animate={
+              active
+                ? { x: [-18, 0], opacity: [0, 1, 0.35] }
+                : { x: 0, opacity: resolved ? 0.45 : 0.2 }
+            }
+            transition={
+              active
+                ? { duration: 1.1, delay: i * 0.18, repeat: Infinity, repeatDelay: 0.6 }
+                : { duration: 0.3 }
+            }
+          />
+        ))}
+        <span className={styles.returnLabel}>← signal in</span>
       </div>
     </div>
   );
 }
 
-function CircularVisual({ active }: { active: boolean }) {
+function CircularVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const lit = active || resolved;
+
   return (
     <div className={styles.circularVisual}>
       <svg viewBox="0 0 210 210" className={styles.circularSvg} aria-hidden="true">
+        <circle cx="105" cy="105" r="72" fill="none" stroke="rgba(23,25,23,.08)" strokeWidth="1" />
         <motion.path
           d="M105 26 C160 26 184 64 184 105 C184 160 151 183 105 183 C56 183 27 151 27 106 C27 70 47 43 77 32"
           fill="none"
-          stroke={active ? "rgba(196,165,116,.82)" : "rgba(25,25,22,.14)"}
-          strokeWidth="1.8"
+          stroke={lit ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
+          strokeWidth="1.5"
           strokeLinecap="round"
-          animate={{ pathLength: active ? 1 : 0.72 }}
-          transition={{ duration: 1 }}
+          initial={false}
+          animate={{ pathLength: lit ? 1 : 0.68 }}
+          transition={{ duration: 0.9 }}
         />
         <motion.path
           d="M76 32 L88 31 L82 42"
           fill="none"
-          stroke={active ? "rgba(196,165,116,.82)" : "rgba(25,25,22,.14)"}
-          strokeWidth="1.8"
+          stroke={lit ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
+          strokeWidth="1.5"
+          animate={{ opacity: lit ? 1 : 0.5 }}
         />
       </svg>
 
@@ -389,9 +635,9 @@ function CircularVisual({ active }: { active: boolean }) {
       <span className={styles.circularReuse}>REUSE</span>
       <span className={styles.circularEnd}>END OF LIFE</span>
 
-      <div className={styles.circularCenter}>
-        <span>NEXT LIFE</span>
-        <strong>Product record continues</strong>
+      <div className={`${styles.circularCenter} ${lit ? styles.circularCenterActive : ""}`}>
+        <span>ITX-4102</span>
+        <strong>{lit ? "Lifecycle active" : "Identity persists"}</strong>
       </div>
     </div>
   );
@@ -401,20 +647,22 @@ export default function ProductLifecycleSystem() {
   const reducedMotion = useReducedMotion();
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [recordHovered, setRecordHovered] = useState(false);
   const activeStage = STAGES[activeIndex];
+  const autoplayPaused = paused || recordHovered;
 
   useEffect(() => {
-    if (reducedMotion || paused) return;
+    if (reducedMotion || autoplayPaused) return;
     const timer = window.setInterval(() => {
       setActiveIndex((value) => (value + 1) % STAGES.length);
-    }, 3000);
+    }, DWELL_MS);
     return () => window.clearInterval(timer);
-  }, [reducedMotion, paused]);
+  }, [reducedMotion, autoplayPaused]);
 
   const selectStage = (index: number) => {
     setActiveIndex(index);
     setPaused(true);
-    window.setTimeout(() => setPaused(false), 6500);
+    window.setTimeout(() => setPaused(false), RESUME_MS);
   };
 
   return (
@@ -427,97 +675,115 @@ export default function ProductLifecycleSystem() {
           to next life.
         </h2>
         <p>
-          INTERTEXE connects the information behind a product from sourcing and manufacturing through product data,
-          traceability, compliance and Digital Product Passports, then keeps that record useful through use, repair,
-          resale and end-of-life.
+          INTERTEXE connects product information from sourcing through compliance and Digital Product Passports —
+          then keeps the same governed record useful through use, repair, resale and end-of-life.
         </p>
       </header>
 
-      <div className={styles.systemMap}>
-        <section className={styles.buildZone}>
-          <div className={styles.zoneHeader}>
-            <StageLabel stage={STAGES[0]} active={activeIndex === 0} onClick={() => selectStage(0)} />
+      <div className={styles.systemCanvas}>
+        <div className={styles.progressStrip} aria-hidden="true">
+          <span className={styles.progressIndex}>
+            {STAGES[activeIndex].number} / 07
+          </span>
+          <div className={styles.progressSegments}>
+            {STAGES.map((stage, index) => (
+              <span
+                key={stage.id}
+                className={`${styles.progressSeg} ${index <= activeIndex ? styles.progressSegOn : ""}`}
+              />
+            ))}
           </div>
-          <SourceStack active={activeIndex === 0} />
-          <div className={styles.flowConnector}>
-            <motion.span animate={{ scaleX: activeIndex >= 1 ? 1 : 0.35, opacity: activeIndex >= 1 ? 1 : 0.4 }} />
-          </div>
-          <div className={styles.normalizeBlock}>
-            <StageLabel stage={STAGES[1]} active={activeIndex === 1} onClick={() => selectStage(1)} />
-            <NormalizeVisual active={activeIndex === 1} />
-          </div>
-        </section>
+        </div>
 
-        <section className={styles.trustZone}>
-          <div className={styles.trustHeader}>
-            <StageLabel stage={STAGES[2]} active={activeIndex === 2} onClick={() => selectStage(2)} />
-            <StageLabel stage={STAGES[3]} active={activeIndex === 3} onClick={() => selectStage(3)} />
-          </div>
-          <div className={styles.recordEnvironment}>
-            <EvidenceLayer active={activeIndex === 2} />
-            <GovernedRecord activeStage={activeIndex} />
-            <ReadinessLayer active={activeIndex === 3} />
-          </div>
-        </section>
+        <div className={styles.systemMap}>
+          <section className={styles.buildZone}>
+            <div className={styles.zoneHeader}>
+              <StageLabel stage={STAGES[0]} active={activeIndex === 0} onClick={() => selectStage(0)} />
+            </div>
+            <SourceStack active={activeIndex === 0} settled={activeIndex > 0} />
+            <div className={styles.flowConnector}>
+              <motion.span
+                animate={{
+                  scaleY: activeIndex >= 1 ? 1 : 0.35,
+                  opacity: activeIndex >= 1 ? 1 : 0.4,
+                }}
+                transition={{ duration: 0.4 }}
+              />
+            </div>
+            <div className={styles.normalizeBlock}>
+              <StageLabel stage={STAGES[1]} active={activeIndex === 1} onClick={() => selectStage(1)} />
+              <NormalizeVisual active={activeIndex === 1} resolved={activeIndex >= 1} />
+            </div>
+          </section>
 
-        <section className={styles.useZone}>
-          <div className={styles.publishSection}>
-            <StageLabel stage={STAGES[4]} active={activeIndex === 4} onClick={() => selectStage(4)} />
-            <PublishingNetwork active={activeIndex === 4} />
-          </div>
-          <div className={styles.useBottom}>
-            <div className={styles.learnSection}>
-              <StageLabel stage={STAGES[5]} active={activeIndex === 5} onClick={() => selectStage(5)} />
-              <IntelligenceVisual active={activeIndex === 5} />
+          <section className={styles.trustZone}>
+            <div className={styles.trustHeader}>
+              <StageLabel stage={STAGES[2]} active={activeIndex === 2} onClick={() => selectStage(2)} />
+              <StageLabel stage={STAGES[3]} active={activeIndex === 3} onClick={() => selectStage(3)} />
             </div>
-            <div className={styles.circularSection}>
-              <StageLabel stage={STAGES[6]} active={activeIndex === 6} onClick={() => selectStage(6)} />
-              <CircularVisual active={activeIndex === 6} />
+            <div className={styles.recordEnvironment}>
+              <EvidenceLayer active={activeIndex === 2} resolved={activeIndex >= 2} />
+              <GovernedRecord activeStage={activeIndex} onHoverChange={setRecordHovered} />
+              <ReadinessLayer active={activeIndex === 3} resolved={activeIndex >= 3} />
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
 
-      <div className={styles.storyStrip}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeStage.id}
-            className={styles.storyContent}
-            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
-            transition={{ duration: 0.28 }}
-          >
-            <div className={styles.storyTitle}>
-              <span>{activeStage.number}</span>
-              <h3 style={SERIF}>{activeStage.title}</h3>
+          <section className={styles.useZone}>
+            <div className={styles.publishSection}>
+              <StageLabel stage={STAGES[4]} active={activeIndex === 4} onClick={() => selectStage(4)} />
+              <PublishingNetwork active={activeIndex === 4} resolved={activeIndex >= 4} />
             </div>
-            <p>{activeStage.description}</p>
-            <div className={styles.storyTerms}>
-              {activeStage.terms.map((term) => (
-                <span key={term}>{term}</span>
-              ))}
+            <div className={styles.useBottom}>
+              <div className={styles.learnSection}>
+                <StageLabel stage={STAGES[5]} active={activeIndex === 5} onClick={() => selectStage(5)} />
+                <IntelligenceVisual active={activeIndex === 5} resolved={activeIndex >= 5} />
+              </div>
+              <div className={styles.circularSection}>
+                <StageLabel stage={STAGES[6]} active={activeIndex === 6} onClick={() => selectStage(6)} />
+                <CircularVisual active={activeIndex === 6} resolved={activeIndex >= 6} />
+              </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+          </section>
+        </div>
+
+        <div className={styles.storyStrip}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeStage.id}
+              className={styles.storyContent}
+              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+              transition={{ duration: 0.26 }}
+            >
+              <div className={styles.storyTitle}>
+                <span>{activeStage.number}</span>
+                <h3 style={SERIF}>{activeStage.title}</h3>
+              </div>
+              <p>{activeStage.description}</p>
+              <div className={styles.storyTerms}>
+                {activeStage.terms.map((term) => (
+                  <span key={term}>{term}</span>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className={styles.followTransition}>
-        <div className={styles.followLine}>
+        <div className={styles.followRail} aria-hidden>
           <motion.span
-            animate={reducedMotion ? undefined : { y: [0, 70], opacity: [0, 1, 0] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+            className={styles.followPulse}
+            animate={reducedMotion ? undefined : { y: [0, 88], opacity: [0, 1, 0] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
         <div className={styles.followCopy}>
           <span className={styles.eyebrow}>FOLLOW THE RECORD</span>
           <h3 style={SERIF}>See the record evolve.</h3>
-          <p>
-            Follow one product from fragmented source data to a governed record, live Digital Product Passport and
-            measurable product intelligence.
-          </p>
+          <p>One product. Six states. From source data to live product intelligence.</p>
         </div>
-        <div className={styles.followLineBottom} />
       </div>
     </section>
   );
