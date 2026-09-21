@@ -1,25 +1,111 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { SERIF } from "../platform-ui";
-import { LIFECYCLE_STAGES, LIFECYCLE_STEP_MS } from "./lifecycle-data";
-import { LifecycleMap } from "./LifecycleMap";
+import {
+  LIFECYCLE_DWELL_MS,
+  LIFECYCLE_RESUME_MS,
+  LIFECYCLE_STAGES,
+  LIFECYCLE_TRAVEL_MS,
+} from "./lifecycle-data";
+import { LifecycleCanvas } from "./LifecycleCanvas";
+import { LifecycleMobile } from "./LifecycleMobile";
+import { progressForStage } from "./LifecycleRibbon";
 import "./lifecycle.css";
+
+type Phase = "dwell" | "travel";
 
 export function ProductLifecycleSection() {
   const reducedMotion = useReducedMotion() ?? false;
   const [activeIndex, setActiveIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [drawProgress, setDrawProgress] = useState(0);
+  const [phase, setPhase] = useState<Phase>("dwell");
+  const pauseUntil = useRef(0);
+  const timers = useRef<number[]>([]);
+
+  const clearTimers = useCallback(() => {
+    timers.current.forEach((id) => window.clearTimeout(id));
+    timers.current = [];
+  }, []);
+
+  const schedule = useCallback((fn: () => void, ms: number) => {
+    const id = window.setTimeout(fn, ms);
+    timers.current.push(id);
+  }, []);
+
+  const goTo = useCallback(
+    (index: number, opts?: { manual?: boolean; travel?: boolean }) => {
+      clearTimers();
+      const next = ((index % LIFECYCLE_STAGES.length) + LIFECYCLE_STAGES.length) % LIFECYCLE_STAGES.length;
+
+      if (opts?.manual) {
+        pauseUntil.current = Date.now() + LIFECYCLE_RESUME_MS;
+        setPhase("dwell");
+        setActiveIndex(next);
+        setDrawProgress(progressForStage(next));
+        return;
+      }
+
+      if (opts?.travel && !reducedMotion) {
+        setPhase("travel");
+        setDrawProgress(progressForStage(next));
+        schedule(() => {
+          setActiveIndex(next);
+          setPhase("dwell");
+        }, LIFECYCLE_TRAVEL_MS);
+        return;
+      }
+
+      setPhase("dwell");
+      setActiveIndex(next);
+      setDrawProgress(progressForStage(next));
+    },
+    [clearTimers, reducedMotion, schedule],
+  );
 
   useEffect(() => {
-    if (reducedMotion || paused) return;
+    setDrawProgress(progressForStage(0));
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    if (phase !== "dwell") return;
+
+    const tick = () => {
+      if (Date.now() < pauseUntil.current) {
+        schedule(tick, 400);
+        return;
+      }
+      const next = (activeIndex + 1) % LIFECYCLE_STAGES.length;
+      // Soft reset when looping: briefly fade progress then travel
+      if (next === 0) {
+        setPhase("travel");
+        setDrawProgress(0);
+        schedule(() => goTo(0, { travel: true }), 280);
+        return;
+      }
+      goTo(next, { travel: true });
+    };
+
+    schedule(tick, LIFECYCLE_DWELL_MS);
+    return clearTimers;
+  }, [activeIndex, phase, reducedMotion, goTo, schedule, clearTimers]);
+
+  // Reduced motion: simple dwell advance
+  useEffect(() => {
+    if (!reducedMotion) return;
     const id = window.setInterval(() => {
-      setActiveIndex((i) => (i + 1) % LIFECYCLE_STAGES.length);
-    }, LIFECYCLE_STEP_MS);
+      if (Date.now() < pauseUntil.current) return;
+      setActiveIndex((i) => {
+        const next = (i + 1) % LIFECYCLE_STAGES.length;
+        setDrawProgress(progressForStage(next));
+        return next;
+      });
+    }, LIFECYCLE_DWELL_MS + LIFECYCLE_TRAVEL_MS);
     return () => window.clearInterval(id);
-  }, [reducedMotion, paused]);
+  }, [reducedMotion]);
 
   return (
     <section id="hero" className="plc-section scroll-mt-24" aria-labelledby="plc-heading">
@@ -31,7 +117,7 @@ export function ProductLifecycleSection() {
           </h1>
           <p className="plc-lede">
             INTERTEXE connects the information behind a product from sourcing and manufacturing through product
-            data, traceability, compliance and Digital Product Passports, then keeps that record useful through
+            data, traceability, compliance and Digital Product Passports, and keeps that record useful through
             use, repair, resale and end-of-life.
           </p>
           <div className="plc-intro-actions">
@@ -44,24 +130,22 @@ export function ProductLifecycleSection() {
           </div>
         </header>
 
-        <div
-          className="plc-canvas"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocusCapture={() => setPaused(true)}
-          onBlurCapture={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node)) setPaused(false);
-          }}
-        >
-          <LifecycleMap
-            activeIndex={activeIndex}
-            onSelect={setActiveIndex}
-            reducedMotion={reducedMotion}
-          />
-        </div>
+        <LifecycleCanvas
+          activeIndex={activeIndex}
+          drawProgress={drawProgress}
+          reducedMotion={reducedMotion}
+          onSelect={(i) => goTo(i, { manual: true })}
+        />
+
+        <LifecycleMobile
+          activeIndex={activeIndex}
+          drawProgress={drawProgress}
+          reducedMotion={reducedMotion}
+          onSelect={(i) => goTo(i, { manual: true })}
+        />
 
         <p className="plc-footnote">
-          How a product and its data move through INTERTEXE — distinct from the workflow walkthrough below.
+          How a product and its data move through INTERTEXE — separate from the workflow walkthrough below.
         </p>
       </div>
     </section>
