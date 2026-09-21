@@ -227,15 +227,15 @@ describe("Permanent 10-product demonstration catalog", () => {
   it("keeps the editorial demo page focused on lifecycle and workflow", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
     const demoPage = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
-    const lifecycle = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/demo/ProductLifecycleSection.tsx"),
+    const system = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.tsx"),
       "utf8",
     );
-    const lifecycleData = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/lifecycle-data.ts"), "utf8");
     const featuredSection = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoFeaturedExample.tsx"), "utf8");
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /ProductLifecycleSection/);
+    assert.match(demo, /ProductLifecycleSystem/);
+    assert.doesNotMatch(demo, /ProductLifecycleSection/);
     assert.doesNotMatch(demo, /DemoHero/);
     assert.doesNotMatch(demo, /DemoIntertexeFlow/);
     assert.match(demo, /DemoProductWorkflow/);
@@ -269,20 +269,17 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(client, /Data that moves fashion forward/);
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
-    assert.match(lifecycle, /From material to next life/);
-    assert.match(lifecycle, /LifecycleDiagram/);
-    assert.match(lifecycle, /LifecycleEditorial/);
-    assert.match(lifecycleData, /Source & Make/);
-    assert.match(lifecycleData, /Repair & Recirculate/);
-    assert.match(lifecycleData, /shortDescription/);
-    assert.match(lifecycleData, /LIFECYCLE_PATH_D|buildTransitPath/);
-    assert.match(lifecycleData, /stageAnchor/);
-    assert.match(lifecycleData, /LIFECYCLE_TRAVEL_MS/);
-    assert.match(lifecycleData, /id: "source-make"/);
-    assert.match(lifecycleData, /id: "repair-recirculate"/);
-    assert.doesNotMatch(lifecycle, /plc-marker|plc-node|LifecycleMarker/);
-    assert.doesNotMatch(lifecycleData, /geo:|label: "left"|label: "right"/);
-    assert.equal([...lifecycleData.matchAll(/id: "[a-z-]+"/g)].length, 7);
+    assert.match(system, /From material/);
+    assert.match(system, /to next life/);
+    assert.match(system, /GovernedRecord/);
+    assert.match(system, /SourceStack/);
+    assert.match(system, /PublishingNetwork/);
+    assert.match(system, /FOLLOW THE RECORD/);
+    assert.match(system, /See the record evolve/);
+    assert.doesNotMatch(system, /stageAnchor|LIFECYCLE_PATH_D|plc-map-canvas/);
+    assert.match(system, /id: "source"/);
+    assert.match(system, /id: "recirculate"/);
+    assert.equal([...system.matchAll(/id: "(source|clean|trace|prepare|publish|learn|recirculate)"/g)].length, 7);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);

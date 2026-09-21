@@ -120,7 +120,8 @@ describe("Platform B2B sales page", () => {
 
   it("routes live QR flow and API detail to dedicated pages", () => {
     assert.match(demo, /PlatformDemoClient/);
-    assert.match(demoClient, /ProductLifecycleSection/);
+    assert.match(demoClient, /ProductLifecycleSystem/);
+    assert.doesNotMatch(demoClient, /ProductLifecycleSection/);
     assert.doesNotMatch(demoClient, /DemoHero/);
     assert.doesNotMatch(demoClient, /DemoIntertexeFlow/);
     assert.match(demoClient, /DemoProductWorkflow/);

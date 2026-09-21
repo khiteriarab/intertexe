@@ -1,13 +1,13 @@
 "use client";
 
-import { ProductLifecycleSection } from "./ProductLifecycleSection";
+import ProductLifecycleSystem from "../../../components/see-it-live/ProductLifecycleSystem";
 import { DemoProductWorkflow } from "./DemoProductWorkflow";
 
-/** See it live — lifecycle story, then how teams use the product record. */
+/** See it live — product system map, then software walkthrough. */
 export function PlatformDemoClient() {
   return (
     <>
-      <ProductLifecycleSection />
+      <ProductLifecycleSystem />
       <DemoProductWorkflow />
     </>
   );
