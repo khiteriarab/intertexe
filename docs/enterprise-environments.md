@@ -2,12 +2,22 @@
 
 ## Projects (never mixed)
 
-| Role | Project | Ref | Env vars |
-|---|---|---|---|
-| Consumer app + Founder HQ | intertexe | burrylupizvggupsryuj | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
-| Enterprise customer data | obelisk-core | dpiksashuqetyzrjogal | `ENTERPRISE_SUPABASE_*` only |
+| Role | Project | Ref | Env vars (production names — do not rename values) | Code client |
+|---|---|---|---|---|
+| Consumer app + Founder HQ | intertexe | burrylupizvggupsryuj | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_*` | `getConsumerSupabase` / `getConsumerAnonAuthClient` |
+| Enterprise customer data | obelisk-core | dpiksashuqetyzrjogal | `ENTERPRISE_SUPABASE_*` / `NEXT_PUBLIC_ENTERPRISE_SUPABASE_*` only | `getObeliskServiceClient` / `getObeliskUserClient` |
 
-`ENTERPRISE_SUPABASE_URL` must not equal `SUPABASE_URL`. The Enterprise client refuses that configuration.
+`ENTERPRISE_SUPABASE_URL` must not equal `SUPABASE_URL`. The Obelisk/Enterprise client refuses that configuration.
+
+Preferred **code** names: `consumerSupabase` / `obeliskSupabase`. Preferred future env aliases (`CONSUMER_SUPABASE_*`, `OBELISK_SUPABASE_*`) may dual-read existing vars — never change production secret values without a coordinated deploy.
+
+Domain naming (two entities, never collapsed):
+- **Fashion brand** — consumer catalog (`brand_slug`, `/designers`); client `getConsumerSupabase`.
+- **Organization** — SaaS tenant on obelisk (`organizations`); client `getObeliskServiceClient`.
+- **`/brands`** — enterprise *marketing* only (buyers of INTERTEXE), not a fashion-brand page and not an org workspace.
+
+A real-world company may have both a fashion-brand record and an organization; they must not share routing, auth, or DB clients. Do not rename consumer `brand_*` to organization. See `docs/brand-domain-naming-audit.md`.
+
 
 ## Deployment environments
 

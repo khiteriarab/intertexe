@@ -122,11 +122,11 @@ export function PlatformBrandShowcaseHero() {
             for traceability, Digital Product Passports, consumer experiences and resale.
           </p>
           <div className="platform-showcase-hero-actions">
-            <Link href="/platform#how-it-works" className="platform-showcase-hero-cta">
+            <Link href="/brands#how-it-works" className="platform-showcase-hero-cta">
               Explore the platform
               <span aria-hidden>→</span>
             </Link>
-            <Link href="/platform/demo" className="platform-showcase-hero-cta-secondary">
+            <Link href="/brands/demo" className="platform-showcase-hero-cta-secondary">
               See it live
             </Link>
           </div>

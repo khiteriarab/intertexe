@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PlatformChrome } from "./PlatformChrome";
 import { PlatformHome } from "./PlatformHome";
 import { PlatformViewTracker } from "./PlatformViewTracker";
+import { marketingCanonical } from "../../lib/enterprise-marketing/paths";
 
 export const dynamic = "force-static";
 
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
   },
   description:
     "Turn governed product data into the digital experience your customer sees. INTERTEXE connects fashion brands, product data, and consumers — hosted passports, white-label domains, or headless API into your app.",
+  alternates: { canonical: marketingCanonical() },
 };
 
 export default function PlatformPage() {

@@ -25,7 +25,7 @@ export function PricingModuleSelector({ checkoutEnabled }: { checkoutEnabled: bo
     );
   };
 
-  const proposalHref = `/platform/request?intent=saas&cta=pricing_modules${
+  const proposalHref = `/brands/request?intent=saas&cta=pricing_modules${
     selected.length ? `&modules=${selected.join(",")}` : ""
   }`;
 

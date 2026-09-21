@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CUSTOMER_ZERO_SLUG, DEMO_BRAND_SLUG } from "../enterprise/constants";
+import { CUSTOMER_ZERO_SLUG, DEMO_ORGANIZATION_SLUG } from "../enterprise/constants";
 import pilotImpact from "./fixtures/pilot-impact.json";
 import type {
   FacilityImpactRow,
@@ -23,7 +23,7 @@ type PilotFixture = {
 };
 
 const fixture = pilotImpact as PilotFixture;
-const PILOT_SLUGS = new Set([CUSTOMER_ZERO_SLUG, DEMO_BRAND_SLUG]);
+const PILOT_SLUGS = new Set([CUSTOMER_ZERO_SLUG, DEMO_ORGANIZATION_SLUG]);
 
 function isPilotOrg(slug: string): boolean {
   return PILOT_SLUGS.has(slug);

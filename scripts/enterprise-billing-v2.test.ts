@@ -29,16 +29,16 @@ describe("billing entitlements v2", () => {
     assert.equal(canAddProducts(ent, 10), false);
   });
 
-  it("B — platform org can create up to 2,000; 2,001st blocked", () => {
+  it("B — Intelligence (platform) org can create up to 10,000; 10,001st blocked", () => {
     const ent = entitlementsForPlan("platform");
-    assert.equal(canAddProducts(ent, 1999), true);
-    assert.equal(canAddProducts(ent, 2000), false);
+    assert.equal(canAddProducts(ent, 9_999), true);
+    assert.equal(canAddProducts(ent, 10_000), false);
   });
 
-  it("C — professional org can create up to 500; 501st blocked", () => {
+  it("C — Foundation (professional) org can create up to 2,500; 2,501st blocked", () => {
     const ent = entitlementsForPlan("professional");
-    assert.equal(canAddProducts(ent, 499), true);
-    assert.equal(canAddProducts(ent, 500), false);
+    assert.equal(canAddProducts(ent, 2_499), true);
+    assert.equal(canAddProducts(ent, 2_500), false);
   });
 
   it("D — republish does not consume extra hosted passport allowance", () => {
@@ -49,24 +49,34 @@ describe("billing entitlements v2", () => {
 
   it("F — wrong Paddle price cannot activate another plan", () => {
     const prev = {
+      foundation: process.env.PADDLE_PRICE_FOUNDATION,
+      intelligence: process.env.PADDLE_PRICE_INTELLIGENCE,
       platform: process.env.PADDLE_PRICE_PLATFORM,
       pro: process.env.PADDLE_PRICE_PROFESSIONAL,
     };
+    delete process.env.PADDLE_PRICE_FOUNDATION;
+    delete process.env.PADDLE_PRICE_INTELLIGENCE;
     process.env.PADDLE_PRICE_PLATFORM = "pri_platform_only";
     process.env.PADDLE_PRICE_PROFESSIONAL = "pri_pro_only";
     assert.equal(paddlePlanByPriceId("pri_platform_only")?.plan, "professional");
+    assert.equal(paddlePlanByPriceId("pri_platform_only")?.publicName, "Foundation");
+    assert.equal(paddlePlanByPriceId("pri_platform_only")?.productAllowance, 2_500);
     assert.equal(paddlePlanByPriceId("pri_pro_only")?.plan, "platform");
+    assert.equal(paddlePlanByPriceId("pri_pro_only")?.publicName, "Intelligence");
+    assert.equal(paddlePlanByPriceId("pri_pro_only")?.productAllowance, 10_000);
     assert.equal(paddlePlanByPriceId("pri_unknown"), null);
+    process.env.PADDLE_PRICE_FOUNDATION = prev.foundation;
+    process.env.PADDLE_PRICE_INTELLIGENCE = prev.intelligence;
     process.env.PADDLE_PRICE_PLATFORM = prev.platform;
     process.env.PADDLE_PRICE_PROFESSIONAL = prev.pro;
   });
 
   it("I — downgrade over limit preserves data semantics (overLimit flag)", () => {
     const ent = entitlementsForPlan("platform");
-    const usage = checkUsageAllowance(ent, "products", 2500, 1);
+    const usage = checkUsageAllowance(ent, "products", 12_000, 1);
     assert.equal(usage.overLimit, true);
     assert.equal(usage.allowed, false);
-    assert.equal(isOverLimit(2500, 2000), true);
+    assert.equal(isOverLimit(12_000, 10_000), true);
   });
 
   it("J — past_due grace allows reads; restricted blocks new resources", () => {
@@ -110,12 +120,14 @@ describe("billing entitlements v2", () => {
     assert.equal(organizationCan(pro, "white_label"), false);
     assert.equal(organizationCan(pro, "circularity"), false);
     assert.equal(organizationCan(pro, "sso"), false);
-    assert.equal(organizationLimit(pro, "products"), 500);
+    assert.equal(organizationCan(pro, "api_access"), false);
+    assert.equal(organizationLimit(pro, "products"), 2_500);
 
     const platform = entitlementsForPlan("platform");
     assert.equal(organizationCan(platform, "white_label"), true);
     assert.equal(organizationCan(platform, "circularity"), true);
-    assert.equal(planLimit("platform", "hosted_passports"), 2000);
+    assert.equal(organizationCan(platform, "api_access"), true);
+    assert.equal(planLimit("platform", "hosted_passports"), 10_000);
   });
 
   it("N — public passports preserved during billing restriction policy", () => {

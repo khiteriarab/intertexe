@@ -175,3 +175,20 @@ export type ProductImpactSummaryRow = {
   provider: SustainabilityProviderId | null;
   lastCalculatedAt: string | null;
 };
+
+/** Organization-scoped sustainability rollup (SaaS customer — not a consumer fashion brand). */
+export type OrganizationSustainabilityAnalytics = {
+  productCount: number;
+  fullyTraceablePct: number;
+  avgTraceabilityScore: number;
+  avgEnvironmentalCostPoints: number | null;
+  certifiedSupplyChainPct: number;
+  repairablePct: number;
+  resaleEligiblePct: number;
+  supplyChainDisclosurePct: number;
+  naturalMaterialsPct: number;
+  avgCarbonKg: number | null;
+};
+
+/** @deprecated Prefer OrganizationSustainabilityAnalytics */
+export type BrandSustainabilityAnalytics = OrganizationSustainabilityAnalytics;

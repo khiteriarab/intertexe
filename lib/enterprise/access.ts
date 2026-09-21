@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
 import { getHqSession } from "../dashboard/auth";
 import { getEnterpriseUserClient, isEnterpriseConfigured } from "./client";
-import { DEMO_BRAND_SLUG, isReservedHqSlug, isValidOrgSlug } from "./constants";
+import { DEMO_ORGANIZATION_SLUG, isReservedHqSlug, isValidOrgSlug } from "./constants";
 import { getActiveIdentityLinkByHqUserId } from "./identity-links";
 import {
   buildWorkspaceContexts,
@@ -81,7 +81,7 @@ export async function getOrganizationAccess(slug: string): Promise<
   }
   const membership = actor.memberships.find((item) => item.slug === slug);
   if (!membership) return { ok: false, status: 404, message: "Not found." };
-  if (slug === DEMO_BRAND_SLUG && !actor.hq) {
+  if (slug === DEMO_ORGANIZATION_SLUG && !actor.hq) {
     return { ok: false, status: 404, message: "Not found." };
   }
   return {

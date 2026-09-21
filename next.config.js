@@ -75,8 +75,23 @@ const nextConfig = {
       },
       {
         source: "/platform/api",
-        destination: "/platform",
+        destination: "/brands",
         permanent: true,
+      },
+      {
+        source: "/brands/see-it-live",
+        destination: "/brands/demo",
+        permanent: true,
+      },
+      {
+        source: "/platform/see-it-live",
+        destination: "/brands/demo",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/brands",
+        destination: "/dashboard/retail-brands",
+        permanent: false,
       },
     ];
   },

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
+import { marketingPath } from "../../lib/enterprise-marketing/paths";
 
 export type PlatformNavKey = "demo" | "solutions" | "request" | "platform" | "login";
 
 const NAV = [
-  { href: "/platform/solutions", label: "Solutions" },
-  { href: "/platform/pricing", label: "Pricing" },
-  { href: "/platform/demo", label: "See it live" },
+  { href: marketingPath("solutions"), label: "Solutions", key: "solutions" as const },
+  { href: marketingPath("pricing"), label: "Pricing", key: "request" as const },
+  { href: marketingPath("demo"), label: "See it live", key: "demo" as const },
 ] as const;
 
 export function PlatformNav({
@@ -22,7 +23,6 @@ export function PlatformNav({
 }) {
   const [open, setOpen] = useState(false);
   const signInUrl = getEnterpriseLoginUrl();
-  const dark = tone === "dark";
 
   useEffect(() => {
     if (!open) return;
@@ -33,22 +33,22 @@ export function PlatformNav({
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const linkTone = (href: string) => {
+  const linkTone = (key: (typeof NAV)[number]["key"]) => {
     const isActive =
-      (active === "solutions" && href === "/platform/solutions") ||
-      (active === "request" && href === "/platform/pricing") ||
-      (active === "demo" && href === "/platform/demo");
+      (active === "solutions" && key === "solutions") ||
+      (active === "request" && key === "request") ||
+      (active === "demo" && key === "demo");
     return `platform-lux-nav-link ${isActive ? "is-active" : ""}`;
   };
 
   return (
-    <nav className={dark ? "platform-lux-nav" : "platform-lux-nav"} aria-label="Platform">
+    <nav className="platform-lux-nav" aria-label="For brands">
       <div className="platform-lux-nav-inner">
         <PlatformWordmark size="sm" className="text-[var(--platform-ink)]" />
 
         <div className="platform-lux-nav-center">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={linkTone(item.href)}>
+            <Link key={item.href} href={item.href} className={linkTone(item.key)}>
               {item.label}
             </Link>
           ))}
@@ -59,7 +59,7 @@ export function PlatformNav({
             Sign in
           </Link>
           <Link
-            href="/platform/request?intent=snapshot&cta=nav"
+            href={marketingPath("request?intent=snapshot&cta=nav")}
             className="platform-lux-nav-cta hidden md:inline-flex"
           >
             Request a demo
@@ -79,15 +79,25 @@ export function PlatformNav({
       {open ? (
         <div id="platform-mobile-menu" className="platform-lux-nav-drawer">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={linkTone(item.href)}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={linkTone(item.key)}
+              onClick={() => setOpen(false)}
+            >
               {item.label}
             </Link>
           ))}
-          <Link href={signInUrl} onClick={() => setOpen(false)}>
+          <Link href={signInUrl} className="platform-lux-nav-signin" onClick={() => setOpen(false)}>
             Sign in
           </Link>
-          <Link href="/platform/request?intent=snapshot&cta=nav" onClick={() => setOpen(false)}>
+          <Link
+            href={marketingPath("request?intent=snapshot&cta=nav")}
+            className="platform-lux-nav-cta"
+            onClick={() => setOpen(false)}
+          >
             Request a demo
+            <span aria-hidden>→</span>
           </Link>
         </div>
       ) : null}

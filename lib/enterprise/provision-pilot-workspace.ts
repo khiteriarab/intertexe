@@ -6,7 +6,7 @@ import { getDeploymentEnv } from "./environment";
 import { publicSiteOrigin } from "./founder-invitations";
 import { slugifyOrganizationName } from "./ids";
 import { isPilotPlan, PILOT_PRODUCT_LIMIT } from "./pricing";
-import { provisionBrandOperator } from "./provision-brand-operator";
+import { provisionOrganizationOperator } from "./provision-organization-operator";
 
 export type ProvisionPilotResult =
   | {
@@ -163,7 +163,7 @@ export async function provisionPilotWorkspaceFromLead(input: {
   }
 
   const org = await createPilotOrganization(client, companyName);
-  const provision = await provisionBrandOperator({
+  const provision = await provisionOrganizationOperator({
     client,
     organizationId: org.id,
     email,

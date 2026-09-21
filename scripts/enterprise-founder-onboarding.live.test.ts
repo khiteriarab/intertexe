@@ -11,7 +11,7 @@ import {
   revokePendingInvitations,
 } from "../lib/enterprise/founder-invitations.ts";
 import { invitationStatus } from "../lib/enterprise/invitation-status.ts";
-import { provisionBrandOperator } from "../lib/enterprise/provision-brand-operator.ts";
+import { provisionOrganizationOperator } from "../lib/enterprise/provision-organization-operator.ts";
 
 const live = process.env.ENTERPRISE_ALLOW_LIVE_TESTS === "true";
 
@@ -60,7 +60,7 @@ describe("Live founder onboarding (invite + provision)", { skip: !live }, () => 
       });
       inviteToken = invite.token;
 
-      const first = await provisionBrandOperator({
+      const first = await provisionOrganizationOperator({
         client: admin,
         organizationId: orgAId,
         email,
@@ -70,7 +70,7 @@ describe("Live founder onboarding (invite + provision)", { skip: !live }, () => 
       });
       assert.equal(first.status, "provisioned");
 
-      const second = await provisionBrandOperator({
+      const second = await provisionOrganizationOperator({
         client: admin,
         organizationId: orgAId,
         email,
@@ -94,7 +94,7 @@ describe("Live founder onboarding (invite + provision)", { skip: !live }, () => 
       assert.ok(orgB?.id);
       orgBId = orgB.id;
 
-      const cross = await provisionBrandOperator({
+      const cross = await provisionOrganizationOperator({
         client: admin,
         organizationId: orgBId,
         email,

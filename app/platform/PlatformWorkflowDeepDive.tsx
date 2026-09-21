@@ -38,7 +38,7 @@ export function PlatformWorkflowDeepDive() {
             </Body>
           </div>
           <Link
-            href="/platform/demo#journey"
+            href="/brands/demo#journey"
             className="text-[11px] tracking-[0.14em] uppercase text-[var(--platform-muted)] underline underline-offset-4 shrink-0"
           >
             See the full workflow →
@@ -91,7 +91,7 @@ export function PlatformWorkflowDeepDive() {
                 ))}
               </ul>
               <Link
-                href="/platform/demo#journey"
+                href="/brands/demo#journey"
                 className="text-[11px] tracking-[0.14em] uppercase underline underline-offset-4 text-[var(--platform-accent)]"
               >
                 Learn more about Normalize &amp; Resolve →
@@ -126,7 +126,7 @@ export function PlatformWorkflowDeepDive() {
                   </li>
                 </ul>
                 <Link
-                  href="/platform/demo#journey"
+                  href="/brands/demo#journey"
                   className="mt-4 inline-block text-[10px] tracking-[0.12em] uppercase underline underline-offset-4"
                 >
                   Review all issues →
@@ -180,7 +180,7 @@ export function PlatformWorkflowDeepDive() {
                 signals that show what is working.
               </p>
               <Link
-                href="/platform/demo#journey"
+                href="/brands/demo#journey"
                 className="text-[11px] tracking-[0.14em] uppercase underline underline-offset-4 text-[var(--platform-accent)]"
               >
                 Explore in demo →
@@ -216,7 +216,7 @@ export function PlatformWorkflowDeepDive() {
                 ))}
               </div>
               <Link
-                href="/platform/demo#live-passport"
+                href="/brands/demo#live-passport"
                 className="text-[11px] tracking-[0.14em] uppercase underline underline-offset-4 text-[var(--platform-accent)]"
               >
                 Explore Publish →

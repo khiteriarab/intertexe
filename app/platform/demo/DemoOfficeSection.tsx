@@ -24,7 +24,7 @@ export function DemoOfficeSection() {
             The INTERTEXE platform team is based in Barcelona. Start with 10 products implemented free, or request
             access to Professional, Platform, or Enterprise after qualification.
           </p>
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=office_section">Start with 10 products</PrimaryLink>
+          <PrimaryLink href="/brands/request?intent=snapshot&cta=office_section">Start with 10 products</PrimaryLink>
         </div>
         <figure className="m-0 min-w-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}

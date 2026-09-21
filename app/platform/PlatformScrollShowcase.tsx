@@ -156,7 +156,7 @@ function StageDetail({ stage }: { stage: PlatformScrollStage }) {
         ))}
       </ul>
       <Link
-        href="/platform/demo"
+        href="/brands/demo"
         className="inline-flex items-center gap-2 rounded-full border border-[var(--platform-ink)]/20 px-5 py-3 text-[11px] tracking-[0.14em] uppercase text-[var(--platform-ink)] hover:bg-white transition-colors"
       >
         Explore in demo

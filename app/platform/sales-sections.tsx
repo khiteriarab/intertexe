@@ -265,12 +265,12 @@ export function SalesPlatformBreadthSection() {
         <PlatformProductPillarsVisual />
 
         <p className="mt-10 lg:mt-12 text-sm text-white/50 leading-relaxed max-w-2xl">
-          <Link href="/platform/demo" className="underline underline-offset-4 hover:text-white/80 text-white/65">
+          <Link href="/brands/demo" className="underline underline-offset-4 hover:text-white/80 text-white/65">
             See it live
           </Link>{" "}
           with sample products, or{" "}
           <Link
-            href="/platform/request?intent=snapshot&cta=platform_breadth"
+            href="/brands/request?intent=snapshot&cta=platform_breadth"
             className="underline underline-offset-4 hover:text-white/80 text-white/65"
           >
             start with 10 of your own products
@@ -294,8 +294,8 @@ export function SalesStartFreeSection() {
           pricing is shared during onboarding, not published on this site.
         </Body>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <PrimaryLink href="/platform/request?intent=snapshot&cta=footer">Start with 10 products</PrimaryLink>
-          <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
+          <PrimaryLink href="/brands/request?intent=snapshot&cta=footer">Start with 10 products</PrimaryLink>
+          <SecondaryLink href="/brands/demo">See it live</SecondaryLink>
         </div>
         <p className="mt-8 text-xs text-[var(--platform-quiet)]">
           <Link href={signIn} className="underline underline-offset-4 hover:text-[var(--platform-primary)]">

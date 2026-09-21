@@ -73,9 +73,9 @@ describe("Platform solutions page", () => {
   });
 
   it("trims the navigation to Solutions, Pricing and See it live", () => {
-    assert.match(nav, /\/platform\/solutions/);
-    assert.match(nav, /\/platform\/pricing/);
-    assert.match(nav, /\/platform\/demo/);
+    assert.match(nav, /marketingPath\("solutions"\)|\/brands\/solutions/);
+    assert.match(nav, /marketingPath\("pricing"\)|\/brands\/pricing/);
+    assert.match(nav, /marketingPath\("demo"\)|\/brands\/demo/);
     assert.doesNotMatch(nav, /label: "Platform"/);
     assert.doesNotMatch(nav, /Digital Product Passport/);
     assert.doesNotMatch(nav, /label: "API"/);

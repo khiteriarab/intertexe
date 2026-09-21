@@ -1,6 +1,6 @@
-import { getServerSupabase } from "../supabase-service-client";
+import { getConsumerSupabase } from "../supabase-service-client";
 
-/** Pointers only. Never copy catalog, source, issue, or passport rows into HQ. */
+/** Pointers only on consumer/HQ Supabase. Never copy catalog, source, issue, or passport rows into HQ. */
 export async function writeHqEnterprisePointers(input: {
   hqDealId: string | null;
   organizationId: string;
@@ -9,7 +9,7 @@ export async function writeHqEnterprisePointers(input: {
   implementationStatus?: string | null;
 }): Promise<void> {
   if (!input.hqDealId) return;
-  const hq = getServerSupabase();
+  const hq = getConsumerSupabase();
   if (!hq) return;
   await hq
     .from("hq_deals")

@@ -68,7 +68,7 @@ export function PlatformCircularWardrobeBanner() {
             <a href={PLATFORM_EBOOK_HREF} className="platform-ebook-submit" target="_blank" rel="noopener noreferrer">
               Open the guide
             </a>
-            <Link href="/platform/request?intent=snapshot&cta=ebook_demo" className="platform-ebook-demo">
+            <Link href="/brands/request?intent=snapshot&cta=ebook_demo" className="platform-ebook-demo">
               Request a demo →
             </Link>
           </div>
@@ -124,7 +124,7 @@ export function PlatformCircularWardrobeBanner() {
               {state === "submitting" ? "Preparing…" : "Download the guide"}
             </button>
 
-            <Link href="/platform/request?intent=snapshot&cta=request_demo" className="platform-ebook-demo">
+            <Link href="/brands/request?intent=snapshot&cta=request_demo" className="platform-ebook-demo">
               Request a demo →
             </Link>
           </form>

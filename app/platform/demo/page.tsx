@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformDemoClient } from "./PlatformDemoClient";
 import "./demo-tour.css";
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
   title: "See INTERTEXE live",
   description:
     "From a tag to full transparency — see how INTERTEXE turns product data into a verified digital passport with the Silk Midi Skirt sample record.",
-  alternates: { canonical: "https://www.intertexe.com/platform/demo" },
+  alternates: { canonical: marketingCanonical("demo") },
 };
 
 export default function PlatformDemoPage() {

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CUSTOMER_ZERO_SLUG, DEMO_BRAND_SLUG, isReservedHqSlug } from "./constants";
+import { CUSTOMER_ZERO_SLUG, DEMO_ORGANIZATION_SLUG, isReservedHqSlug } from "./constants";
 import { authUserIdFromAccessToken } from "./jwt-claims";
 import type { EnterpriseMembership, WorkspaceContext } from "./types";
 
@@ -52,7 +52,7 @@ export function buildWorkspaceContexts(input: {
   }
   const seen = new Set<string>();
   for (const membership of input.memberships) {
-    if (membership.slug === DEMO_BRAND_SLUG) continue;
+    if (membership.slug === DEMO_ORGANIZATION_SLUG) continue;
     seen.add(membership.slug);
     const label =
       membership.slug === CUSTOMER_ZERO_SLUG ? "INTERTEXE — DPP Workspace" : membership.name;
@@ -86,7 +86,7 @@ export function resolvePostLoginPath(input: {
     return next;
   }
   if (input.hq) return "/dashboard";
-  const first = input.memberships.find((m) => m.slug !== DEMO_BRAND_SLUG);
+  const first = input.memberships.find((m) => m.slug !== DEMO_ORGANIZATION_SLUG);
   if (first) return `/dashboard/${first.slug}`;
   return "/dashboard";
 }

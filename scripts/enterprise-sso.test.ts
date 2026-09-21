@@ -109,11 +109,11 @@ describe("Enterprise SSO architecture (obelisk-core)", () => {
     assert.equal(normalizeEmailDomain("invalid"), null);
   });
 
-  it("J — enterprise password reset routes to obelisk-core for brand accounts", () => {
+  it("J — enterprise password reset routes to obelisk-core for organization accounts", () => {
     const forgot = fs.readFileSync(path.join(ROOT, "app/api/dashboard/forgot-password/route.ts"), "utf8");
-    assert.match(forgot, /getEnterpriseAnonClient/);
+    assert.match(forgot, /getObeliskAnonClient|getEnterpriseAnonClient/);
     assert.match(forgot, /resetPasswordForEmail/);
-    assert.match(forgot, /isEnterpriseBrandAccount/);
+    assert.match(forgot, /isEnterpriseOrganizationAccount/);
     assert.match(forgot, /obelisk-core/);
     const reset = fs.readFileSync(path.join(ROOT, "app/reset-password/page.tsx"), "utf8");
     assert.match(reset, /createEnterpriseClientComponentClient/);
@@ -125,7 +125,7 @@ describe("Enterprise SSO architecture (obelisk-core)", () => {
     assert.match(handoff, /identity-links/);
     assert.match(handoff, /mintStaffEnterpriseHandoff/);
     assert.match(links, /enterprise_identity_links/);
-    assert.match(links, /getServerSupabase/);
+    assert.match(links, /getConsumerSupabase|getServerSupabase/);
     const sso = fs.readFileSync(path.join(ROOT, "lib/enterprise/sso.ts"), "utf8");
     assert.doesNotMatch(sso, /enterprise_identity_links/);
     assert.doesNotMatch(sso, /mintStaffEnterpriseHandoff/);

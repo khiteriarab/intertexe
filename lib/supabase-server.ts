@@ -70,8 +70,8 @@ export type CatalogFetchOpts = {
   liveRowCap?: number;
 };
 
-import { getServerSupabase } from "./supabase-service-client";
-export { getServerSupabase };
+import { getServerSupabase, getConsumerSupabase } from "./supabase-service-client";
+export { getServerSupabase, getConsumerSupabase };
 
 export interface Designer {
   id: string;

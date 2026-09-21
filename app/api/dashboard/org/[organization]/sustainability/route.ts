@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOrgApi } from "../../../../../../lib/enterprise/api-auth";
-import { loadBrandSustainabilityAnalytics } from "../../../../../../lib/sustainability/brand-analytics";
+import { loadOrganizationSustainabilityAnalytics } from "../../../../../../lib/sustainability/organization-analytics";
 import { loadCatalogTraceabilitySummary } from "../../../../../../lib/enterprise/traceability";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ export async function GET(
   if (gate.error) return gate.error;
 
   const [analytics, traceability] = await Promise.all([
-    loadBrandSustainabilityAnalytics(gate.access.client, gate.access.membership.organizationId),
+    loadOrganizationSustainabilityAnalytics(gate.access.client, gate.access.membership.organizationId),
     loadCatalogTraceabilitySummary(gate.access.client, gate.access.membership.organizationId),
   ]);
 
