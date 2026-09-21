@@ -117,6 +117,8 @@ describe("Platform solutions page", () => {
     assert.match(nav, /marketingPath\("demo"\)|\/brands\/demo/);
     assert.match(nav, /marketingPath\("success-stories"\)|\/brands\/success-stories/);
     assert.match(nav, /\/digital-product-passport/);
+    assert.match(nav, /label: "DPP"/);
+    assert.doesNotMatch(nav, /label: "Digital Product Passport"/);
     assert.doesNotMatch(nav, /label: "Platform"/);
     assert.doesNotMatch(nav, /label: "API"/);
   });

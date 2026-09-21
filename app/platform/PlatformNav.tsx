@@ -10,7 +10,7 @@ export type PlatformNavKey = "demo" | "solutions" | "request" | "success-stories
 
 const NAV = [
   { href: marketingPath("solutions"), label: "Solutions", key: "solutions" as const },
-  { href: "/digital-product-passport", label: "Digital Product Passport", key: "dpp" as const },
+  { href: "/digital-product-passport", label: "DPP", key: "dpp" as const },
   { href: marketingPath("pricing"), label: "Pricing", key: "request" as const },
   { href: marketingPath("demo"), label: "See it live", key: "demo" as const },
   { href: marketingPath("success-stories"), label: "Success Stories", key: "success-stories" as const },
