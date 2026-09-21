@@ -6,16 +6,16 @@ import { HomepageLifecycleSection } from "../../components/home/lifecycle/Homepa
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: hero → cinematic record bridge → PRODUCT LIFECYCLE → pillars → guide.
+ * Journey: hero + stats → One Workspace pillars → cinematic bridge → PRODUCT LIFECYCLE → guide.
  * Attio Follow the Record rail lives on /brands/demo only.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
       <SalesHeroSection />
+      <PlatformHowItWorksSection />
       <HomepageHeroLifecycleBridge />
       <HomepageLifecycleSection />
-      <PlatformHowItWorksSection />
       <PlatformCircularWardrobeBanner />
     </div>
   );
