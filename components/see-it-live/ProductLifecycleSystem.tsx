@@ -209,13 +209,14 @@ function AnimatedValue({ value, className }: { value: string; className?: string
   );
 }
 
-function SourceStack({ active }: { active: boolean }) {
+function SourceStack({ active, settled }: { active: boolean; settled: boolean }) {
   const sources = [
     ["PLM", "Style + BOM"],
     ["ERP", "Supplier + PO"],
     ["SUPPLIER", "Evidence"],
     ["CSV", "Composition"],
   ];
+  const lit = active || settled;
 
   return (
     <div className={styles.sourceStack}>
@@ -224,7 +225,7 @@ function SourceStack({ active }: { active: boolean }) {
           key={type}
           className={`${styles.sourceRow} ${active ? styles.sourceRowActive : ""}`}
           animate={
-            active
+            lit
               ? { x: 0, opacity: 1 }
               : { x: index % 2 === 0 ? -4 : 4, opacity: 0.62 }
           }
@@ -241,8 +242,9 @@ function SourceStack({ active }: { active: boolean }) {
   );
 }
 
-function NormalizeVisual({ active }: { active: boolean }) {
+function NormalizeVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
   const messy = ["Silk 96%", "96 silk", "SILK:96", "96% Seide"];
+  const clean = resolved;
 
   return (
     <div className={styles.normalizeVisual}>
@@ -252,7 +254,7 @@ function NormalizeVisual({ active }: { active: boolean }) {
             key={item}
             className={styles.messyItem}
             animate={
-              active
+              clean
                 ? { x: 10, opacity: 0.22 }
                 : { x: index % 2 === 0 ? -3 : 4, opacity: 0.72 }
             }
@@ -265,27 +267,24 @@ function NormalizeVisual({ active }: { active: boolean }) {
 
       <motion.div
         className={styles.normalizeArrow}
-        animate={{ opacity: active ? 1 : 0.35, scaleX: active ? 1 : 0.7 }}
+        animate={{ opacity: clean ? 1 : 0.35, scaleX: clean ? 1 : 0.7 }}
         transition={{ duration: 0.35 }}
       >
         →
       </motion.div>
 
       <motion.div
-        className={`${styles.cleanValue} ${active ? styles.cleanValueActive : ""}`}
+        className={`${styles.cleanValue} ${clean ? styles.cleanValueActive : ""}`}
         animate={{
-          borderColor: active ? "rgba(201,169,98,.55)" : "rgba(23,25,23,.12)",
-          backgroundColor: active ? "rgba(196,165,116,.08)" : "#ffffff",
+          borderColor: clean ? "rgba(201,169,98,.55)" : "rgba(23,25,23,.12)",
+          backgroundColor: clean ? "rgba(196,165,116,.08)" : "#ffffff",
         }}
         transition={{ duration: 0.35 }}
       >
         <span>COMPOSITION</span>
         <AnimatePresence mode="wait" initial={false}>
-          <motion.strong
-            key={active ? "clean" : "pending"}
-            {...FIELD_MOTION}
-          >
-            {active ? "96% Silk · 4% Elastane" : "Awaiting normalize"}
+          <motion.strong key={clean ? "clean" : "pending"} {...FIELD_MOTION}>
+            {clean ? "96% Silk · 4% Elastane" : "Awaiting normalize"}
           </motion.strong>
         </AnimatePresence>
       </motion.div>
@@ -429,8 +428,9 @@ function GovernedRecord({
   );
 }
 
-function EvidenceLayer({ active }: { active: boolean }) {
+function EvidenceLayer({ active, resolved }: { active: boolean; resolved: boolean }) {
   const items = ["Supplier declaration", "Origin evidence", "Chain of custody"];
+  const lit = active || resolved;
 
   return (
     <div className={styles.evidenceLayer}>
@@ -440,10 +440,10 @@ function EvidenceLayer({ active }: { active: boolean }) {
             key={index}
             d={`M18 ${28 + index * 42} H118`}
             fill="none"
-            stroke={active ? "rgba(201,169,98,.7)" : "rgba(23,25,23,.12)"}
+            stroke={lit ? "rgba(201,169,98,.7)" : "rgba(23,25,23,.12)"}
             strokeWidth="1"
             initial={false}
-            animate={{ pathLength: active ? 1 : 0.35, opacity: active ? 1 : 0.45 }}
+            animate={{ pathLength: lit ? 1 : 0.35, opacity: lit ? 1 : 0.45 }}
             transition={{ duration: 0.65, delay: active ? index * 0.07 : 0 }}
           />
         ))}
@@ -451,8 +451,8 @@ function EvidenceLayer({ active }: { active: boolean }) {
       {items.map((label, index) => (
         <motion.div
           key={label}
-          className={`${styles.evidenceItem} ${active ? styles.evidenceItemActive : ""}`}
-          animate={{ opacity: active ? 1 : 0.58, x: active ? 0 : -4 }}
+          className={`${styles.evidenceItem} ${lit ? styles.evidenceItemActive : ""}`}
+          animate={{ opacity: lit ? 1 : 0.58, x: lit ? 0 : -4 }}
           transition={{ duration: 0.35, delay: active ? index * 0.07 : 0 }}
         >
           <span className={styles.evidenceDot} />
@@ -463,8 +463,9 @@ function EvidenceLayer({ active }: { active: boolean }) {
   );
 }
 
-function ReadinessLayer({ active }: { active: boolean }) {
+function ReadinessLayer({ active, resolved }: { active: boolean; resolved: boolean }) {
   const checks = ["Required fields", "Evidence", "Traceability", "DPP readiness"];
+  const lit = active || resolved;
 
   return (
     <div className={styles.readinessLayer}>
@@ -472,18 +473,18 @@ function ReadinessLayer({ active }: { active: boolean }) {
         <motion.div
           key={check}
           className={styles.readinessCheck}
-          animate={{ opacity: active ? 1 : 0.58 }}
+          animate={{ opacity: lit ? 1 : 0.58 }}
           transition={{ delay: active ? index * 0.08 : 0, duration: 0.3 }}
         >
           <motion.span
             className={styles.readinessMark}
             animate={{
-              backgroundColor: active ? "#c9a962" : "transparent",
-              borderColor: active ? "#c9a962" : "rgba(23,25,23,.22)",
+              backgroundColor: lit ? "#c9a962" : "transparent",
+              borderColor: lit ? "#c9a962" : "rgba(23,25,23,.22)",
             }}
             transition={{ duration: 0.28, delay: active ? index * 0.08 : 0 }}
           >
-            {active ? "✓" : ""}
+            {lit ? "✓" : ""}
           </motion.span>
           {check}
         </motion.div>
@@ -492,12 +493,13 @@ function ReadinessLayer({ active }: { active: boolean }) {
   );
 }
 
-function PublishingNetwork({ active }: { active: boolean }) {
+function PublishingNetwork({ active, resolved }: { active: boolean; resolved: boolean }) {
   const outputs = ["DPP", "QR / NFC", "WEB", "API", "RETAIL"];
+  const lit = active || resolved;
 
   return (
     <div className={styles.publishNetwork}>
-      <div className={`${styles.publishCore} ${active ? styles.publishCoreActive : ""}`}>
+      <div className={`${styles.publishCore} ${lit ? styles.publishCoreActive : ""}`}>
         <span>PRODUCT</span>
         <strong>ITX-4102</strong>
       </div>
@@ -514,10 +516,10 @@ function PublishingNetwork({ active }: { active: boolean }) {
             key={d}
             d={d}
             fill="none"
-            stroke={active ? "rgba(201,169,98,.78)" : "rgba(23,25,23,.12)"}
+            stroke={lit ? "rgba(201,169,98,.78)" : "rgba(23,25,23,.12)"}
             strokeWidth="1.25"
             initial={false}
-            animate={{ pathLength: active ? 1 : 0.38, opacity: active ? 1 : 0.4 }}
+            animate={{ pathLength: lit ? 1 : 0.38, opacity: lit ? 1 : 0.4 }}
             transition={{ duration: 0.72, delay: active ? index * 0.055 : 0 }}
           />
         ))}
@@ -527,8 +529,8 @@ function PublishingNetwork({ active }: { active: boolean }) {
         {outputs.map((item, index) => (
           <motion.div
             key={item}
-            className={`${styles.publishEndpoint} ${active ? styles.publishEndpointActive : ""}`}
-            animate={{ opacity: active ? 1 : 0.55, x: active ? 0 : 4 }}
+            className={`${styles.publishEndpoint} ${lit ? styles.publishEndpointActive : ""}`}
+            animate={{ opacity: lit ? 1 : 0.55, x: lit ? 0 : 4 }}
             transition={{ delay: active ? 0.2 + index * 0.05 : 0, duration: 0.32 }}
           >
             {item}
@@ -539,7 +541,9 @@ function PublishingNetwork({ active }: { active: boolean }) {
   );
 }
 
-function IntelligenceVisual({ active }: { active: boolean }) {
+function IntelligenceVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const lit = active || resolved;
+
   return (
     <div className={styles.intelligenceVisual}>
       <div className={styles.metricTop}>
@@ -550,13 +554,13 @@ function IntelligenceVisual({ active }: { active: boolean }) {
       <div className={styles.benchmarkTrack}>
         <motion.div
           className={styles.benchmarkFill}
-          animate={{ width: active ? "76%" : "48%" }}
+          animate={{ width: lit ? "76%" : "48%" }}
           transition={{ duration: 0.65 }}
         />
         <span className={styles.peerMedian} title="Peer median" />
         <motion.span
           className={styles.goldMarker}
-          animate={{ left: active ? "76%" : "48%", opacity: active ? 1 : 0.45 }}
+          animate={{ left: lit ? "76%" : "48%", opacity: lit ? 1 : 0.45 }}
           transition={{ duration: 0.65 }}
         />
       </div>
@@ -570,7 +574,7 @@ function IntelligenceVisual({ active }: { active: boolean }) {
           <span key={label as string}>
             {label}
             <motion.i
-              animate={{ width: active ? `${on}%` : `${off}%` }}
+              animate={{ width: lit ? `${on}%` : `${off}%` }}
               transition={{ duration: 0.55, delay: active ? index * 0.05 : 0 }}
             />
           </span>
@@ -585,7 +589,7 @@ function IntelligenceVisual({ active }: { active: boolean }) {
             animate={
               active
                 ? { x: [-18, 0], opacity: [0, 1, 0.35] }
-                : { x: 0, opacity: 0.2 }
+                : { x: 0, opacity: resolved ? 0.45 : 0.2 }
             }
             transition={
               active
@@ -600,7 +604,9 @@ function IntelligenceVisual({ active }: { active: boolean }) {
   );
 }
 
-function CircularVisual({ active }: { active: boolean }) {
+function CircularVisual({ active, resolved }: { active: boolean; resolved: boolean }) {
+  const lit = active || resolved;
+
   return (
     <div className={styles.circularVisual}>
       <svg viewBox="0 0 210 210" className={styles.circularSvg} aria-hidden="true">
@@ -608,19 +614,19 @@ function CircularVisual({ active }: { active: boolean }) {
         <motion.path
           d="M105 26 C160 26 184 64 184 105 C184 160 151 183 105 183 C56 183 27 151 27 106 C27 70 47 43 77 32"
           fill="none"
-          stroke={active ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
+          stroke={lit ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
           strokeWidth="1.5"
           strokeLinecap="round"
           initial={false}
-          animate={{ pathLength: active ? 1 : 0.68 }}
+          animate={{ pathLength: lit ? 1 : 0.68 }}
           transition={{ duration: 0.9 }}
         />
         <motion.path
           d="M76 32 L88 31 L82 42"
           fill="none"
-          stroke={active ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
+          stroke={lit ? "rgba(201,169,98,.85)" : "rgba(23,25,23,.16)"}
           strokeWidth="1.5"
-          animate={{ opacity: active ? 1 : 0.5 }}
+          animate={{ opacity: lit ? 1 : 0.5 }}
         />
       </svg>
 
@@ -629,9 +635,9 @@ function CircularVisual({ active }: { active: boolean }) {
       <span className={styles.circularReuse}>REUSE</span>
       <span className={styles.circularEnd}>END OF LIFE</span>
 
-      <div className={`${styles.circularCenter} ${active ? styles.circularCenterActive : ""}`}>
+      <div className={`${styles.circularCenter} ${lit ? styles.circularCenterActive : ""}`}>
         <span>ITX-4102</span>
-        <strong>{active ? "Lifecycle active" : "Identity persists"}</strong>
+        <strong>{lit ? "Lifecycle active" : "Identity persists"}</strong>
       </div>
     </div>
   );
@@ -694,7 +700,7 @@ export default function ProductLifecycleSystem() {
             <div className={styles.zoneHeader}>
               <StageLabel stage={STAGES[0]} active={activeIndex === 0} onClick={() => selectStage(0)} />
             </div>
-            <SourceStack active={activeIndex === 0} />
+            <SourceStack active={activeIndex === 0} settled={activeIndex > 0} />
             <div className={styles.flowConnector}>
               <motion.span
                 animate={{
@@ -706,7 +712,7 @@ export default function ProductLifecycleSystem() {
             </div>
             <div className={styles.normalizeBlock}>
               <StageLabel stage={STAGES[1]} active={activeIndex === 1} onClick={() => selectStage(1)} />
-              <NormalizeVisual active={activeIndex === 1} />
+              <NormalizeVisual active={activeIndex === 1} resolved={activeIndex >= 1} />
             </div>
           </section>
 
@@ -716,25 +722,25 @@ export default function ProductLifecycleSystem() {
               <StageLabel stage={STAGES[3]} active={activeIndex === 3} onClick={() => selectStage(3)} />
             </div>
             <div className={styles.recordEnvironment}>
-              <EvidenceLayer active={activeIndex === 2} />
+              <EvidenceLayer active={activeIndex === 2} resolved={activeIndex >= 2} />
               <GovernedRecord activeStage={activeIndex} onHoverChange={setRecordHovered} />
-              <ReadinessLayer active={activeIndex === 3} />
+              <ReadinessLayer active={activeIndex === 3} resolved={activeIndex >= 3} />
             </div>
           </section>
 
           <section className={styles.useZone}>
             <div className={styles.publishSection}>
               <StageLabel stage={STAGES[4]} active={activeIndex === 4} onClick={() => selectStage(4)} />
-              <PublishingNetwork active={activeIndex >= 4} />
+              <PublishingNetwork active={activeIndex === 4} resolved={activeIndex >= 4} />
             </div>
             <div className={styles.useBottom}>
               <div className={styles.learnSection}>
                 <StageLabel stage={STAGES[5]} active={activeIndex === 5} onClick={() => selectStage(5)} />
-                <IntelligenceVisual active={activeIndex === 5} />
+                <IntelligenceVisual active={activeIndex === 5} resolved={activeIndex >= 5} />
               </div>
               <div className={styles.circularSection}>
                 <StageLabel stage={STAGES[6]} active={activeIndex === 6} onClick={() => selectStage(6)} />
-                <CircularVisual active={activeIndex === 6} />
+                <CircularVisual active={activeIndex === 6} resolved={activeIndex >= 6} />
               </div>
             </div>
           </section>
