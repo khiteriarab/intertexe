@@ -57,9 +57,13 @@ describe("Platform solutions page", () => {
 
   it("closes on the connected record and a single CTA pair", () => {
     assert.match(page, /One governed record\. Every stage connected\./);
-    assert.match(page, /Start with the problem you need to solve\./);
-    assert.match(page, /Explore the platform/);
-    assert.match(page, /Request a demo/);
+    assert.match(page, /One product record\. Every use case connected\./);
+    assert.match(page, /Know more/);
+    assert.match(page, /Prove more/);
+    assert.match(page, /Do more/);
+    assert.match(page, /Book a demo/);
+    assert.match(page, /Explore pricing/);
+    assert.doesNotMatch(page, /Start with the problem you need to solve\./);
     assert.match(page, /solutions-governed-record\.png/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/solutions-governed-record.png")));
     assert.doesNotMatch(page, /workspace-product-record\.png/);

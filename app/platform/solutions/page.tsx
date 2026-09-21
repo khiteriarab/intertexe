@@ -140,23 +140,62 @@ export default function PlatformSolutionsPage() {
         </div>
       </section>
 
-      <section className="solutions-close">
-        <div className="platform-lux-wrap solutions-close-inner">
-          <div>
-            <Eyebrow>One platform</Eyebrow>
-            <Heading className="mb-4">Start with the problem you need to solve.</Heading>
-            <Body className="mb-0">
-              Use one INTERTEXE solution or connect several around the same governed product record.
-            </Body>
-          </div>
-          <div className="solutions-close-actions">
-            <Link href="/brands" className="solutions-cta-primary">
-              Explore the platform
-              <span aria-hidden>→</span>
-            </Link>
-            <Link href="/brands/request?intent=snapshot&cta=solutions" className="solutions-cta-secondary">
-              Request a demo
-            </Link>
+      <section className="solutions-close" aria-labelledby="solutions-close-heading">
+        <div className="platform-lux-wrap">
+          <header className="solutions-close-head">
+            <h2 id="solutions-close-heading" className="solutions-close-title" style={SERIF}>
+              One product record. Every use case connected.
+            </h2>
+            <p className="solutions-close-lede">
+              INTERTEXE brings product data, material intelligence, traceability, compliance, Digital Product
+              Passports, connected experiences, and circularity into one governed system.
+            </p>
+          </header>
+
+          <ul className="solutions-close-pillars">
+            <li>
+              <h3 className="solutions-close-pillar-title" style={SERIF}>
+                Know more
+              </h3>
+              <p>
+                Bring materials, suppliers, evidence, and product data into one trusted record.
+              </p>
+            </li>
+            <li>
+              <h3 className="solutions-close-pillar-title" style={SERIF}>
+                Prove more
+              </h3>
+              <p>
+                Turn traceability, compliance, and sustainability information into evidence-backed product
+                intelligence.
+              </p>
+            </li>
+            <li>
+              <h3 className="solutions-close-pillar-title" style={SERIF}>
+                Do more
+              </h3>
+              <p>
+                Publish passports, connect consumer and retail experiences, measure performance, and extend the
+                product into repair, resale, and next life.
+              </p>
+            </li>
+          </ul>
+
+          <div className="solutions-close-convert">
+            <p className="solutions-close-convert-line" style={SERIF}>
+              See what INTERTEXE could look like for your products.
+            </p>
+            <div className="solutions-close-actions">
+              <Link
+                href="/brands/request?intent=saas&cta=solutions_close"
+                className="solutions-close-cta-primary"
+              >
+                Book a demo
+              </Link>
+              <Link href="/brands/pricing" className="solutions-close-cta-secondary">
+                Explore pricing
+              </Link>
+            </div>
           </div>
         </div>
       </section>
