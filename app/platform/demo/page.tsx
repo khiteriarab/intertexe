@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
+import { b2bPageMetadata } from "../../../lib/seo/b2b-metadata";
 import { PlatformChrome } from "../PlatformChrome";
 import { SolutionsClose } from "../SolutionsClose";
 import { PlatformDemoClient } from "./PlatformDemoClient";
 import "./demo-tour.css";
 
-export const metadata: Metadata = {
-  title: "See INTERTEXE live",
+export const metadata: Metadata = b2bPageMetadata({
+  title: "Fashion Digital Product Passport Demo | INTERTEXE",
   description:
-    "From material to next life — follow product data through INTERTEXE from sourcing to Digital Product Passports, then into use, repair and recirculation.",
-  alternates: { canonical: marketingCanonical("demo") },
-};
+    "See how INTERTEXE turns messy fashion product data into structured material intelligence, a governed product record and a live Digital Product Passport.",
+  path: "/brands/demo",
+  ogImageAlt: "INTERTEXE fashion Digital Product Passport demo walkthrough",
+});
 
 export default function PlatformDemoPage() {
   return (

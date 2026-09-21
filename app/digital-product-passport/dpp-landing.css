@@ -1,0 +1,243 @@
+/* Digital Product Passport SEO landing — uses PlatformChrome visual language. */
+
+.dpp-hero {
+  background: #ffffff;
+  padding: 4.5rem 0 3.5rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-hero {
+    padding: 6rem 0 4.5rem;
+  }
+}
+
+.dpp-hero-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 3rem;
+    align-items: center;
+  }
+}
+
+.dpp-h1 {
+  margin: 0 0 1.25rem;
+  max-width: 16ch;
+  font-size: clamp(2.15rem, 4.2vw, 3.35rem);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: var(--platform-ink, #101312);
+}
+
+.dpp-careful {
+  color: var(--platform-muted, #5c5854);
+}
+
+.dpp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: center;
+}
+
+.dpp-actions--tight {
+  margin-top: 1.75rem;
+}
+
+.dpp-hero-visual,
+.dpp-split-visual {
+  overflow: hidden;
+  border: 1px solid rgba(15, 20, 18, 0.1);
+  border-radius: 4px;
+  background: #fbfaf8;
+}
+
+.dpp-hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dpp-section {
+  background: #ffffff;
+  padding: 3.5rem 0 4.5rem;
+  border-top: 1px solid rgba(15, 20, 18, 0.06);
+}
+
+.dpp-section--soft {
+  background: #fbfaf8;
+}
+
+@media (min-width: 900px) {
+  .dpp-section {
+    padding: 5rem 0 6rem;
+  }
+}
+
+.dpp-section-head {
+  max-width: 44rem;
+  margin-bottom: 2.5rem;
+}
+
+.dpp-capability-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 800px) {
+  .dpp-capability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 2.5rem;
+  }
+}
+
+.dpp-capability-grid li {
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(15, 20, 18, 0.1);
+}
+
+.dpp-capability-title {
+  margin: 0 0 0.55rem;
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--platform-ink, #101312);
+}
+
+.dpp-capability-grid p {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.9875rem;
+  line-height: 1.55;
+  color: var(--platform-muted, #5c5854);
+}
+
+.dpp-split {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: center;
+  }
+}
+
+.dpp-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dpp-checklist li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.9875rem;
+  line-height: 1.45;
+  color: var(--platform-muted, #5c5854);
+}
+
+.dpp-checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 1px;
+  background: var(--platform-gold, #c9a962);
+}
+
+.dpp-inline-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dpp-inline-link:hover {
+  color: var(--platform-ink, #101312);
+}
+
+.dpp-inline-link-light {
+  color: rgba(245, 243, 239, 0.92);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dpp-faq-layout {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-faq-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 3rem;
+  }
+}
+
+.dpp-faq-list {
+  display: grid;
+  gap: 0;
+}
+
+.dpp-faq-item {
+  border-top: 1px solid rgba(15, 20, 18, 0.1);
+  padding: 1rem 0;
+}
+
+.dpp-faq-item:last-child {
+  border-bottom: 1px solid rgba(15, 20, 18, 0.1);
+}
+
+.dpp-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--platform-ink, #101312);
+}
+
+.dpp-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.dpp-faq-item p {
+  margin: 0.75rem 0 0.25rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--platform-muted, #5c5854);
+}
+
+.dpp-close {
+  background: #101312;
+  color: #f5f3ef;
+  padding: 4.5rem 0 5.5rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-close {
+    padding: 6rem 0 7rem;
+  }
+}
+
+.dpp-close .platform-display,
+.dpp-close h2 {
+  color: #f5f3ef;
+}

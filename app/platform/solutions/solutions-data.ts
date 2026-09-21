@@ -109,7 +109,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Turn approved product data into a living digital passport for your website, app, QR code, white-label experience, or connected partner channels.",
     tags: ["Digital Product Passport", "Hosted · white label · API", "QR · NFC · RFID", "Consumer transparency", "Verified product data"],
-    href: "/brands/digital-product-passport",
+    href: "/digital-product-passport",
     icon: "passports",
     proposition: "Publish once from the governed record — hosted, white-labeled, or via API.",
     detail: [
