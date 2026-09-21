@@ -55,11 +55,18 @@ describe("Brand domain naming clarity", () => {
     assert.doesNotMatch(sitemap, /\/platform`/);
   });
 
-  it("keeps consumer brand profiles distinct from SaaS orgs", () => {
+  it("keeps consumer brand profiles as fashion-brand vocabulary (not organizations)", () => {
     const profiles = fs.readFileSync(path.join(root, "lib/brand-profiles.ts"), "utf8");
-    assert.match(profiles, /export interface ConsumerBrandProfile/);
-    assert.match(profiles, /getConsumerBrandProfile/);
-    assert.match(profiles, /export type BrandProfile = ConsumerBrandProfile/);
+    assert.match(profiles, /BrandProfile|ConsumerBrandProfile/);
+    assert.match(profiles, /getBrandProfile|getConsumerBrandProfile/);
+    assert.doesNotMatch(profiles, /OrganizationProfile|getOrganizationProfile/);
+  });
+
+  it("treats fashion brands and SaaS organizations as separate entities", () => {
+    const audit = fs.readFileSync(path.join(root, "docs/brand-domain-naming-audit.md"), "utf8");
+    assert.match(audit, /shopper-facing fashion brand is \*\*not\*\* an enterprise organization/i);
+    assert.match(audit, /must \*\*not\*\* share routing, auth assumptions, or database clients/i);
+    assert.match(audit, /Do not\*\* perform global|perform global `brand` → `organization`/i);
   });
 
   it("routes HQ retail analytics away from /brands marketing path", () => {

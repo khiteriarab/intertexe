@@ -11,7 +11,13 @@
 
 Preferred **code** names: `consumerSupabase` / `obeliskSupabase`. Preferred future env aliases (`CONSUMER_SUPABASE_*`, `OBELISK_SUPABASE_*`) may dual-read existing vars — never change production secret values without a coordinated deploy.
 
-Domain naming: consumer fashion labels live under `/designers` and consumer catalog helpers; SaaS customers are `organizations` on obelisk. Public marketing for buyers of INTERTEXE is `/brands` (not `/designers`). See `docs/brand-domain-naming-audit.md`.
+Domain naming (two entities, never collapsed):
+- **Fashion brand** — consumer catalog (`brand_slug`, `/designers`); client `getConsumerSupabase`.
+- **Organization** — SaaS tenant on obelisk (`organizations`); client `getObeliskServiceClient`.
+- **`/brands`** — enterprise *marketing* only (buyers of INTERTEXE), not a fashion-brand page and not an org workspace.
+
+A real-world company may have both a fashion-brand record and an organization; they must not share routing, auth, or DB clients. Do not rename consumer `brand_*` to organization. See `docs/brand-domain-naming-audit.md`.
+
 
 ## Deployment environments
 
