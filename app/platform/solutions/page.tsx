@@ -6,6 +6,7 @@ import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 import { SolutionsClose } from "../SolutionsClose";
 import { SalesDeliverySection } from "../sales-home-sections";
+import { PlatformFaq } from "../PlatformFaq";
 import { Body, Eyebrow, Heading, SERIF } from "../platform-ui";
 import { SOLUTIONS, type SolutionCard } from "./solutions-data";
 import "./solutions.css";
@@ -103,6 +104,8 @@ export default function PlatformSolutionsPage() {
       </section>
 
       <SalesDeliverySection />
+
+      <PlatformFaq />
 
       <SolutionsClose cta="solutions_close" />
     </PlatformChrome>
