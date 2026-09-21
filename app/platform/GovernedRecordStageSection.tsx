@@ -8,14 +8,11 @@ export function GovernedRecordStageSection() {
   return (
     <section className="governed-opener" aria-labelledby="governed-record-heading">
       <div className="governed-opener-head">
-        <p className="governed-opener-eyebrow">One record. Every stage connected.</p>
         <h1 id="governed-record-heading" className="governed-opener-title" style={SERIF}>
-          From product data
-          <br />
-          to product intelligence.
+          From product data all the way to product intelligence.
         </h1>
         <p className="governed-opener-body">
-          One governed record for compliance, Digital Product Passports, customer experiences, and next-life services.
+          The platform empowering fashion brands on compliance and Digital Product Passports.
         </p>
         <div className="governed-opener-actions">
           <Link href="#journey" className="governed-opener-cta-primary">
