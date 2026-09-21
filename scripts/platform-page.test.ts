@@ -68,34 +68,44 @@ describe("Platform B2B sales page", () => {
     assert.match(saasCss, /--platform-bg: #faf9f6/);
     assert.match(chrome, /platform-saas\.css/);
     assert.match(chrome, /platform-luxury\.css/);
-    assert.match(home, /LifecycleOverviewSection/);
+    assert.match(home, /HomepageLifecycleSection/);
     assert.doesNotMatch(howItWorks, /ProductLifecycleSystem/);
     assert.doesNotMatch(howItWorks, /ProductLifecycleMap/);
-    assert.doesNotMatch(howItWorks, /LifecycleOverviewSection/);
-    const lifecycleMap = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/LifecycleOverviewSection.tsx"), "utf8");
-    const lifecycleData = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/lifecycle-stages.ts"), "utf8");
+    assert.doesNotMatch(howItWorks, /HomepageLifecycleSection/);
+    const lifecycleMap = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/HomepageLifecycleSection.tsx"), "utf8");
+    const lifecycleData = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/lifecycle-data.ts"), "utf8");
     const lifecycleMapCss = fs.readFileSync(
-      path.join(process.cwd(), "components/home/lifecycle/LifecycleOverviewSection.module.css"),
+      path.join(process.cwd(), "components/home/lifecycle/HomepageLifecycleSection.module.css"),
+      "utf8",
+    );
+    const lifecycleVisuals = fs.readFileSync(
+      path.join(process.cwd(), "components/home/lifecycle/LifecycleStageVisuals.tsx"),
       "utf8",
     );
     assert.match(lifecycleData, /Source & Make/);
-    assert.match(lifecycleData, /Repair & Recirculate/);
-    assert.match(lifecycleData, /Passport & Publish/);
-    assert.match(lifecycleMap, /LIFECYCLE_STAGES/);
-    assert.match(lifecycleMap, /From material/);
-    assert.match(lifecycleMapCss, /--lov-bg/);
-    assert.match(lifecycleMapCss, /\.mapFrame/);
-    assert.match(lifecycleMapCss, /\.record/);
-    assert.match(lifecycleMap, /NODE_POINTS|HUB|Governed product record/i);
-    assert.doesNotMatch(lifecycleMapCss, /--canvas:\s*#111514/);
-    assert.ok(fs.existsSync(path.join(process.cwd(), "components/home/lifecycle/lifecycle-stages.ts")));
     assert.match(lifecycleData, /Clean & Connect/);
     assert.match(lifecycleData, /Trace & Prove/);
     assert.match(lifecycleData, /Check & Prepare/);
+    assert.match(lifecycleData, /Passport & Publish/);
     assert.match(lifecycleData, /Use & Learn/);
+    assert.match(lifecycleData, /Repair & Recirculate/);
     assert.equal((lifecycleData.match(/number: "0[1-7]"/g) || []).length, 7);
-    assert.match(lifecycleMap, /See it live/i);
-    assert.doesNotMatch(lifecycleMap, /HomepageLifecycleSection/);
+    assert.doesNotMatch(lifecycleData, /Product Intelligence/);
+    assert.doesNotMatch(lifecycleData, /Connected Product/);
+    assert.match(lifecycleMap, /LIFECYCLE_STAGES/);
+    assert.match(lifecycleData, /From material/);
+    assert.match(lifecycleMap, /LIFECYCLE_HEADER/);
+    assert.match(lifecycleMapCss, /--hlc-bg/);
+    assert.match(lifecycleMapCss, /\.spine/);
+    assert.doesNotMatch(lifecycleMapCss, /--canvas:\s*#111514/);
+    assert.doesNotMatch(lifecycleMapCss, /\.mapFrame/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "components/home/lifecycle/LifecycleStageVisuals.tsx")));
+    assert.match(lifecycleVisuals, /SourceMakeVisual/);
+    assert.match(lifecycleVisuals, /RepairRecirculateVisual/);
+    assert.match(lifecycleData, /See it live/i);
+    assert.match(lifecycleData, /See a live product/i);
+    assert.doesNotMatch(home, /LifecycleOverviewSection/);
+    assert.doesNotMatch(home, /DemoProductWorkflow/);
     assert.doesNotMatch(howItWorks, /WhatItIsProcessVisual/);
     assert.doesNotMatch(howItWorks, /From raw product data to intelligent action/);
     assert.match(howItWorks, /Three layers\. One governed source of truth\./);
@@ -168,10 +178,10 @@ describe("Platform B2B sales page", () => {
     assert.match(hero, /Distribute/);
     assert.match(hero, /Extend/);
     assert.doesNotMatch(hero, /Start with 10 products/);
-    assert.match(home, /LifecycleOverviewSection/);
+    assert.match(home, /HomepageLifecycleSection/);
     assert.doesNotMatch(howItWorks, /ProductLifecycleSystem/);
     assert.doesNotMatch(howItWorks, /ProductLifecycleMap/);
-    assert.doesNotMatch(howItWorks, /LifecycleOverviewSection/);
+    assert.doesNotMatch(howItWorks, /HomepageLifecycleSection/);
     assert.doesNotMatch(howItWorks, /Start with 10 products/);
     assert.match(sections, /Start with 10 products/);
     assert.match(homeSections, /PlatformBrandShowcaseHero/);

@@ -1,0 +1,364 @@
+.section {
+  --hlc-bg: #fafaf7;
+  --hlc-ink: #161616;
+  --hlc-body: #4e4a45;
+  --hlc-mute: #8a847c;
+  --hlc-line: #ddd7cf;
+  --hlc-gold: var(--platform-gold, #c9a962);
+  --hlc-pill: #f2e7d3;
+  --hlc-btn: #1d1c1a;
+
+  background: var(--hlc-bg);
+  color: var(--hlc-ink);
+  font-family: var(--itx-sans, sans-serif);
+  padding: clamp(5.5rem, 10vw, 8.5rem) 0;
+}
+
+.shell {
+  width: min(1320px, calc(100% - 5rem));
+  margin: 0 auto;
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+  gap: 2rem 3rem;
+  align-items: start;
+  margin-bottom: clamp(3.5rem, 7vw, 5.5rem);
+}
+
+.introCopy {
+  max-width: 36rem;
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hlc-mute);
+}
+
+.headline {
+  margin: 0 0 1.35rem;
+  font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+  line-height: 0.98;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  color: var(--hlc-ink);
+}
+
+.body {
+  margin: 0 0 1.75rem;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--hlc-body);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+}
+
+.primaryCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.85rem;
+  padding: 0 1.35rem;
+  border-radius: 999px;
+  background: var(--hlc-btn);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: background-color 0.18s ease;
+}
+
+.primaryCta:hover {
+  background: #000;
+}
+
+.secondaryCta {
+  color: var(--hlc-ink);
+  text-decoration: none;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(22, 22, 22, 0.35);
+  padding-bottom: 0.15rem;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.secondaryCta:hover {
+  color: var(--hlc-gold);
+  border-bottom-color: rgba(201, 169, 98, 0.7);
+}
+
+.introAside {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.35rem;
+}
+
+.seeItLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.65rem;
+  padding: 0 1.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--hlc-ink);
+  background: #fff;
+  color: var(--hlc-ink);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.seeItLive:hover {
+  background: var(--hlc-ink);
+  color: #fff;
+}
+
+/* Rows + spine */
+
+.rows {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4.25rem, 8vw, 6.75rem);
+}
+
+.spine {
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--hlc-line);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+  gap: 0 1.25rem;
+  align-items: center;
+}
+
+.rowSide {
+  min-width: 0;
+}
+
+.spineSlot {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.spineNode {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--hlc-ink);
+  box-shadow: 0 0 0 4px var(--hlc-bg);
+  z-index: 2;
+}
+
+.spineNodeAccent {
+  border-color: var(--hlc-gold);
+  background: var(--hlc-gold);
+}
+
+.rowCopy {
+  max-width: 28rem;
+}
+
+.row[data-align="left"] .rowCopy {
+  margin-right: auto;
+}
+
+.row[data-align="right"] .rowCopy {
+  margin-left: auto;
+}
+
+.stageNumber {
+  margin: 0 0 0.55rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hlc-mute);
+  font-family: var(--itx-sans, sans-serif);
+}
+
+.rowTitle {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.45rem, 2.2vw, 1.85rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--hlc-ink);
+}
+
+.rowSubtitle {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--hlc-ink);
+}
+
+.rowBody {
+  margin: 0 0 1.15rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--hlc-body);
+}
+
+.tags {
+  list-style: none;
+  margin: 0 0 1.35rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tags li {
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--hlc-line);
+  background: #fff;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: var(--hlc-body);
+}
+
+.tags li:nth-child(2) {
+  background: var(--hlc-pill);
+  border-color: transparent;
+}
+
+.rowDiagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16rem;
+  padding: 0.5rem;
+}
+
+.rowDiagram :global(.hlc-diagram) {
+  width: min(100%, 26rem);
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 980px) {
+  .shell {
+    width: calc(100% - 3rem);
+  }
+
+  .intro {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .introAside {
+    justify-content: flex-start;
+  }
+
+  .spine {
+    left: 1.15rem;
+    transform: none;
+  }
+
+  .row {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 0 1rem;
+  }
+
+  .rowSide:first-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .spineSlot {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .rowSide:last-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  /* Always text then diagram on mobile */
+  .row .rowSide:first-child .rowDiagram,
+  .row .rowSide:last-child .rowCopy {
+    /* When align=right, diagram is first — swap via display order */
+  }
+
+  .rowCopy,
+  .row[data-align="right"] .rowCopy {
+    margin-left: 0;
+    max-width: none;
+  }
+}
+
+@media (max-width: 980px) {
+  /* Force text above diagram regardless of desktop align */
+  .row {
+    display: flex;
+    flex-direction: column;
+    padding-left: 1.75rem;
+  }
+
+  .spineSlot {
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 28px;
+  }
+
+  .rowSide {
+    width: 100%;
+  }
+
+  .row .rowSide:has(.rowDiagram) {
+    order: 2;
+  }
+
+  .row .rowSide:has(.rowCopy) {
+    order: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 4rem 0 4.5rem;
+  }
+
+  .shell {
+    width: calc(100% - 2.5rem);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rowDiagram {
+    min-height: 12rem;
+  }
+}

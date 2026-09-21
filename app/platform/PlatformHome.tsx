@@ -1,18 +1,18 @@
 import { SalesHeroSection } from "./sales-home-sections";
 import { PlatformCircularWardrobeBanner } from "./PlatformCircularWardrobeBanner";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
-import { LifecycleOverviewSection } from "../../components/home/lifecycle/LifecycleOverviewSection";
+import { HomepageLifecycleSection } from "../../components/home/lifecycle/HomepageLifecycleSection";
 
 /**
  * Public B2B platform overview — intertexe.com/platform (/brands)
- * Journey: platform hero → homepage lifecycle hub (7 stages) → pillars → guide.
+ * Journey: platform hero → PRODUCT LIFECYCLE (Kessler rows) → pillars → guide.
  * Attio Follow the Record rail lives on /brands/demo only.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
       <SalesHeroSection />
-      <LifecycleOverviewSection />
+      <HomepageLifecycleSection />
       <PlatformHowItWorksSection />
       <PlatformCircularWardrobeBanner />
     </div>
