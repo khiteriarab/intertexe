@@ -34,6 +34,7 @@ export function PlatformChrome({
             <Link href={marketingPath("solutions")}>Solutions</Link>
             <Link href={marketingPath("pricing")}>Pricing</Link>
             <Link href={marketingPath("demo")}>See it live</Link>
+            <Link href={marketingPath("success-stories")}>Success Stories</Link>
           </div>
           <div className="platform-lux-footer-col">
             <p className="platform-lux-footer-heading">Company</p>
