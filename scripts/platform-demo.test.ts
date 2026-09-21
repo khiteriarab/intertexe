@@ -227,14 +227,11 @@ describe("Permanent 10-product demonstration catalog", () => {
   it("keeps the editorial demo page focused on lifecycle and workflow", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
     const demoPage = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
-    const system = fs.readFileSync(
-      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.tsx"),
-      "utf8",
-    );
     const featuredSection = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoFeaturedExample.tsx"), "utf8");
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /ProductLifecycleSystem/);
+    assert.match(demo, /GovernedRecordStageSection/);
+    assert.doesNotMatch(demo, /ProductLifecycleSystem/);
     assert.doesNotMatch(demo, /ProductLifecycleSection/);
     assert.doesNotMatch(demo, /DemoHero/);
     assert.doesNotMatch(demo, /DemoIntertexeFlow/);
@@ -245,6 +242,12 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(demo, /DemoClosingQuote/);
     assert.doesNotMatch(demo, /DemoScrollyJourney/);
     assert.doesNotMatch(demo, /DemoCatalogGrid/);
+    const governed = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/GovernedRecordStageSection.tsx"),
+      "utf8",
+    );
+    assert.match(governed, /One governed record\. Every stage connected\./);
+    assert.match(governed, /solutions-governed-record\.png/);
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
     assert.match(workflow, /activeStep === "source"|activeStep === item\.id|id: "source"/);
     assert.match(workflow, /demo-flow-rail|demo-flow-stage/);
@@ -272,12 +275,15 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-measure.png")));
     const quote = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoClosingQuote.tsx"), "utf8");
     assert.match(quote, /Data that moves fashion forward/);
-    const client = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    assert.doesNotMatch(client, /Data that moves fashion forward/);
+    assert.doesNotMatch(demo, /Data that moves fashion forward/);
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
+    const system = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.tsx"),
+      "utf8",
+    );
     assert.match(system, /LifecycleHeroSection/);
-    assert.doesNotMatch(system, /GovernedRecord|SourceStack|PublishingNetwork|systemCanvas/);
+    assert.doesNotMatch(system, /SourceStack|PublishingNetwork|systemCanvas/);
     const hero = fs.readFileSync(
       path.join(process.cwd(), "components/see-it-live/lifecycle/LifecycleHeroSection.tsx"),
       "utf8",
