@@ -84,11 +84,9 @@ describe("Platform B2B sales page", () => {
     assert.match(lifecycleMap, /LIFECYCLE_STAGES/);
     assert.match(lifecycleMap, /From material/);
     assert.match(lifecycleMapCss, /--lov-bg/);
-    assert.match(lifecycleMapCss, /\.pin/);
-    assert.match(lifecycleMapCss, /\.sticky/);
-    assert.match(lifecycleMapCss, /\.rail/);
-    assert.match(lifecycleMapCss, /\.visualMedia/);
-    assert.match(lifecycleMap, /goToStep|scrollable|activeIndex/);
+    assert.match(lifecycleMapCss, /\.mapFrame/);
+    assert.match(lifecycleMapCss, /\.record/);
+    assert.match(lifecycleMap, /NODE_POINTS|HUB|Governed product record/i);
     assert.doesNotMatch(lifecycleMapCss, /--canvas:\s*#111514/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "components/home/lifecycle/lifecycle-stages.ts")));
     assert.match(lifecycleData, /Clean & Connect/);
