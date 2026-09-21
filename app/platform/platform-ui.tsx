@@ -7,9 +7,17 @@ export function Eyebrow({ children, className = "" }: { children: ReactNode; cla
   return <p className={`platform-kicker mb-5 text-[var(--platform-quiet,#5c5852)] ${className}`}>{children}</p>;
 }
 
-export function Heading({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Heading({
+  children,
+  className = "",
+  id,
+}: {
+  children: ReactNode;
+  className?: string;
+  id?: string;
+}) {
   return (
-    <h2 className={`platform-display text-[var(--platform-ink,#111111)] ${className}`} style={SERIF}>
+    <h2 id={id} className={`platform-display text-[var(--platform-ink,#111111)] ${className}`} style={SERIF}>
       {children}
     </h2>
   );
