@@ -133,11 +133,11 @@ export function DemoProductWorkflow() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 pt-12 sm:pt-14 lg:pt-16 pb-6">
         <p className="text-[10px] tracking-[0.24em] uppercase text-[var(--platform-quiet)] mb-3">Follow the record</p>
         <h2 className="text-[1.75rem] sm:text-[2.35rem] font-light max-w-2xl leading-[1.12] mb-3" style={SERIF}>
-          One product. A complete lifecycle.
+          Six ways teams work the record.
         </h2>
         <p className="text-[15px] text-[var(--platform-muted)] font-light max-w-xl">
-          Select a stage to inspect the {DEMO_FEATURED.name} record — from messy inputs to the passport your
-          customer scans.
+          Select a stage to inspect the {DEMO_FEATURED.name} — from messy inputs to the passport your customer
+          scans.
         </p>
       </div>
 
