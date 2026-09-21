@@ -380,8 +380,6 @@ export function ProductLifecycleMap() {
             </button>
           );
         })}
-
-        </div>
       </div>
 
       <div className="plc-map-detail">
