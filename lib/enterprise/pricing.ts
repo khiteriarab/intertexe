@@ -217,7 +217,7 @@ export const SAAS_TIERS: SaasTierDefinition[] = [
     productAllowance: null,
     passportAllowance: null,
     userSeats: null,
-    commitmentMonths: 11,
+    commitmentMonths: 12,
     headline: "Infrastructure for complex product ecosystems.",
     features: [
       "Custom product & passport volume",

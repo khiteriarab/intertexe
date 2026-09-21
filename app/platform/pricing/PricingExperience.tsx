@@ -99,49 +99,6 @@ export function PricingExperience() {
         </div>
       </section>
 
-      <section className="saas-pricing-impl" aria-labelledby="pricing-impl-heading">
-        <div className="platform-lux-wrap">
-          <div className="saas-pricing-section-head">
-            <Eyebrow>Implementation</Eyebrow>
-            <Heading id="pricing-impl-heading" className="mb-4">
-              We configure INTERTEXE around your business.
-            </Heading>
-            <Body className="mb-0">
-              The one-time fee gets you production-ready: architecture, field mapping, system connections, passport
-              structures, first-batch validation, and team training — so you can manage or sync products yourselves.
-              It is not a fee for us to manually type in your catalogue.
-            </Body>
-          </div>
-
-          <ol className="saas-pricing-stages">
-            {PRICING_IMPLEMENTATION_STAGES.map((stage) => (
-              <li key={stage.step}>
-                <span className="saas-pricing-stage-num">{stage.step}</span>
-                <div>
-                  <h3 className="saas-pricing-stage-title">{stage.title}</h3>
-                  <p className="saas-pricing-stage-copy">{stage.copy}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-
-          <ul className="saas-pricing-impl-fees">
-            {PUBLIC_PRICING_PLANS.map((plan) => (
-              <li key={plan.id}>
-                <span className="saas-pricing-impl-name">{plan.name} implementation</span>
-                <span className="saas-pricing-impl-fee">
-                  {plan.id === "enterprise"
-                    ? currency === "EUR"
-                      ? `custom, typically from ${formatEurEstimate(plan.implementationFromUSD ?? 5_000)}`
-                      : "custom, typically from $5,000"
-                    : formatImplementation(plan, currency).replace(" one-time", "")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
       <section className="saas-pricing-compare" aria-labelledby="pricing-compare-heading">
         <div className="platform-lux-wrap">
           <div className="saas-pricing-section-head saas-pricing-compare-head">
@@ -277,6 +234,49 @@ export function PricingExperience() {
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <section className="saas-pricing-impl" aria-labelledby="pricing-impl-heading">
+        <div className="platform-lux-wrap">
+          <div className="saas-pricing-section-head">
+            <Eyebrow>Implementation & Support</Eyebrow>
+            <Heading id="pricing-impl-heading" className="mb-4">
+              We configure INTERTEXE around your business.
+            </Heading>
+            <Body className="mb-0">
+              The one-time fee gets you production-ready: architecture, field mapping, system connections, passport
+              structures, first-batch validation, and team training — so you can manage or sync products yourselves.
+              It is not a fee for us to manually type in your catalogue.
+            </Body>
+          </div>
+
+          <ol className="saas-pricing-stages">
+            {PRICING_IMPLEMENTATION_STAGES.map((stage) => (
+              <li key={stage.step}>
+                <span className="saas-pricing-stage-num">{stage.step}</span>
+                <div>
+                  <h3 className="saas-pricing-stage-title">{stage.title}</h3>
+                  <p className="saas-pricing-stage-copy">{stage.copy}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <ul className="saas-pricing-impl-fees">
+            {PUBLIC_PRICING_PLANS.map((plan) => (
+              <li key={plan.id}>
+                <span className="saas-pricing-impl-name">{plan.name} implementation</span>
+                <span className="saas-pricing-impl-fee">
+                  {plan.id === "enterprise"
+                    ? currency === "EUR"
+                      ? `custom, typically from ${formatEurEstimate(plan.implementationFromUSD ?? 5_000)}`
+                      : "custom, typically from $5,000"
+                    : formatImplementation(plan, currency).replace(" one-time", "")}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
