@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PlatformNav, type PlatformNavKey } from "./PlatformNav";
 import { PlatformWordmark } from "./PlatformWordmark";
 import { getEnterpriseLoginUrl } from "../../lib/platform-urls";
+import { marketingPath } from "../../lib/enterprise-marketing/paths";
 import "./platform-tokens.css";
 import "./b2b-visuals.css";
 import "./platform-saas.css";
@@ -28,11 +29,11 @@ export function PlatformChrome({
             </p>
           </div>
           <div className="platform-lux-footer-col">
-            <p className="platform-lux-footer-heading">Platform</p>
-            <Link href="/platform">Product Record</Link>
-            <Link href="/platform/solutions">Solutions</Link>
-            <Link href="/platform/pricing">Pricing</Link>
-            <Link href="/platform/demo">See it live</Link>
+            <p className="platform-lux-footer-heading">For brands</p>
+            <Link href={marketingPath()}>Product Record</Link>
+            <Link href={marketingPath("solutions")}>Solutions</Link>
+            <Link href={marketingPath("pricing")}>Pricing</Link>
+            <Link href={marketingPath("demo")}>See it live</Link>
           </div>
           <div className="platform-lux-footer-col">
             <p className="platform-lux-footer-heading">Company</p>

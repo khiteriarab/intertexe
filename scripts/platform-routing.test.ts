@@ -138,6 +138,7 @@ test("platform host strips consumer chrome from login", () => {
   assert.match(catalogImage, /fetchPriority="auto"/);
   assert.doesNotMatch(catalogImage, /fetchPriority=\{eager/);
   assert.match(cookies, /\/platform/);
+  assert.match(cookies, /\/brands/);
   assert.match(cookies, /isPlatformHost/);
   assert.doesNotMatch(cookies, /usePathname/);
 });

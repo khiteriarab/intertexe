@@ -1,0 +1,7 @@
+{
+  "name": "@intertexe/brand",
+  "version": "0.1.0",
+  "private": true,
+  "description": "INTERTEXE brand primitives (tokens only — not a component library)",
+  "files": ["tokens.css", "README.md"]
+}

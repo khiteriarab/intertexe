@@ -1,4 +1,8 @@
-/* INTERTEXE platform — beige editorial brand tokens */
+/* INTERTEXE platform — beige editorial brand tokens
+ * Scoped under .platform-shell — do not import this file from consumer marketplace routes
+ * or authenticated SaaS layouts (use packages/brand/tokens.css + enterprise-theme instead).
+ */
+@import "../../../packages/brand/tokens.css";
 @import "../shared/intertexe-editorial.css";
 
 .platform-shell {

@@ -25,15 +25,18 @@ function getAnonKey(): string {
 /** Reuse one service client per serverless isolate — avoids reconnect tax on every HQ query. */
 let cachedServiceClient: SupabaseClient | null = null;
 
-/** Service-role (or anon) Supabase client for server-side catalog RPCs. */
-export function getServerSupabase() {
+/**
+ * Consumer catalog + Founder HQ Supabase (intertexe project).
+ * Never use for obelisk-core organization/workspace data — use getObeliskServiceClient.
+ */
+export function getConsumerSupabase() {
   if (cachedServiceClient) return cachedServiceClient;
 
   const url = getSupabaseUrl();
   const key = getServiceRoleKey() || getAnonKey();
   if (!url || !key) {
     console.warn(
-      "Missing Supabase environment variables — returning null client. Checked: SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL, VITE_SUPABASE_URL"
+      "Missing consumer Supabase environment variables — returning null client. Checked: SUPABASE_URL, NEXT_PUBLIC_SUPABASE_URL, VITE_SUPABASE_URL"
     );
     return null;
   }
@@ -41,4 +44,9 @@ export function getServerSupabase() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return cachedServiceClient;
+}
+
+/** @deprecated Prefer getConsumerSupabase — same consumer/HQ client. */
+export function getServerSupabase() {
+  return getConsumerSupabase();
 }

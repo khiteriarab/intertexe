@@ -2,12 +2,16 @@
 
 ## Projects (never mixed)
 
-| Role | Project | Ref | Env vars |
-|---|---|---|---|
-| Consumer app + Founder HQ | intertexe | burrylupizvggupsryuj | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` |
-| Enterprise customer data | obelisk-core | dpiksashuqetyzrjogal | `ENTERPRISE_SUPABASE_*` only |
+| Role | Project | Ref | Env vars (production names — do not rename values) | Code client |
+|---|---|---|---|---|
+| Consumer app + Founder HQ | intertexe | burrylupizvggupsryuj | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_*` | `getConsumerSupabase` / `getConsumerAnonAuthClient` |
+| Enterprise customer data | obelisk-core | dpiksashuqetyzrjogal | `ENTERPRISE_SUPABASE_*` / `NEXT_PUBLIC_ENTERPRISE_SUPABASE_*` only | `getObeliskServiceClient` / `getObeliskUserClient` |
 
-`ENTERPRISE_SUPABASE_URL` must not equal `SUPABASE_URL`. The Enterprise client refuses that configuration.
+`ENTERPRISE_SUPABASE_URL` must not equal `SUPABASE_URL`. The Obelisk/Enterprise client refuses that configuration.
+
+Preferred **code** names: `consumerSupabase` / `obeliskSupabase`. Preferred future env aliases (`CONSUMER_SUPABASE_*`, `OBELISK_SUPABASE_*`) may dual-read existing vars — never change production secret values without a coordinated deploy.
+
+Domain naming: consumer fashion labels live under `/designers` and consumer catalog helpers; SaaS customers are `organizations` on obelisk. Public marketing for buyers of INTERTEXE is `/brands` (not `/designers`). See `docs/brand-domain-naming-audit.md`.
 
 ## Deployment environments
 

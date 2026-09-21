@@ -18,7 +18,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Turn fragmented materials, supplier data, specifications, certifications, and source files into structured product intelligence your teams can actually use.",
     tags: ["Product identity", "Materials + composition", "Supplier data", "Evidence", "Governed record"],
-    href: "/platform/demo#journey",
+    href: "/brands/product-intelligence",
     icon: "core",
   },
   {
@@ -28,7 +28,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Trace materials and manufacturing, identify evidence gaps, resolve conflicting data, and prepare product records for Digital Product Passports and evolving regulation.",
     tags: ["Traceability", "Evidence verification", "Compliance readiness", "DPP preparation", "Regulatory intelligence"],
-    href: "/platform/demo#passport",
+    href: "/brands/traceability",
     icon: "issues",
   },
   {
@@ -38,7 +38,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Understand environmental performance across materials, sourcing, manufacturing, and lifecycle stages so teams can compare products, identify hotspots, and act earlier.",
     tags: ["Environmental impact", "Material benchmarking", "PEF-ready insights", "LCA inputs", "Impact hotspots"],
-    href: "/platform/demo#journey",
+    href: "/brands/environmental-intelligence",
     icon: "intelligence",
   },
   {
@@ -48,7 +48,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Publish trusted product information for consumers, regulators, and partners through a persistent digital passport connected to the original governed record.",
     tags: ["Digital Product Passport", "Consumer transparency", "QR-ready", "Care information", "Verified product data"],
-    href: "/platform#delivery",
+    href: "/brands/digital-product-passport",
     icon: "passports",
   },
   {
@@ -58,7 +58,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Extend product intelligence into care, repair, resale value, ownership transfer, circularity, and next-life experiences from the same record.",
     tags: ["Care + repair", "Resale value", "Ownership transfer", "Next life", "Circularity"],
-    href: "/platform#delivery",
+    href: "/brands/solutions",
     icon: "workflows",
   },
   {
@@ -68,7 +68,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Centralize supplier records, certifications, documentation, sourcing evidence, and performance so teams can compare suppliers and see where action is needed.",
     tags: ["Supplier records", "Evidence status", "Scorecards", "Sourcing risk", "Compliance gaps"],
-    href: "/platform/demo#journey",
+    href: "/brands/supplier-data",
     icon: "suppliers",
   },
 ];

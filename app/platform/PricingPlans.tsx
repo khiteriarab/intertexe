@@ -12,7 +12,7 @@ const PILOT = {
     "Passport-ready outputs & hosted QR when published",
     "No subscription · no recurring free plan",
   ],
-  href: "/platform/request?intent=snapshot&cta=pricing_pilot",
+  href: "/brands/request?intent=snapshot&cta=pricing_pilot",
   cta: "Start with 10 products",
 } as const;
 
@@ -117,7 +117,7 @@ export function PricingPlans() {
                     </p>
                   ) : null}
                   <Link
-                    href={`/platform/request?intent=${tier.key === "enterprise" ? "enterprise" : "saas"}&tier=${tier.key}&cta=pricing_${tier.key}`}
+                    href={`/brands/request?intent=${tier.key === "enterprise" ? "enterprise" : "saas"}&tier=${tier.key}&cta=pricing_${tier.key}`}
                     className="inline-flex w-full items-center justify-center text-[11px] tracking-[0.14em] uppercase bg-[var(--platform-primary)] text-white px-5 py-3.5 hover:bg-[var(--platform-primary-hover)] min-h-[44px] rounded-md mt-auto"
                   >
                     {tier.key === "enterprise" ? "Contact sales" : "Request access"}

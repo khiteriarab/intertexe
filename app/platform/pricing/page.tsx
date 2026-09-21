@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Pricing — build your yearly licence",
   description:
     "Select the INTERTEXE modules you need. Priced modules show annual starting figures; lifecycle scope is set in your written proposal.",
-  alternates: { canonical: "https://www.intertexe.com/platform/pricing" },
+  alternates: { canonical: marketingCanonical("pricing") },
 };
 
 export default function PlatformPricingPage() {

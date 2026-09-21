@@ -151,7 +151,7 @@ export function JourneyStepsVisual() {
       </div>
       <p className="mt-6 text-center">
         <Link
-          href="/platform/demo#journey"
+          href="/brands/demo#journey"
           className="text-[11px] tracking-[0.14em] uppercase text-[var(--platform-primary)] underline underline-offset-4 hover:text-[var(--platform-accent)]"
         >
           Explore the interactive journey →

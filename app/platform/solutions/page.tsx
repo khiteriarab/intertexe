@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import Image from "next/image";
 import Link from "next/link";
 import { ENT_NAV_GROUP_ICONS, ENT_NAV_ITEM_ICONS } from "../../dashboard/components/EnterpriseNavIcons";
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   title: "Solutions — one product record, six ways to use it",
   description:
     "INTERTEXE connects product creation, traceability, environmental intelligence, compliance, consumer transparency, and next-life experiences through one governed product record.",
-  alternates: { canonical: "https://www.intertexe.com/platform/solutions" },
+  alternates: { canonical: marketingCanonical("solutions") },
 };
 
 const SOLUTION_ICONS = {
@@ -70,11 +71,11 @@ export default function PlatformSolutionsPage() {
               transparency, and next-life experiences through one governed product record.
             </Body>
             <div className="solutions-intro-actions">
-              <Link href="/platform" className="solutions-cta-primary">
+              <Link href="/brands" className="solutions-cta-primary">
                 Explore the platform
                 <span aria-hidden>→</span>
               </Link>
-              <Link href="/platform/demo" className="solutions-cta-secondary">
+              <Link href="/brands/demo" className="solutions-cta-secondary">
                 See it live
               </Link>
             </div>
@@ -149,11 +150,11 @@ export default function PlatformSolutionsPage() {
             </Body>
           </div>
           <div className="solutions-close-actions">
-            <Link href="/platform" className="solutions-cta-primary">
+            <Link href="/brands" className="solutions-cta-primary">
               Explore the platform
               <span aria-hidden>→</span>
             </Link>
-            <Link href="/platform/request?intent=snapshot&cta=solutions" className="solutions-cta-secondary">
+            <Link href="/brands/request?intent=snapshot&cta=solutions" className="solutions-cta-secondary">
               Request a demo
             </Link>
           </div>

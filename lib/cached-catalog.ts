@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { fetchBrandStats, fetchSaleProducts, getServerSupabase } from "./supabase-server";
+import { fetchBrandStats, fetchSaleProducts, getConsumerSupabase } from "./supabase-server";
 import { fetchPlatformStats, type PlatformStats } from "./platform-stats";
 import { CATALOG_STATS } from "./catalog-stats";
 import { SHOPPABLE_MIN_PRODUCTS } from "./shoppable-brands";
@@ -46,16 +46,20 @@ function withTimeout<T>(
   });
 }
 
-export type BrandStat = {
+/** Consumer designers-directory stat (fashion labels — not SaaS organizations). */
+export type ConsumerBrandStat = {
   slug: string;
   name: string;
   count: number;
   avgNaturalFiber: number;
 };
 
+/** @deprecated Prefer ConsumerBrandStat */
+export type BrandStat = ConsumerBrandStat;
+
 /** Direct designers-table directory — used when the full brand-stats path is slow. */
-export async function fetchDesignersDirectoryFast(): Promise<BrandStat[]> {
-  const supabase = getServerSupabase();
+export async function fetchDesignersDirectoryFast(): Promise<ConsumerBrandStat[]> {
+  const supabase = getConsumerSupabase();
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("designers")

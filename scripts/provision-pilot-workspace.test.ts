@@ -20,6 +20,6 @@ describe("Pilot workspace auto-provisioning", () => {
     assert.match(provision, /plan: "demo"/);
     assert.match(provision, /PILOT_PRODUCT_LIMIT/);
     assert.match(provision, /pilot_started_at/);
-    assert.match(provision, /provisionBrandOperator/);
+    assert.match(provision, /provisionOrganizationOperator/);
   });
 });

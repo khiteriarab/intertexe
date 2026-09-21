@@ -23,7 +23,8 @@ export const CATALOG_MARQUEE_BRANDS = [
   "Acne Studios",
 ] as const;
 
-function BrandCard({ name }: { name: string }) {
+/** Fashion designer name tile for marketing marquee (consumer catalog — not a SaaS org). */
+function FashionDesignerMarqueeCard({ name }: { name: string }) {
   return (
     <div className="shrink-0 w-[168px] sm:w-[188px] h-[72px] sm:h-[80px] flex items-center justify-center rounded-sm bg-white/8 border border-white/15 px-4">
       <span className="text-[11px] sm:text-xs tracking-[0.16em] uppercase text-white text-center leading-tight">
@@ -54,7 +55,7 @@ export function CatalogMarquee() {
         <div className="overflow-hidden">
           <div className="itx-marquee-track flex w-max gap-3 pr-3">
             {loop.map((name, index) => (
-              <BrandCard key={`${name}-${index}`} name={name} />
+              <FashionDesignerMarqueeCard key={`${name}-${index}`} name={name} />
             ))}
           </div>
         </div>

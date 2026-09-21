@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseAnonAuthClient } from "../../../../lib/supabase-auth-server";
+import { getConsumerAnonAuthClient } from "../../../../lib/supabase-auth-server";
 import { writeAuthAudit } from "../../../../lib/dashboard/auth";
 import { buildDashboardPasswordResetRedirect } from "../../../../lib/platform-urls";
-import { getEnterpriseAnonClient, getEnterpriseServiceClient } from "../../../../lib/enterprise/client";
+import { getObeliskAnonClient, getObeliskServiceClient } from "../../../../lib/enterprise/client";
 import { discoverSsoByEmail } from "../../../../lib/enterprise/sso-config";
 import { isLinkedEnterprisePrincipal } from "../../../../lib/enterprise/identity-links";
 
@@ -12,8 +12,9 @@ function isTechnicalPrincipalEmail(email: string): boolean {
   return /^itx-principal\.[a-f0-9]+@identity\.intertexe\.com$/.test(email);
 }
 
-async function isEnterpriseBrandAccount(email: string): Promise<boolean> {
-  const supabase = getEnterpriseServiceClient();
+/** True when email belongs to an obelisk organization operator (not consumer HQ staff). */
+async function isEnterpriseOrganizationAccount(email: string): Promise<boolean> {
+  const supabase = getObeliskServiceClient();
   if (!supabase) return false;
   const { data: profile } = await supabase
     .from("profiles")
@@ -36,10 +37,10 @@ export async function POST(request: NextRequest) {
     const redirectTo = buildDashboardPasswordResetRedirect(request.nextUrl.origin);
     const discovery = await discoverSsoByEmail(email);
     const enterpriseOnly =
-      !isTechnicalPrincipalEmail(email) && (await isEnterpriseBrandAccount(email));
+      !isTechnicalPrincipalEmail(email) && (await isEnterpriseOrganizationAccount(email));
 
     if (enterpriseOnly) {
-      const enterpriseAuth = getEnterpriseAnonClient();
+      const enterpriseAuth = getObeliskAnonClient();
       if (enterpriseAuth) {
         if (discovery.ssoAvailable && discovery.enforceSso && !discovery.allowPasswordFallback) {
           return NextResponse.json({
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const auth = getSupabaseAnonAuthClient();
+    const auth = getConsumerAnonAuthClient();
     if (!auth) {
       return NextResponse.json({ message: "Auth is not configured." }, { status: 503 });
     }

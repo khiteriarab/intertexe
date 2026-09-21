@@ -35,7 +35,7 @@ describe("Platform B2B sales page", () => {
     assert.match(homeSections, /PlatformBrandShowcaseHero/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /See it live/i);
-    assert.match(showcaseHero, /\/platform\/demo/);
+    assert.match(showcaseHero, /\/brands\/demo/);
     assert.ok(showcaseHero.indexOf("platform-showcase-hero-sub") < showcaseHero.indexOf("platform-showcase-hero-cta"));
     const showcaseCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-tokens.css"), "utf8");
     assert.match(showcaseCss, /@media \(max-width: 767px\)/);
@@ -131,7 +131,7 @@ describe("Platform B2B sales page", () => {
     assert.match(demo, /See INTERTEXE live/i);
     const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
     assert.match(banner, /Request a demo/);
-    assert.match(banner, /\/platform\/request/);
+    assert.match(banner, /\/brands\/request/);
     assert.match(banner, /Ebook/);
     assert.match(banner, /platform-ebook/);
     assert.doesNotMatch(banner, /Build the record your product deserves/);
@@ -164,7 +164,7 @@ describe("Platform B2B sales page", () => {
     assert.match(nav, /Request a demo/);
     assert.match(nav, /Sign in/);
     assert.match(nav, /Solutions/);
-    assert.match(nav, /\/platform\/solutions/);
+    assert.match(nav, /\/brands\/solutions/);
     assert.doesNotMatch(nav, /\/platform\/discover/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
@@ -336,8 +336,8 @@ describe("Platform B2B sales page", () => {
     assert.match(pillarsVisual, /symbols\/story-carrier-qr-nfc\.png/);
     assert.match(pillarsVisual, /symbols\/story-delivery-channels\.png/);
     assert.doesNotMatch(pillarsVisual, /platform-product-pillar-visual/);
-    assert.match(pillarsVisual, /\/platform\/demo#journey/);
-    assert.match(pillarsVisual, /\/platform#delivery/);
+    assert.match(pillarsVisual, /\/brands\/demo#journey/);
+    assert.match(pillarsVisual, /\/brands#delivery/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });

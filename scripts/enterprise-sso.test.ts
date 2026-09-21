@@ -113,7 +113,7 @@ describe("Enterprise SSO architecture (obelisk-core)", () => {
     const forgot = fs.readFileSync(path.join(ROOT, "app/api/dashboard/forgot-password/route.ts"), "utf8");
     assert.match(forgot, /getEnterpriseAnonClient/);
     assert.match(forgot, /resetPasswordForEmail/);
-    assert.match(forgot, /isEnterpriseBrandAccount/);
+    assert.match(forgot, /isEnterpriseOrganizationAccount/);
     assert.match(forgot, /obelisk-core/);
     const reset = fs.readFileSync(path.join(ROOT, "app/reset-password/page.tsx"), "utf8");
     assert.match(reset, /createEnterpriseClientComponentClient/);

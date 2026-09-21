@@ -17,7 +17,7 @@ import { UtmCapture } from "./UtmCapture";
 import { AppDownloadPrompt } from "./AppDownloadPrompt";
 import { isPlatformHost } from "@/lib/dashboard/constants";
 
-const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
+const B2B_ROUTE_PREFIXES = ["/brands", "/platform", "/partners", "/khiteri", "/dashboard"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
 const PASSPORT_ROUTE_PREFIX = "/p/";
 

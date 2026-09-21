@@ -1,6 +1,25 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { PlatformChrome } from "../platform/PlatformChrome";
+import { PlatformHome } from "../platform/PlatformHome";
+import { PlatformViewTracker } from "../platform/PlatformViewTracker";
+import { marketingCanonical } from "../../lib/enterprise-marketing/paths";
 
-/** Legacy / affiliate links → designers directory */
-export default function BrandsPage() {
-  redirect("/designers");
+export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "INTERTEXE for Brands | Product Intelligence Infrastructure for Fashion",
+  },
+  description:
+    "Turn governed product data into the digital experience your customer sees. INTERTEXE connects fashion brands, product data, and consumers — hosted passports, white-label domains, or headless API into your app.",
+  alternates: { canonical: marketingCanonical() },
+};
+
+export default function BrandsMarketingHomePage() {
+  return (
+    <PlatformChrome active="platform">
+      <PlatformViewTracker event="platform_view" />
+      <PlatformHome />
+    </PlatformChrome>
+  );
 }

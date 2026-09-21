@@ -40,7 +40,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
     a: (
       <>
         Yes. Scan the case study QR on{" "}
-        <Link href="/platform/demo#live-passport" className="underline underline-offset-4">
+        <Link href="/brands/demo#live-passport" className="underline underline-offset-4">
           /platform/demo
         </Link>{" "}
         or read the Material Intelligence API contract at{" "}
@@ -65,7 +65,7 @@ export function PlatformFaq() {
           <p className="platform-copy mb-8">
             Workspace, delivery, and compliance questions — without overclaiming certification or inventing product data.
           </p>
-          <PrimaryLink href="/platform/demo">See it live →</PrimaryLink>
+          <PrimaryLink href="/brands/demo">See it live →</PrimaryLink>
         </div>
         <div>
           {FAQ.map((item) => (

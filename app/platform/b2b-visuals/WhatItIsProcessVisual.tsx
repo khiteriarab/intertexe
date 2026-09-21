@@ -20,7 +20,7 @@ const SLIDES = [
       "Source files & specifications",
     ],
     foot: "From disconnected files to one usable data layer.",
-    discoverHref: "/platform/demo#create",
+    discoverHref: "/brands/demo#create",
   },
   {
     id: "verify" as const,
@@ -36,7 +36,7 @@ const SLIDES = [
       "Incomplete manufacturing details",
     ],
     foot: "Turn fragmented product data into trusted product data.",
-    discoverHref: "/platform/demo#verify",
+    discoverHref: "/brands/demo#verify",
   },
   {
     id: "comply" as const,
@@ -52,7 +52,7 @@ const SLIDES = [
       "Approved evidence layer",
     ],
     foot: "One governed record. Ready for regulation, audit, and consumer use.",
-    discoverHref: "/platform/demo#comply",
+    discoverHref: "/brands/demo#comply",
   },
   {
     id: "distribute" as const,
@@ -63,7 +63,7 @@ const SLIDES = [
     copy: "Publish product data through hosted passports, branded experiences, or API so every channel works from the same governed source.",
     bullets: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
     foot: "Infrastructure — not just a page builder.",
-    discoverHref: "/platform/demo#distribute",
+    discoverHref: "/brands/demo#distribute",
   },
   {
     id: "extend" as const,
@@ -74,7 +74,7 @@ const SLIDES = [
     copy: "Power scan-based care, repair, resale, transfer, and circular next-life experiences from the same product record.",
     bullets: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
     foot: "From first sale to second life.",
-    discoverHref: "/platform/demo#extend",
+    discoverHref: "/brands/demo#extend",
   },
 ] as const;
 
