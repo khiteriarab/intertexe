@@ -137,7 +137,7 @@ export const SOLUTIONS: SolutionCard[] = [
     description:
       "Extend product intelligence into care, repair, resale, ownership transfer, circularity, and next-life experiences.",
     tags: ["Care + repair", "Resale value", "Ownership transfer", "Next life", "Circularity"],
-    href: "/brands/solutions",
+    href: "/brands/connected-product-lifecycle",
     icon: "workflows",
     proposition: "A living product identity that keeps working after checkout.",
     detail: [
