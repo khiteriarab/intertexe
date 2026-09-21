@@ -117,7 +117,8 @@
 | `createClientComponentClient` | `NEXT_PUBLIC_SUPABASE_*` | Consumer browser | Generic |
 | `getSupabaseAnonAuthClient` / `getSupabaseAuthUserId` | Consumer | Consumer auth | Used from `lib/enterprise/resale-auth.ts` — **verify intentional** (resale buyer vs org user) |
 | `getEnterpriseServiceClient` / `getEnterpriseUserClient` / `getEnterpriseAnonClient` | `ENTERPRISE_SUPABASE_*` | obelisk-core | Good; guard refuses URL == consumer |
-| `createEnterpriseServiceClient` | Duplicate of enterprise service | obelisk | Duplicate entrypoint — consolidate aliases |
+| `createEnterpriseServiceClient` | Duplicate of enterprise service | obelisk | **Fixed:** now delegates to `getObeliskServiceClient()` (inherits URL≠consumer guard) |
+| `lib/enterprise/resale-auth.ts` | Consumer Auth for resale buyers | **Intentional** — shoppers ≠ org operators; documented in source |
 | `createEnterpriseClientComponentClient` | `NEXT_PUBLIC_ENTERPRISE_SUPABASE_*` | obelisk browser | OK |
 
 **Wrong-project scenarios to prevent:**
