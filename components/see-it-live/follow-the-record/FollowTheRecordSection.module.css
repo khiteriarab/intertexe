@@ -210,7 +210,15 @@
   line-height: 0;
 }
 
-.visualFrame img {
+/* Image + overlay — base image sizing unchanged from prior fill layout */
+.stageVisual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.stageBaseImage {
   display: block;
   width: 100%;
   height: 100%;
@@ -219,6 +227,209 @@
   object-fit: contain;
   object-position: left center;
   background: transparent;
+}
+
+.interactiveOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Legacy selector kept for tests / contain rule */
+.visualFrame img,
+.stageBaseImage {
+  background: transparent;
+}
+
+/* ── Motion overlays (SOURCE / NORMALIZE first pass) ── */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.overlaySource {
+  display: block;
+}
+
+.sourceCards {
+  position: absolute;
+  left: 2.5%;
+  top: 22%;
+  width: 22%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sourceCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 20, 18, 0.1);
+  box-shadow: 0 6px 18px rgba(16, 19, 18, 0.08);
+  backdrop-filter: blur(4px);
+}
+
+.sourceCardLabel {
+  font-size: clamp(0.55rem, 0.85vw, 0.7rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ftr-ink);
+  line-height: 1.2;
+}
+
+.sourceCardDetail {
+  font-size: clamp(0.5rem, 0.75vw, 0.65rem);
+  color: var(--ftr-body);
+  line-height: 1.25;
+}
+
+.sourceLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.sourceRecordPulse {
+  position: absolute;
+  right: 6%;
+  top: 18%;
+  width: 46%;
+  height: 64%;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(201, 169, 98, 0.35), 0 18px 40px rgba(16, 19, 18, 0.1);
+  background: transparent;
+}
+
+.overlayStatus {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(16, 19, 18, 0.9);
+  color: #fff;
+  font-size: clamp(0.55rem, 0.8vw, 0.68rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.overlayNormalize {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 4% 3% 5%;
+}
+
+.normalizePanel {
+  width: min(42%, 22rem);
+  padding: 0.85rem 0.95rem 0.95rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(15, 20, 18, 0.1);
+  box-shadow: 0 14px 36px rgba(16, 19, 18, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+.normalizePromptLabel {
+  margin: 0 0 0.4rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ftr-mute);
+}
+
+.normalizeInput {
+  display: flex;
+  align-items: center;
+  min-height: 2.1rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 20, 18, 0.14);
+  background: #fff;
+  font-size: clamp(0.65rem, 1vw, 0.8rem);
+  color: var(--ftr-ink);
+  line-height: 1.3;
+}
+
+.normalizeTyped {
+  white-space: pre-wrap;
+}
+
+.normalizeCursor {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 1px;
+  background: var(--ftr-ink);
+  animation: ftrBlink 1s steps(1) infinite;
+}
+
+@keyframes ftrBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.normalizeBlock {
+  margin-top: 0.7rem;
+}
+
+.normalizeBlockLabel {
+  margin: 0 0 0.25rem;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ftr-mute);
+}
+
+.normalizeRaw {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(0.65rem, 0.95vw, 0.78rem);
+  color: var(--ftr-body);
+  line-height: 1.4;
+}
+
+.normalizeClean {
+  margin: 0;
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
+  font-weight: 500;
+  color: var(--ftr-ink);
+  line-height: 1.4;
+}
+
+.normalizeStatuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+}
+
+.normalizeChip {
+  display: inline-flex;
+  padding: 0.28rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 169, 98, 0.45);
+  background: rgba(201, 169, 98, 0.12);
+  color: var(--ftr-ink);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* Desktop stage copy lives in the PNG — keep HTML for a11y/mobile only */
@@ -270,6 +481,10 @@
   display: none;
 }
 
+.mobileTabsSticky {
+  display: none;
+}
+
 @media (max-width: 899px) {
   .pin,
   .sticky {
@@ -278,25 +493,117 @@
 
   .mobileStack {
     display: block;
-    width: min(720px, calc(100% - 2rem));
-    margin: 0 auto;
-    padding: 2.25rem 0 2.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 2rem 0 3rem;
+  }
+
+  .mobileStack > .intro {
+    width: calc(100vw - 32px);
+    margin: 0 auto 1.25rem;
+  }
+
+  .mobileTabsSticky {
+    display: block;
+    position: sticky;
+    top: 3.75rem;
+    z-index: 5;
+    background: linear-gradient(180deg, var(--ftr-bg) 70%, rgba(251, 250, 247, 0));
+    padding: 0.35rem 0 0.85rem;
+  }
+
+  .mobileTabs {
+    display: flex;
+    gap: 0.35rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 16px 0.35rem;
+  }
+
+  .mobileTabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobileTab {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    flex: 0 0 auto;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #b0aaa1;
+    white-space: nowrap;
+  }
+
+  .mobileTabActive {
+    color: var(--ftr-ink);
+    font-weight: 500;
   }
 
   .mobileStage {
-    padding: 1.5rem 0;
+    width: calc(100vw - 32px);
+    margin: 0 auto;
+    padding: 2rem 0 4.5rem;
     border-top: 1px solid var(--ftr-line);
   }
 
-  .mobileVisual {
-    margin-top: 0.85rem;
+  .mobileStageHeadline {
+    margin: 0 0 0.65rem;
+    font-size: clamp(2rem, 8vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    color: var(--ftr-ink);
   }
 
-  .mobileVisual img {
-    display: block;
+  .mobileStageBody {
+    margin: 0 0 1.35rem;
+    font-size: clamp(1.05rem, 4.2vw, 1.35rem);
+    line-height: 1.4;
+    color: var(--ftr-body);
+  }
+
+  .mobileVisual {
+    margin-top: 0.5rem;
+    width: 100%;
+    position: relative;
+  }
+
+  .mobileVisual .stageVisual {
+    position: relative;
     width: 100%;
     height: auto;
-    object-fit: contain;
+  }
+
+  .mobileVisual .stageBaseImage {
+    position: relative;
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+
+  .mobileVisual .interactiveOverlay {
+    position: absolute;
+    inset: 0;
+  }
+
+  .sourceCards {
+    width: 38%;
+    top: 18%;
+    left: 2%;
+  }
+
+  .normalizePanel {
+    width: min(88%, 20rem);
+  }
+
+  .overlayNormalize {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 5% 4% 6%;
   }
 
   .headline {
@@ -310,11 +617,23 @@
     gap: 0 1rem;
     padding: 1rem 1rem 0.75rem;
   }
+
+  .sourceCards {
+    width: 26%;
+  }
+
+  .normalizePanel {
+    width: min(48%, 18rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .visualFrame,
   .stageCopy {
     transition: none !important;
+  }
+
+  .normalizeCursor {
+    animation: none;
   }
 }
