@@ -129,7 +129,7 @@ function NormalizeLayer() {
 
 function ValidateLayer() {
   return (
-    <div className={styles.layer}>
+    <div className={`${styles.layer} ${styles.layerSplit}`}>
       <div className={styles.layerRecord}>
         <ProductRecordFrame stage="validate" />
       </div>
@@ -194,7 +194,7 @@ function PublishLayer() {
 
 function ActivateLayer() {
   return (
-    <div className={styles.layer}>
+    <div className={`${styles.layer} ${styles.layerSplit}`}>
       <div className={styles.layerRecord}>
         <ProductRecordFrame stage="activate" />
       </div>
