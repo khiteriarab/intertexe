@@ -27,8 +27,8 @@ export default function SuccessStoriesPage() {
               Our <em>success stories</em>
             </h1>
             <p className="ss-intro-lede">
-              Placeholder case studies so you can preview the full sales path — Partner and Client stories,
-              detail narratives, and newsletter capture.
+              How brands and partners use INTERTEXE to govern product data, prove claims, and publish
+              Digital Product Passports — from first record to consumer experience.
             </p>
           </div>
         </section>
