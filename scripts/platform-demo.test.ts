@@ -289,7 +289,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /object-fit:\s*contain/);
     // Artwork must fill the sticky right pane (not a capped centered island).
     assert.match(followCss, /\.visualFrame img \{[\s\S]*?height:\s*100%/);
-    assert.match(followCss, /\.visualShell \{[\s\S]*?flex:\s*1/);
+    assert.match(followCss, /\.left \{[\s\S]*?justify-content:\s*flex-start/);
+    assert.match(followCss, /\.rail \{[\s\S]*?flex:\s*0 0 auto/);
     assert.match(followCss, /\.strip \{[\s\S]*?width:\s*100%/);
     assert.doesNotMatch(followCss, /width:\s*min\(100%,\s*980px\)/);
     assert.doesNotMatch(followCss, /max-height:\s*68vh/);
