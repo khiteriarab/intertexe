@@ -111,7 +111,7 @@ function AppFrame({
       {showConsumerChrome ? <Analytics /> : null}
       {showConsumerChrome ? <MetaPixel /> : null}
       <div
-        className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden ${
+        className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-clip ${
           minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"
         }`}
       >
