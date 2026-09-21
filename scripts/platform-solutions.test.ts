@@ -6,6 +6,7 @@ import { LIFECYCLE_STAGES, SOLUTIONS } from "../app/platform/solutions/solutions
 
 describe("Platform solutions page", () => {
   const page = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/page.tsx"), "utf8");
+  const grid = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/SolutionsExploreGrid.tsx"), "utf8");
   const css = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/solutions.css"), "utf8");
   const nav = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformNav.tsx"), "utf8");
 
@@ -26,7 +27,15 @@ describe("Platform solutions page", () => {
       assert.ok(solution.tags.length >= 4, `${solution.key} needs capability tags`);
       assert.ok(solution.description.length < 260, `${solution.key} copy should stay short`);
       assert.ok(solution.icon, `${solution.key} needs a dashboard icon`);
+      assert.ok(solution.proposition, `${solution.key} needs a sales proposition`);
+      assert.ok(solution.detail.length >= 2, `${solution.key} needs detail paragraphs`);
+      assert.ok(solution.get.length >= 4, `${solution.key} needs What you get items`);
+      assert.ok(solution.why.length > 40, `${solution.key} needs Why it matters`);
+      assert.ok(solution.visual.startsWith("/platform/"), `${solution.key} needs a panel visual`);
+      assert.ok(solution.cta.label && solution.cta.href, `${solution.key} needs a CTA`);
     }
+    assert.match(SOLUTIONS[0].description, /structured product intelligence/);
+    assert.match(SOLUTIONS[1].title, /product claim came from/);
     assert.deepEqual(
       SOLUTIONS.map((s) => s.icon),
       ["core", "issues", "intelligence", "passports", "workflows", "suppliers"],
@@ -38,13 +47,28 @@ describe("Platform solutions page", () => {
   });
 
   it("leads with an asymmetric grid rather than six identical boxes", () => {
-    assert.match(page, /solution-card--feature|size="feature"/);
-    assert.match(page, /solutions-grid-stack/);
-    assert.match(page, /solutions-grid--rest/);
-    assert.match(page, /solution-card-icon/);
-    assert.match(page, /SOLUTION_ICONS|ENT_NAV_ITEM_ICONS|ENT_NAV_GROUP_ICONS/);
+    assert.match(page, /SolutionsExploreGrid/);
+    assert.match(grid, /solution-card--feature|size="feature"/);
+    assert.match(grid, /solutions-grid-stack/);
+    assert.match(grid, /solutions-grid--rest/);
+    assert.match(grid, /solution-card-icon/);
+    assert.match(grid, /SOLUTION_ICONS|ENT_NAV_ITEM_ICONS|ENT_NAV_GROUP_ICONS/);
     assert.match(css, /\.solutions-grid--rest \{[\s\S]*?repeat\(3, minmax\(0, 1fr\)\)/);
     assert.match(css, /\.solution-card-icon/);
+  });
+
+  it("opens a premium explore panel from the card CTA without navigating away", () => {
+    assert.match(grid, /Explore solution/);
+    assert.match(grid, /role="dialog"/);
+    assert.match(grid, /What you get/);
+    assert.match(grid, /Why it matters/);
+    assert.match(grid, /solution-panel/);
+    assert.match(grid, /AnimatePresence|framer-motion/);
+    assert.match(grid, /scale:\s*0\.98|scale:\s*1/);
+    assert.doesNotMatch(grid, /href=\{card\.href\}/);
+    assert.match(css, /\.solution-panel \{[\s\S]*?72vw|1160px/);
+    assert.match(css, /\.solution-panel-close/);
+    assert.match(css, /\.solution-panel-backdrop/);
   });
 
   it("keeps white dominant with beige reserved for the hover accent", () => {

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import Link from "next/link";
-import { ENT_NAV_GROUP_ICONS, ENT_NAV_ITEM_ICONS } from "../../dashboard/components/EnterpriseNavIcons";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 import { SolutionsClose } from "../SolutionsClose";
-import { Body, Eyebrow, Heading, SERIF } from "../platform-ui";
-import { SOLUTIONS, type SolutionCard } from "./solutions-data";
+import { Body, Eyebrow, Heading } from "../platform-ui";
+import { SolutionsExploreGrid } from "./SolutionsExploreGrid";
 import "./solutions.css";
 
 export const metadata: Metadata = {
@@ -16,47 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: marketingCanonical("solutions") },
 };
 
-const SOLUTION_ICONS = {
-  ...ENT_NAV_ITEM_ICONS,
-  ...ENT_NAV_GROUP_ICONS,
-} as const;
-
-function SolutionCardBlock({
-  card,
-  size = "standard",
-}: {
-  card: SolutionCard;
-  size?: "feature" | "standard";
-}) {
-  const Icon = SOLUTION_ICONS[card.icon];
-  return (
-    <Link href={card.href} className={`solution-card solution-card--${size}`}>
-      <span className="solution-card-icon" aria-hidden>
-        <Icon />
-      </span>
-      <p className="solution-card-label">{card.label}</p>
-      <h3 className="solution-card-title" style={SERIF}>
-        {card.title}
-      </h3>
-      <p className="solution-card-copy">{card.description}</p>
-      <ul className="solution-card-tags">
-        {card.tags.map((tag) => (
-          <li key={tag}>{tag}</li>
-        ))}
-      </ul>
-      <span className="solution-card-cta">
-        Explore solution
-        <span className="solution-card-arrow" aria-hidden>
-          →
-        </span>
-      </span>
-    </Link>
-  );
-}
-
 export default function PlatformSolutionsPage() {
-  const [feature, traceability, environmental, ...rest] = SOLUTIONS;
-
   return (
     <PlatformChrome active="solutions">
       <PlatformViewTracker event="platform_solutions_view" />
@@ -85,19 +44,7 @@ export default function PlatformSolutionsPage() {
 
       <section className="solutions-grid-section">
         <div className="platform-lux-wrap">
-          <div className="solutions-grid solutions-grid--lead">
-            <SolutionCardBlock card={feature} size="feature" />
-            <div className="solutions-grid-stack">
-              <SolutionCardBlock card={traceability} />
-              <SolutionCardBlock card={environmental} />
-            </div>
-          </div>
-
-          <div className="solutions-grid solutions-grid--rest">
-            {rest.map((card) => (
-              <SolutionCardBlock key={card.key} card={card} />
-            ))}
-          </div>
+          <SolutionsExploreGrid />
         </div>
       </section>
 

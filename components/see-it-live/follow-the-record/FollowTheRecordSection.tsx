@@ -8,7 +8,7 @@ import { FOLLOW_HEADER, FOLLOW_STAGES, type FollowStageId } from "./follow-the-r
 import styles from "./FollowTheRecordSection.module.css";
 
 /** Short scroll triggers — states, not full-page slides. */
-const STAGE_VH = 52;
+const STAGE_VH = 48;
 const ease = [0.22, 1, 0.36, 1] as const;
 
 function StageRail({
@@ -49,7 +49,6 @@ function StageVisual({ stageId }: { stageId: FollowStageId }) {
 
   return (
     <div className={styles.visualShell} aria-live="polite">
-      <div className={styles.visualGlow} aria-hidden />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={active.id}
