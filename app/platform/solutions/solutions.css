@@ -269,8 +269,146 @@ button.solution-card {
   transform: translateX(5px);
 }
 
-/* ── Dark connected-record section ── */
+/* ── See it live opener (left copy + workspace graphic) ── */
 
+.governed-opener {
+  background: #fbfaf8;
+  color: #161513;
+  padding: 3.25rem 0 3.5rem;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .governed-opener {
+    padding: 4.5rem 0 5rem;
+  }
+}
+
+.governed-opener-wrap {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .governed-opener-wrap {
+    grid-template-columns: minmax(0, 0.34fr) minmax(0, 0.66fr);
+    gap: clamp(2.5rem, 4vw, 4.5rem);
+  }
+}
+
+.governed-opener-copy {
+  max-width: 30rem;
+}
+
+@media (min-width: 900px) {
+  .governed-opener-copy {
+    max-width: 480px;
+  }
+}
+
+.governed-opener-eyebrow {
+  margin: 0 0 1.15rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #6a655e;
+}
+
+.governed-opener-title {
+  margin: 0 0 1.15rem;
+  font-size: clamp(2.35rem, 4.6vw, 4.25rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: #161513;
+}
+
+.governed-opener-body {
+  margin: 0 0 1.75rem;
+  max-width: 480px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: #5c5852;
+}
+
+.governed-opener-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.governed-opener-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.85rem 1.35rem;
+  border-radius: 999px;
+  background: #161513;
+  color: #fbfaf8;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.governed-opener-cta-primary:hover {
+  background: #000;
+}
+
+.governed-opener-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #161513;
+  text-decoration: none;
+}
+
+.governed-opener-cta-secondary:hover {
+  color: #000;
+}
+
+.governed-opener-micro {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a847c;
+  line-height: 1.7;
+}
+
+.governed-opener-micro-sep {
+  margin: 0 0.45rem;
+  color: #c4beb4;
+}
+
+.governed-opener-visual {
+  min-width: 0;
+}
+
+.governed-opener-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Keep legacy dark section utilities for any remaining references */
 .solutions-dark {
   background: #101312;
   color: #f5f3ef;

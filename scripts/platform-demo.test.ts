@@ -246,8 +246,16 @@ describe("Permanent 10-product demonstration catalog", () => {
       path.join(process.cwd(), "app/platform/GovernedRecordStageSection.tsx"),
       "utf8",
     );
-    assert.match(governed, /One governed record\. Every stage connected\./);
-    assert.match(governed, /solutions-governed-record\.png/);
+    assert.match(governed, /From product data/);
+    assert.match(governed, /to product intelligence\./);
+    assert.match(governed, /demo-governed-workspace\.png/);
+    assert.doesNotMatch(governed, /solutions-governed-record\.png/);
+    assert.doesNotMatch(governed, /solutions-lifecycle/);
+    assert.doesNotMatch(governed, /CREATE|PROVE|UNDERSTAND|PUBLISH|EXTEND/);
+    assert.match(governed, /#journey/);
+    assert.match(governed, /Explore the 6 stages/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-governed-workspace.png")));
+
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
     const followSection = fs.readFileSync(
       path.join(process.cwd(), "components/see-it-live/follow-the-record/FollowTheRecordSection.tsx"),

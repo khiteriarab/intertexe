@@ -1,45 +1,56 @@
 import Image from "next/image";
+import Link from "next/link";
 import { SERIF } from "./platform-ui";
-import { LIFECYCLE_STAGES } from "./solutions/solutions-data";
 import "./solutions/solutions.css";
 
-/** Dark “one governed record” stage strip + product shot — used atop See it live. */
+const MICROCOPY = ["Product data", "Traceability", "Passport", "Intelligence", "Lifecycle"] as const;
+
+/** See it live opener — left editorial copy + workspace graphic. */
 export function GovernedRecordStageSection() {
   return (
-    <section className="solutions-dark" aria-labelledby="governed-record-heading">
-      <div className="platform-lux-wrap">
-        <div className="solutions-dark-copy">
-          <h2 id="governed-record-heading" className="solutions-dark-title" style={SERIF}>
-            One governed record. Every stage connected.
-          </h2>
-          <p className="solutions-dark-body">
-            The same product data powers traceability, compliance, environmental intelligence, consumer experiences,
-            and next-life services without rebuilding the record for every use case.
+    <section className="governed-opener" aria-labelledby="governed-record-heading">
+      <div className="platform-lux-wrap governed-opener-wrap">
+        <div className="governed-opener-copy">
+          <p className="governed-opener-eyebrow">One record. Every stage connected.</p>
+          <h1 id="governed-record-heading" className="governed-opener-title" style={SERIF}>
+            From product data
+            <br />
+            to product intelligence.
+          </h1>
+          <p className="governed-opener-body">
+            INTERTEXE connects fragmented product, material, supplier, and lifecycle data into one governed record your
+            teams can use across compliance, Digital Product Passports, customer experiences, and next-life services.
+          </p>
+          <div className="governed-opener-actions">
+            <Link href="#journey" className="governed-opener-cta-primary">
+              See it live
+              <span aria-hidden>→</span>
+            </Link>
+            <a href="#journey" className="governed-opener-cta-secondary">
+              Explore the 6 stages
+              <span aria-hidden>↓</span>
+            </a>
+          </div>
+          <p className="governed-opener-micro" aria-label="Product journey themes">
+            {MICROCOPY.map((item, index) => (
+              <span key={item}>
+                {index > 0 ? <span className="governed-opener-micro-sep" aria-hidden>
+                  /
+                </span> : null}
+                {item}
+              </span>
+            ))}
           </p>
         </div>
 
-        <ol className="solutions-lifecycle">
-          {LIFECYCLE_STAGES.map((item, index) => (
-            <li key={item.stage}>
-              <span className="solutions-lifecycle-stage">{item.stage}</span>
-              <span className="solutions-lifecycle-label">{item.label}</span>
-              {index < LIFECYCLE_STAGES.length - 1 ? (
-                <span className="solutions-lifecycle-arrow" aria-hidden>
-                  →
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ol>
-
-        <div className="solutions-shot">
+        <div className="governed-opener-visual">
           <Image
-            src="/platform/solutions-governed-record.png"
-            alt="INTERTEXE consumer passport on mobile beside the product Impact workspace on desktop."
+            src="/platform/demo-governed-workspace.png"
+            alt="INTERTEXE workspace with catalog readiness, material intelligence, traceability, and passport activity cards."
             width={1672}
             height={941}
-            className="solutions-shot-main"
-            sizes="(max-width: 899px) 94vw, 1100px"
+            className="governed-opener-image"
+            sizes="(max-width: 899px) 94vw, 68vw"
             priority
           />
         </div>
