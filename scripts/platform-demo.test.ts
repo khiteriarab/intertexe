@@ -276,10 +276,22 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(system, /PublishingNetwork/);
     assert.match(system, /FOLLOW THE RECORD/);
     assert.match(system, /See the record evolve/);
+    assert.match(system, /RECORD_STATES/);
+    assert.match(system, /GOVERNED PRODUCT RECORD/);
     assert.doesNotMatch(system, /stageAnchor|LIFECYCLE_PATH_D|plc-map-canvas/);
     assert.match(system, /id: "source"/);
     assert.match(system, /id: "recirculate"/);
     assert.equal([...system.matchAll(/id: "(source|clean|trace|prepare|publish|learn|recirculate)"/g)].length, 7);
+    const systemCss = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.module.css"),
+      "utf8",
+    );
+    assert.match(systemCss, /--page:\s*#fafaf8|--canvas:\s*#ffffff/);
+    assert.match(systemCss, /--graphite:\s*#1d211e/);
+    assert.doesNotMatch(systemCss, /--bg:\s*#e8dcc8|--bg:\s*#f7f4ee/);
+    assert.match(systemCss, /\.systemCanvas/);
+    assert.match(systemCss, /\.recordHeader/);
+    assert.match(systemCss, /\.followRail/);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);
