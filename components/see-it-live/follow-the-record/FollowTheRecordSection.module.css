@@ -52,8 +52,8 @@
 .left {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 1.25rem;
+  justify-content: flex-start;
+  gap: 1.35rem;
   min-height: 0;
   height: 100%;
   padding: 0.35rem 0 0.5rem;
@@ -112,6 +112,7 @@
 
 .rail {
   flex: 0 0 auto;
+  margin-top: 0.15rem;
   padding-bottom: 0.25rem;
 }
 
