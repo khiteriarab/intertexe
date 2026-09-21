@@ -226,11 +226,16 @@ describe("Permanent 10-product demonstration catalog", () => {
 
   it("keeps the editorial demo page focused on one featured product", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
+    const lifecycle = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/demo/ProductLifecycleSection.tsx"),
+      "utf8",
+    );
+    const lifecycleData = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/lifecycle-data.ts"), "utf8");
     const featuredSection = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoFeaturedExample.tsx"), "utf8");
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /DemoHero/);
+    assert.match(demo, /ProductLifecycleSection/);
+    assert.doesNotMatch(demo, /DemoHero/);
     assert.doesNotMatch(demo, /DemoIntertexeFlow/);
     assert.match(demo, /DemoProductWorkflow/);
     assert.match(demo, /DemoFeaturedExample/);
@@ -261,9 +266,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(client, /Data that moves fashion forward/);
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
-    assert.match(hero, /From a tag to full transparency/);
-    assert.match(hero, /demo-hero-scanner-v2\.png/);
-    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-hero-scanner-v2.png")));
+    assert.match(lifecycle, /From material to next life/);
+    assert.match(lifecycle, /LifecyclePath/);
+    assert.match(lifecycleData, /Source & Make/);
+    assert.match(lifecycleData, /Repair & Recirculate/);
+    assert.match(lifecycleData, /id: "source-make"/);
+    assert.match(lifecycleData, /id: "repair-recirculate"/);
+    assert.equal([...lifecycleData.matchAll(/id: "[a-z-]+"/g)].length, 7);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);

@@ -7,7 +7,7 @@ import "./demo-tour.css";
 export const metadata: Metadata = {
   title: "See INTERTEXE live",
   description:
-    "From a tag to full transparency — see how INTERTEXE turns product data into a verified digital passport with the Silk Midi Skirt sample record.",
+    "From material to next life — follow product data through INTERTEXE from sourcing to Digital Product Passports, then into use, repair and recirculation.",
   alternates: { canonical: marketingCanonical("demo") },
 };
 
