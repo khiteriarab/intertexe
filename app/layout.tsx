@@ -111,6 +111,10 @@ const orgSchema = {
     "cotton clothing",
     "luxury fashion",
     "sustainable fashion",
+    "Digital Product Passport",
+    "fashion Digital Product Passport",
+    "fashion material intelligence",
+    "fashion product data platform",
   ],
 };
 

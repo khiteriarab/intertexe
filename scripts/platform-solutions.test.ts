@@ -34,7 +34,7 @@ describe("Platform solutions page", () => {
       assert.ok(solution.why.length > 40, `${solution.key} needs Why it matters`);
       assert.ok(solution.visual.startsWith("/platform/"), `${solution.key} needs a panel visual`);
       assert.ok(solution.cta.label && solution.cta.href, `${solution.key} needs a CTA`);
-      assert.match(solution.href, /^\/brands\//, `${solution.key} should link to an in-depth page`);
+      assert.match(solution.href, /^\/(brands|digital-product-passport)/, `${solution.key} should link to an in-depth page`);
     }
     assert.match(SOLUTIONS[0].description, /structured product intelligence/);
     assert.match(SOLUTIONS[1].title, /product claim came from/);

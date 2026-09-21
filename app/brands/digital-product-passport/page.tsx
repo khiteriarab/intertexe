@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { SolutionDetailPage, solutionMetadata } from "../_lib/solution-page";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = solutionMetadata("digital-product-passport");
+/** Canonical DPP SEO landing is /digital-product-passport. */
+export const metadata: Metadata = {
+  title: { absolute: "Digital Product Passport Software for Fashion | INTERTEXE" },
+  alternates: { canonical: "https://www.intertexe.com/digital-product-passport" },
+  robots: { index: false, follow: true },
+};
 
-export default function Page() {
-  return <SolutionDetailPage segment="digital-product-passport" />;
+export default function BrandsDigitalProductPassportRedirect() {
+  redirect("/digital-product-passport");
 }

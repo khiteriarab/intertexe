@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
+import { b2bPageMetadata } from "../../../lib/seo/b2b-metadata";
 
 export { default } from "../../platform/solutions/page";
 
-export const metadata: Metadata = {
-  title: "Solutions — one product record, six ways to use it",
+export const metadata: Metadata = b2bPageMetadata({
+  title: "Fashion Solutions | Product Record & Digital Product Passports",
   description:
-    "INTERTEXE connects product creation, traceability, environmental intelligence, compliance, consumer transparency, and next-life experiences through one governed product record.",
-  alternates: { canonical: marketingCanonical("solutions") },
-};
+    "INTERTEXE connects product creation, traceability, environmental intelligence, compliance, consumer transparency, and Digital Product Passports through one governed product record.",
+  path: "/brands/solutions",
+});

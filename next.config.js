@@ -89,6 +89,16 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/brands/digital-product-passport",
+        destination: "/digital-product-passport",
+        permanent: true,
+      },
+      {
+        source: "/platform/digital-product-passport",
+        destination: "/digital-product-passport",
+        permanent: true,
+      },
+      {
         source: "/dashboard/brands",
         destination: "/dashboard/retail-brands",
         permanent: false,

@@ -22,8 +22,16 @@ export function PlatformHowItWorksSection() {
           <PlatformProductPillarsVisual variant="light" />
 
           <p className="mt-8 lg:mt-10 text-sm text-[var(--platform-quiet)] leading-relaxed max-w-2xl">
+            Explore{" "}
+            <Link
+              href="/digital-product-passport"
+              className="underline underline-offset-4 hover:text-[var(--platform-primary)]"
+            >
+              Digital Product Passport software for fashion
+            </Link>
+            ,{" "}
             <Link href="/brands/demo" className="underline underline-offset-4 hover:text-[var(--platform-primary)]">
-              See it live
+              see it live
             </Link>{" "}
             with sample products, or{" "}
             <Link
