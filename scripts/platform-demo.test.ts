@@ -249,12 +249,17 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(governed, /From product data/);
     assert.match(governed, /to product intelligence\./);
     assert.match(governed, /demo-governed-workspace\.png/);
+    assert.match(governed, /governed-opener-head/);
+    assert.doesNotMatch(governed, /governed-opener-wrap|governed-opener-copy/);
     assert.doesNotMatch(governed, /solutions-governed-record\.png/);
     assert.doesNotMatch(governed, /solutions-lifecycle/);
-    assert.doesNotMatch(governed, /CREATE|PROVE|UNDERSTAND|PUBLISH|EXTEND/);
     assert.match(governed, /#journey/);
     assert.match(governed, /Explore the 6 stages/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-governed-workspace.png")));
+    const css = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/solutions.css"), "utf8");
+    assert.match(css, /\.governed-opener-head/);
+    assert.match(css, /text-align:\s*center/);
+    assert.doesNotMatch(css, /grid-template-columns:\s*minmax\(0,\s*0\.34fr\)/);
 
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
     const followSection = fs.readFileSync(

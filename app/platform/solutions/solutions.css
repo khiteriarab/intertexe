@@ -269,78 +269,71 @@ button.solution-card {
   transform: translateX(5px);
 }
 
-/* ── See it live opener (left copy + workspace graphic) ── */
+/* ── See it live hero (minimal top copy + dominant graphic) ── */
 
 .governed-opener {
-  background: #fbfaf8;
-  color: #161513;
-  padding: 3.25rem 0 3.5rem;
+  --governed-ink: #f5f3ef;
+  --governed-quiet: rgba(245, 243, 239, 0.72);
+  background:
+    radial-gradient(90% 55% at 50% 100%, rgba(255, 255, 255, 0.07), transparent 62%),
+    linear-gradient(180deg, #121411 0%, #0c0e0c 100%);
+  color: var(--governed-ink);
+  padding: 2.75rem 0 0;
   overflow: hidden;
 }
 
 @media (min-width: 900px) {
   .governed-opener {
-    padding: 4.5rem 0 5rem;
+    min-height: min(92vh, 920px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 3.5rem 0 0;
   }
 }
 
-.governed-opener-wrap {
-  display: grid;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-@media (min-width: 900px) {
-  .governed-opener-wrap {
-    grid-template-columns: minmax(0, 0.34fr) minmax(0, 0.66fr);
-    gap: clamp(2.5rem, 4vw, 4.5rem);
-  }
-}
-
-.governed-opener-copy {
-  max-width: 30rem;
-}
-
-@media (min-width: 900px) {
-  .governed-opener-copy {
-    max-width: 480px;
-  }
+.governed-opener-head {
+  width: min(44rem, calc(100% - 2.5rem));
+  margin: 0 auto;
+  text-align: center;
+  animation: governed-opener-rise 0.7s ease-out both;
 }
 
 .governed-opener-eyebrow {
-  margin: 0 0 1.15rem;
+  margin: 0 0 0.85rem;
   font-family: var(--itx-sans, sans-serif);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #6a655e;
+  color: rgba(245, 243, 239, 0.55);
 }
 
 .governed-opener-title {
-  margin: 0 0 1.15rem;
-  font-size: clamp(2.35rem, 4.6vw, 4.25rem);
+  margin: 0 0 0.85rem;
+  font-size: clamp(2.35rem, 5vw, 3.85rem);
   font-weight: 400;
   line-height: 1.02;
   letter-spacing: -0.035em;
-  color: #161513;
+  color: #f5f3ef;
 }
 
 .governed-opener-body {
-  margin: 0 0 1.75rem;
-  max-width: 480px;
+  margin: 0 auto 1.5rem;
+  max-width: 34rem;
   font-family: var(--itx-sans, sans-serif);
   font-size: 1.0625rem;
-  line-height: 1.65;
-  color: #5c5852;
+  line-height: 1.55;
+  color: var(--governed-quiet);
 }
 
 .governed-opener-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 1rem 1.5rem;
-  margin-bottom: 1.75rem;
+  gap: 0.85rem 1.35rem;
+  margin-bottom: 1.15rem;
 }
 
 .governed-opener-cta-primary {
@@ -350,19 +343,20 @@ button.solution-card {
   min-height: 44px;
   padding: 0.85rem 1.35rem;
   border-radius: 999px;
-  background: #161513;
-  color: #fbfaf8;
+  background: #f5f3ef;
+  color: #121411;
   font-family: var(--itx-sans, sans-serif);
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .governed-opener-cta-primary:hover {
-  background: #000;
+  background: #fff;
+  transform: translateY(-1px);
 }
 
 .governed-opener-cta-secondary {
@@ -374,38 +368,73 @@ button.solution-card {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #161513;
+  color: #f5f3ef;
   text-decoration: none;
 }
 
 .governed-opener-cta-secondary:hover {
-  color: #000;
+  color: #fff;
 }
 
 .governed-opener-micro {
   margin: 0;
   font-family: var(--itx-sans, sans-serif);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #8a847c;
+  color: rgba(245, 243, 239, 0.42);
   line-height: 1.7;
 }
 
 .governed-opener-micro-sep {
-  margin: 0 0.45rem;
-  color: #c4beb4;
+  margin: 0 0.4rem;
+  color: rgba(245, 243, 239, 0.28);
 }
 
 .governed-opener-visual {
-  min-width: 0;
+  width: min(1240px, calc(100% - 1rem));
+  margin: 2.5rem auto 0;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  animation: governed-opener-rise 0.85s ease-out 0.12s both;
+}
+
+@media (min-width: 900px) {
+  .governed-opener-visual {
+    width: min(1400px, calc(100% - 1.5rem));
+    margin-top: 3rem;
+  }
 }
 
 .governed-opener-image {
   display: block;
   width: 100%;
   height: auto;
+  filter: drop-shadow(0 36px 80px rgba(0, 0, 0, 0.45));
+}
+
+@keyframes governed-opener-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .governed-opener-head,
+  .governed-opener-visual {
+    animation: none;
+  }
+
+  .governed-opener-cta-primary:hover {
+    transform: none;
+  }
 }
 
 /* Keep legacy dark section utilities for any remaining references */
