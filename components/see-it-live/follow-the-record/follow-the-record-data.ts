@@ -42,7 +42,7 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "NORMALIZE",
     headline: "Messy strings become structured intelligence.",
     body: "Clean, enrich, and standardize key product attributes and material composition without overwriting source strings.",
-    image: "/platform/demo-normalize.png",
+    image: "/platform/demo-normalize.png?v=transparent",
     alt: "INTERTEXE issues workspace resolving a composition conflict — current approved vs incoming source",
   },
   {

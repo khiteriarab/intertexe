@@ -267,7 +267,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     );
     assert.match(workflow, /FollowTheRecordSection/);
     assert.match(followSection, /activeIndex|goToStep/);
-    assert.match(followSection, /STAGE_VH\s*=\s*52|52vh/);
+    assert.match(followSection, /STAGE_VH\s*=\s*48|48vh/);
     assert.match(followSection, /demo-source|active\.image|item\.image/);
     assert.match(followData, /id: "source"/);
     assert.match(followData, /Fragmented inputs, one product\./);
@@ -287,11 +287,17 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /\.visualShell/);
     assert.match(followCss, /\.visualFrame/);
     assert.match(followCss, /object-fit:\s*contain/);
-    assert.match(followCss, /height:\s*auto/);
-    assert.match(followCss, /52vh|--ftr-stage-vh:\s*52vh/);
+    assert.match(followCss, /width:\s*min\(100%,\s*980px\)/);
+    assert.match(followCss, /margin-top:\s*1\.25rem/);
+    assert.match(followCss, /48vh|--ftr-stage-vh:\s*48vh/);
     assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
     assert.doesNotMatch(followCss, /min-height:\s*100vh/);
     assert.doesNotMatch(followCss, /object-fit:\s*cover/);
+    assert.doesNotMatch(followCss, /\.visualGlow/);
+    // Normalize artwork should be RGBA with transparency for Attio-style floating panels
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
+    const normalizeBuf = fs.readFileSync(path.join(process.cwd(), "public/platform/demo-normalize.png"));
+    assert.ok(normalizeBuf.includes(Buffer.from("IDAT")) || normalizeBuf.length > 100000);
     assert.doesNotMatch(followSection, /demo-workflow-rail-product/);
     assert.doesNotMatch(followSection, /Featured product/);
     assert.doesNotMatch(followSection, /demo-workflow-panel-inner/);
