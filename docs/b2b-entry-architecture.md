@@ -1,13 +1,16 @@
 # INTERTEXE B2B entry architecture
 
-Local implementation only — **no production DNS cutover yet**.
+> **Sales path update:** public B2B marketing is canonical at **`/brands`** (`/platform` is a temporary legacy alias). See [`architecture.md`](./architecture.md) and [`brands-phase1-redirect-map.md`](./brands-phase1-redirect-map.md).
+
+Local implementation notes for hosts and cookies.
 
 ## URL map
 
 | URL | Role |
 |-----|------|
 | `intertexe.com` | Consumer / public INTERTEXE |
-| `intertexe.com/platform` | Public B2B sales page (10 sections) |
+| `intertexe.com/brands` | Public B2B sales / enterprise marketing (canonical) |
+| `intertexe.com/platform` | Legacy alias for the same marketing experience |
 | `platform.intertexe.com` | Enterprise login + existing SaaS (`/dashboard/...`) |
 | `intertexe.com/p/[public-id]` | Public product passport |
 | `dashboard.intertexe.com` | Legacy HQ/enterprise host (still supported) |

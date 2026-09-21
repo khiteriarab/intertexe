@@ -125,7 +125,7 @@ describe("Enterprise SSO architecture (obelisk-core)", () => {
     assert.match(handoff, /identity-links/);
     assert.match(handoff, /mintStaffEnterpriseHandoff/);
     assert.match(links, /enterprise_identity_links/);
-    assert.match(links, /getServerSupabase/);
+    assert.match(links, /getConsumerSupabase|getServerSupabase/);
     const sso = fs.readFileSync(path.join(ROOT, "lib/enterprise/sso.ts"), "utf8");
     assert.doesNotMatch(sso, /enterprise_identity_links/);
     assert.doesNotMatch(sso, /mintStaffEnterpriseHandoff/);

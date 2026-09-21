@@ -1,5 +1,7 @@
 # Brand / brands domain naming audit
 
+> Navigation map for the whole repo: [`architecture.md`](./architecture.md).
+
 **Goal:** Keep shopper-facing fashion **brands** and enterprise SaaS **organizations** as separate domain entities — before repo split.
 
 **Hard rule:** A shopper-facing fashion brand is **not** an enterprise organization. The same real-world company may be represented by both (consumer catalog brand + SaaS org), but those are **two entities**. They must **not** share routing, auth assumptions, or database clients.

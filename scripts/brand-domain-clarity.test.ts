@@ -76,4 +76,13 @@ describe("Brand domain naming clarity", () => {
     assert.match(retail, /Retail Brand Intelligence/);
     assert.match(retail, /not SaaS organization/);
   });
+
+  it("exposes a top-level architecture map for new engineers", () => {
+    const arch = fs.readFileSync(path.join(root, "docs/architecture.md"), "utf8");
+    assert.match(arch, /getConsumerSupabase/);
+    assert.match(arch, /getObeliskServiceClient/);
+    assert.match(arch, /Where new code should go/);
+    assert.match(arch, /\/brands/);
+    assert.match(arch, /\/designers/);
+  });
 });

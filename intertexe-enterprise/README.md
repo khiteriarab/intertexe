@@ -2,6 +2,8 @@
 
 This folder documents the **target** standalone enterprise marketing app.
 
+Start with [`docs/architecture.md`](../docs/architecture.md) for how marketing, SaaS, consumer, and HQ fit together.
+
 ## Phase 1 (current)
 
 Marketing still renders inside the main Next.js app at:
@@ -20,5 +22,5 @@ Do **not** duplicate live indexed pages during the move.
 ## Out of scope
 
 - Authenticated SaaS (`platform.intertexe.com` / `app/dashboard`)
-- Consumer `/designers`
-- `public/brands/*` image assets (consumer designer photography)
+- Consumer `/designers` / fashion brand catalog
+- `public/brands/*` image assets (consumer fashion brand photography)
