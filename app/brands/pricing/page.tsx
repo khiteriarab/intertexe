@@ -5,8 +5,8 @@ export { default } from "../../platform/pricing/page";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Pricing — build your yearly licence",
+  title: "Pricing — Foundation, Intelligence, Enterprise",
   description:
-    "Select the INTERTEXE modules you need. Priced modules show annual starting figures; lifecycle scope is set in your written proposal.",
+    "Monthly USD plans for INTERTEXE product intelligence: Foundation, Intelligence, and Enterprise. Clear commitments, implementation fees, and EUR estimates for reference.",
   alternates: { canonical: marketingCanonical("pricing") },
 };

@@ -2,42 +2,24 @@ import type { Metadata } from "next";
 import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
-import { PRICING_MODULES, paddlePriceIdForModule } from "../../../lib/enterprise/pricing-modules";
-import { isPaddleConfigured } from "../../../lib/enterprise/paddle";
-import { Body, Eyebrow, Heading } from "../platform-ui";
-import { PricingModuleSelector } from "./PricingModuleSelector";
+import { PricingExperience } from "./PricingExperience";
 import "./pricing.css";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Pricing — build your yearly licence",
+  title: "Pricing — Foundation, Intelligence, Enterprise",
   description:
-    "Select the INTERTEXE modules you need. Priced modules show annual starting figures; lifecycle scope is set in your written proposal.",
+    "Monthly USD plans for INTERTEXE product intelligence: Foundation, Intelligence, and Enterprise. Clear commitments, implementation fees, and EUR estimates for reference.",
   alternates: { canonical: marketingCanonical("pricing") },
 };
 
 export default function PlatformPricingPage() {
-  const checkoutEnabled =
-    isPaddleConfigured() &&
-    PRICING_MODULES.filter((m) => m.startingEur !== null).every((m) => Boolean(paddlePriceIdForModule(m.key)));
-
   return (
     <PlatformChrome active="request">
       <PlatformViewTracker event="platform_pricing_view" />
       <section className="platform-pricing-page">
-        <div className="platform-lux-wrap">
-          <div className="platform-pricing-head">
-            <Eyebrow>Pricing</Eyebrow>
-            <Heading className="mb-4">Build your yearly licence.</Heading>
-            <Body className="mb-0">
-              Select the modules you need. Priced modules show annual starting figures; Connected Product Lifecycle is
-              scoped in your proposal.
-            </Body>
-          </div>
-
-          <PricingModuleSelector checkoutEnabled={checkoutEnabled} />
-        </div>
+        <PricingExperience />
       </section>
     </PlatformChrome>
   );
