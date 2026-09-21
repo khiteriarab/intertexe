@@ -249,29 +249,39 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(governed, /One governed record\. Every stage connected\./);
     assert.match(governed, /solutions-governed-record\.png/);
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
-    assert.match(workflow, /activeStep === "source"|activeStep === item\.id|id: "source"/);
-    assert.match(workflow, /demo-flow-rail|demo-flow-stage/);
-    assert.match(workflow, /demo-source\.png/);
-    assert.match(workflow, /demo-normalize\.png/);
-    assert.match(workflow, /demo-validate\.png/);
-    assert.match(workflow, /demo-publish\.png/);
-    assert.match(workflow, /demo-activate\.png/);
-    assert.match(workflow, /demo-measure\.png/);
-    assert.doesNotMatch(workflow, /demo-workflow-rail-product/);
-    assert.doesNotMatch(workflow, /Featured product/);
-    assert.match(workflow, /scrollable|activeIndex|demo-flow-pin/);
-    assert.match(workflow, /demo-flow-pin/);
-    assert.match(workflow, /demo-flow-sticky/);
-    assert.doesNotMatch(workflow, /demo-workflow-panel-inner/);
-    assert.match(workflow, /Six ways teams work the record/);
-    const flowCss = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/demo-tour.css"), "utf8");
-    assert.match(flowCss, /\.demo-flow-rail-indicator/);
-    assert.match(flowCss, /\.demo-flow-visual/);
-    assert.match(flowCss, /\.demo-flow-copy/);
-    assert.match(flowCss, /\.demo-flow-pin/);
-    assert.match(flowCss, /\.demo-flow-sticky/);
-    assert.match(flowCss, /height: calc\(var\(--flow-steps\) \* 100vh\)/);
-    assert.doesNotMatch(workflow, /rounded-xl border border-\[var\(--platform-border\)\]/);
+    const followSection = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/FollowTheRecordSection.tsx"),
+      "utf8",
+    );
+    const followData = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/follow-the-record-data.ts"),
+      "utf8",
+    );
+    const followCanvas = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/StickyDemoCanvas.tsx"),
+      "utf8",
+    );
+    const followCss = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/FollowTheRecordSection.module.css"),
+      "utf8",
+    );
+    assert.match(workflow, /FollowTheRecordSection/);
+    assert.match(followSection, /activeIndex|goToStep/);
+    assert.match(followSection, /StickyDemoCanvas/);
+    assert.match(followData, /id: "source"/);
+    assert.match(followData, /Fragmented inputs, one product\./);
+    assert.match(followData, /Claims become evidence-backed\./);
+    assert.match(followData, /Signals return to the record\./);
+    assert.match(followData, /Six ways teams work the record\./);
+    assert.match(followCanvas, /SourceLayer|ProductRecordFrame|Silk Midi Skirt|PRODUCT_RECORD/);
+    assert.match(followCss, /\.pin/);
+    assert.match(followCss, /\.sticky/);
+    assert.match(followCss, /\.rail/);
+    assert.match(followCss, /\.canvas/);
+    assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
+    assert.doesNotMatch(followSection, /demo-workflow-rail-product/);
+    assert.doesNotMatch(followSection, /Featured product/);
+    assert.doesNotMatch(followSection, /demo-workflow-panel-inner/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-validate.png")));
