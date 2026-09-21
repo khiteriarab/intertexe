@@ -14,6 +14,9 @@ export type FollowStage = {
   label: string;
   headline: string;
   body: string;
+  /** Original stage artwork — do not replace without explicit approval. */
+  image: string;
+  alt: string;
 };
 
 export const FOLLOW_HEADER = {
@@ -30,6 +33,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "SOURCE",
     headline: "Fragmented inputs, one product.",
     body: "Ingest product data from PLM, ERP, suppliers, or your existing systems, preserved as submitted.",
+    image: "/platform/demo-source.png",
+    alt: "Fragmented inputs from PLM, ERP, spreadsheet, supplier file, and retailer feed converging into one INTERTEXE product record",
   },
   {
     id: "normalize",
@@ -37,6 +42,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "NORMALIZE",
     headline: "Messy strings become structured intelligence.",
     body: "Clean, enrich, and standardize key product attributes and material composition without overwriting source strings.",
+    image: "/platform/demo-normalize.png",
+    alt: "INTERTEXE issues workspace resolving a composition conflict — current approved vs incoming source",
   },
   {
     id: "validate",
@@ -44,6 +51,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "VALIDATE",
     headline: "Claims become evidence-backed.",
     body: "Connect material and product claims to supplier evidence, provenance, and chain-of-custody records.",
+    image: "/platform/demo-validate.png",
+    alt: "INTERTEXE product workspace with key indicators for a ready-to-publish record",
   },
   {
     id: "publish",
@@ -51,6 +60,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "PUBLISH",
     headline: "One governed record, published everywhere.",
     body: "Turn the verified product record into a Digital Product Passport and distribute it through connected channels.",
+    image: "/platform/demo-publish.png",
+    alt: "Publish once — digital product passport powering web, QR, mobile app, API, and retail channels",
   },
   {
     id: "activate",
@@ -58,6 +69,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "ACTIVATE",
     headline: "The product becomes a live digital touchpoint.",
     body: "Use QR, NFC, or passport delivery to support transparency, care, repair, resale, and post-purchase engagement.",
+    image: "/platform/demo-activate.png",
+    alt: "INTERTEXE product record with preview QR and full source-to-next-life lifecycle",
   },
   {
     id: "measure",
@@ -65,35 +78,7 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "MEASURE",
     headline: "Signals return to the record.",
     body: "Use engagement, scan activity, benchmarks, and product intelligence to understand performance and improve the record over time.",
+    image: "/platform/demo-measure.png",
+    alt: "Material Benchmark dashboard — governed record coverage, peer medians, and passport performance",
   },
 ];
-
-export const PRODUCT_RECORD = {
-  name: "Silk Midi Skirt",
-  sku: "ITX-4102",
-  composition: "96% Silk · 4% Elastane",
-  origin: "Italy",
-  image: "/platform/hero-silk-dress.png",
-} as const;
-
-export const SOURCE_INPUTS = [
-  { id: "plm", label: "PLM", detail: "92% silk, 8% elastane", kind: "PLM" },
-  { id: "erp", label: "ERP", detail: "96% silk, 4% elastane", kind: "ERP" },
-  { id: "sheet", label: "Spreadsheet", detail: "100% silk", kind: "XLS" },
-  { id: "supplier", label: "Supplier file", detail: "Atelier Nord · Milan", kind: "PDF" },
-  { id: "retail", label: "Retailer feed", detail: "Silk Midi Skirt", kind: "CSV" },
-] as const;
-
-export const MESSY_STRINGS = ["Silk 96", "96 silk", "SILK:96%", "96% Seide"] as const;
-
-export const EVIDENCE_NODES = [
-  { id: "supplier", label: "Supplier evidence", from: "Pending", to: "Linked" },
-  { id: "provenance", label: "Provenance", from: "Incomplete", to: "Verified" },
-  { id: "custody", label: "Chain of custody", from: "Pending", to: "Linked" },
-] as const;
-
-export const PUBLISH_CHANNELS = ["QR", "Web", "API", "Retail"] as const;
-
-export const ACTIVATE_TAGS = ["QR / NFC", "Digital Product Passport", "Care", "Repair", "Resale"] as const;
-
-export const MEASURE_SIGNALS = ["Analytics", "Engagement", "Scan Activity"] as const;

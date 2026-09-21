@@ -16,8 +16,8 @@ export const FLOW_STEPS = FOLLOW_STAGES.map((stage) => ({
   title: stage.label.charAt(0) + stage.label.slice(1).toLowerCase(),
   headline: stage.headline,
   copy: stage.body,
-  image: `/platform/demo-${stage.id}.png`,
-  alt: stage.headline,
+  image: stage.image,
+  alt: stage.alt,
 }));
 
 export type FlowStepId = (typeof FLOW_STEPS)[number]["id"];
