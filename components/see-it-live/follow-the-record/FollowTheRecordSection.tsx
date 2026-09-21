@@ -174,7 +174,10 @@ export function FollowTheRecordSection() {
 
             <div className={styles.right}>
               <StageVisual stageId={stage.id} />
-              <StageCopy stageId={stage.id} />
+              {/* Stage headlines are baked into the PNGs — keep live text for screen readers only. */}
+              <div className={styles.stageCopyDesktop}>
+                <StageCopy stageId={stage.id} />
+              </div>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ export const MARKETING_RESERVED_SEGMENTS = [
   "traceability",
   "environmental-intelligence",
   "digital-product-passport",
+  "connected-product-lifecycle",
   "supplier-data",
   "login",
 ] as const;

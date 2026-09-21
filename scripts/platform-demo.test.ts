@@ -287,13 +287,17 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /\.visualShell/);
     assert.match(followCss, /\.visualFrame/);
     assert.match(followCss, /object-fit:\s*contain/);
-    assert.match(followCss, /width:\s*min\(100%,\s*980px\)/);
-    assert.match(followCss, /margin-top:\s*1\.25rem/);
+    // Artwork must fill the sticky right pane (not a capped centered island).
+    assert.match(followCss, /\.visualFrame img \{[\s\S]*?height:\s*100%/);
+    assert.match(followCss, /\.visualShell \{[\s\S]*?flex:\s*1/);
+    assert.match(followCss, /\.strip \{[\s\S]*?width:\s*100%/);
+    assert.doesNotMatch(followCss, /width:\s*min\(100%,\s*980px\)/);
+    assert.doesNotMatch(followCss, /max-height:\s*68vh/);
     assert.match(followCss, /48vh|--ftr-stage-vh:\s*48vh/);
     assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
-    assert.doesNotMatch(followCss, /min-height:\s*100vh/);
     assert.doesNotMatch(followCss, /object-fit:\s*cover/);
     assert.doesNotMatch(followCss, /\.visualGlow/);
+    assert.match(followSection, /stageCopyDesktop/);
     // Normalize artwork should be RGBA with transparency for Attio-style floating panels
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     const normalizeBuf = fs.readFileSync(path.join(process.cwd(), "public/platform/demo-normalize.png"));
