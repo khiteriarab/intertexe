@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformDemoClient } from "./PlatformDemoClient";
 import "./demo-tour.css";

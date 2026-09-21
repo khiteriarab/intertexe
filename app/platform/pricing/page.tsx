@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import { PlatformChrome } from "../PlatformChrome";
 import { PlatformViewTracker } from "../PlatformViewTracker";
 import { PRICING_MODULES, paddlePriceIdForModule } from "../../../lib/enterprise/pricing-modules";

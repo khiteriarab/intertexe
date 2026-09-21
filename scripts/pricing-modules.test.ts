@@ -110,7 +110,7 @@ describe("Modular licence pricing", () => {
     assert.match(selector, /estimateModules/);
     assert.doesNotMatch(selector, /SAAS_TIERS/);
     assert.match(css, /\.pricing-config-row\.is-selected \{[\s\S]*?var\(--platform-accent-soft\)/);
-    assert.match(nav, /\/brands\/pricing/);
+    assert.match(nav, /marketingPath\("pricing"\)|\/brands\/pricing/);
   });
 
   it("guards the public checkout route", () => {

@@ -109,9 +109,9 @@ describe("Enterprise SSO architecture (obelisk-core)", () => {
     assert.equal(normalizeEmailDomain("invalid"), null);
   });
 
-  it("J — enterprise password reset routes to obelisk-core for brand accounts", () => {
+  it("J — enterprise password reset routes to obelisk-core for organization accounts", () => {
     const forgot = fs.readFileSync(path.join(ROOT, "app/api/dashboard/forgot-password/route.ts"), "utf8");
-    assert.match(forgot, /getEnterpriseAnonClient/);
+    assert.match(forgot, /getObeliskAnonClient|getEnterpriseAnonClient/);
     assert.match(forgot, /resetPasswordForEmail/);
     assert.match(forgot, /isEnterpriseOrganizationAccount/);
     assert.match(forgot, /obelisk-core/);
