@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import { PlatformChrome } from "../PlatformChrome";
+import { SolutionsClose } from "../SolutionsClose";
 import { PlatformDemoClient } from "./PlatformDemoClient";
 import "./demo-tour.css";
 
@@ -15,6 +16,7 @@ export default function PlatformDemoPage() {
   return (
     <PlatformChrome active="demo">
       <PlatformDemoClient />
+      <SolutionsClose cta="demo_close" headingId="demo-close-heading" />
     </PlatformChrome>
   );
 }

@@ -56,13 +56,15 @@ describe("Platform solutions page", () => {
   });
 
   it("closes on the connected record and a single CTA pair", () => {
+    const close = fs.readFileSync(path.join(process.cwd(), "app/platform/SolutionsClose.tsx"), "utf8");
+    assert.match(page, /SolutionsClose/);
     assert.match(page, /One governed record\. Every stage connected\./);
-    assert.match(page, /One product record\. Every use case connected\./);
-    assert.match(page, /Know more/);
-    assert.match(page, /Prove more/);
-    assert.match(page, /Do more/);
-    assert.match(page, /Book a demo/);
-    assert.match(page, /Explore pricing/);
+    assert.match(close, /One product record\. Every use case connected\./);
+    assert.match(close, /Know more/);
+    assert.match(close, /Prove more/);
+    assert.match(close, /Do more/);
+    assert.match(close, /Book a demo/);
+    assert.match(close, /Explore pricing/);
     assert.doesNotMatch(page, /Start with the problem you need to solve\./);
     assert.match(page, /solutions-governed-record\.png/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/solutions-governed-record.png")));
@@ -71,10 +73,11 @@ describe("Platform solutions page", () => {
   });
 
   it("keeps the public page free of module pricing and API language", () => {
+    const close = fs.readFileSync(path.join(process.cwd(), "app/platform/SolutionsClose.tsx"), "utf8");
     assert.doesNotMatch(page, /\bAPI\b/);
     assert.doesNotMatch(page, /module/i);
     assert.doesNotMatch(page, /€/);
-    assert.match(page, /Explore pricing/);
+    assert.match(close, /Explore pricing/);
   });
 
   it("trims the navigation to Solutions, Pricing and See it live", () => {

@@ -224,8 +224,9 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(conflict?.normalized.shell || "", /Conflict/);
   });
 
-  it("keeps the editorial demo page focused on one featured product", () => {
+  it("keeps the editorial demo page focused on lifecycle and workflow", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
+    const demoPage = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
     const lifecycle = fs.readFileSync(
       path.join(process.cwd(), "app/platform/demo/ProductLifecycleSection.tsx"),
       "utf8",
@@ -238,7 +239,9 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(demo, /DemoHero/);
     assert.doesNotMatch(demo, /DemoIntertexeFlow/);
     assert.match(demo, /DemoProductWorkflow/);
-    assert.match(demo, /DemoFeaturedExample/);
+    assert.doesNotMatch(demo, /DemoFeaturedExample/);
+    assert.match(demoPage, /SolutionsClose/);
+    assert.match(demoPage, /demo_close/);
     assert.doesNotMatch(demo, /DemoClosingQuote/);
     assert.doesNotMatch(demo, /DemoScrollyJourney/);
     assert.doesNotMatch(demo, /DemoCatalogGrid/);

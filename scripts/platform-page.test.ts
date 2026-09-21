@@ -124,9 +124,11 @@ describe("Platform B2B sales page", () => {
     assert.doesNotMatch(demoClient, /DemoHero/);
     assert.doesNotMatch(demoClient, /DemoIntertexeFlow/);
     assert.match(demoClient, /DemoProductWorkflow/);
-    assert.match(demoClient, /DemoFeaturedExample/);
+    assert.doesNotMatch(demoClient, /DemoFeaturedExample/);
     assert.doesNotMatch(demoClient, /DemoClosingQuote/);
     assert.doesNotMatch(demoClient, /DemoBookSection/);
+    assert.match(demo, /SolutionsClose/);
+    assert.match(demo, /demo_close/);
     assert.match(demo, /See INTERTEXE live/i);
     const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
     assert.match(banner, /Request a demo/);
