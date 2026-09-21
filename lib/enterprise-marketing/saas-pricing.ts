@@ -4,13 +4,12 @@
  * Customer-facing names: Foundation · Intelligence · Enterprise
  * Legacy entitlement keys (unchanged): professional · platform · enterprise
  *
- * Presentation only — does not enforce entitlements or change checkout.
+ * Commercial limits and implementation fees are aligned with lib/enterprise/pricing.ts
+ * and Paddle mapping in lib/enterprise/paddle.ts.
  *
- * Known code vs commercial deltas (flagged, not silently inventing):
- * - Entitlement product limits in plans.ts are still 500 / 2,000; marketing shows 2,500 / 10,000.
- * - Implementation fees in plans.ts still resolve a single default (~$5k); marketing shows $1,500 / $3,500 / custom.
- * - professional still has api_access in entitlements; Foundation marketing excludes general API (imports/exports only).
- * - professional has advanced_benchmarking; Foundation marketing shows Material Benchmark as Basic.
+ * Presentation nuance (feature depth labels, not allowance deltas):
+ * - Foundation marketing shows Material Benchmark as Basic; entitlement still uses advanced_benchmarking flag for access.
+ * - Foundation excludes general API (imports/exports only) — matches planDefinition features.
  */
 
 import { marketingPath } from "./paths";

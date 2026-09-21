@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PlanKey } from "./entitlements";
 import { recordBillingAudit, gracePeriodEnd } from "./billing-lifecycle";
-import { normalizePlanKey, type BillingStatus } from "./plans";
+import { normalizePlanKey, planDefinition, type BillingStatus } from "./plans";
 
 export type PaddleEnvironment = "sandbox" | "production";
 
@@ -11,6 +11,8 @@ export type PaddlePlanMeta = {
   productAllowance: number | null;
   passportAllowance: number | null;
   kind: "subscription" | "implementation";
+  /** Public commercial name when mapped from a known subscription price. */
+  publicName?: "Foundation" | "Intelligence" | "Enterprise";
 };
 
 export function getPaddleEnvironment(): PaddleEnvironment {
@@ -28,38 +30,103 @@ export function isPaddleConfigured(): boolean {
   return Boolean(process.env.PADDLE_API_KEY?.trim());
 }
 
+function subscriptionMeta(plan: PlanKey, publicName: PaddlePlanMeta["publicName"]): PaddlePlanMeta {
+  const def = planDefinition(plan);
+  return {
+    plan,
+    productAllowance: def.maxProducts,
+    passportAllowance: def.maxHostedPassports,
+    kind: "subscription",
+    publicName,
+  };
+}
+
+function implementationMeta(): PaddlePlanMeta {
+  const def = planDefinition("founding_pilot");
+  return {
+    plan: "founding_pilot",
+    productAllowance: def.maxProducts,
+    passportAllowance: def.maxHostedPassports,
+    kind: "implementation",
+  };
+}
+
+/** Env aliases for Foundation ($499/mo) — entitlement key `professional`. */
+export function foundationSubscriptionPriceIds(): string[] {
+  return [
+    process.env.PADDLE_PRICE_FOUNDATION,
+    process.env.PADDLE_PRICE_PLATFORM,
+    process.env.PADDLE_PRICE_SAAS_PLATFORM,
+    process.env.PADDLE_PRICE_SAAS_STARTER,
+  ]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+}
+
+/** Env aliases for Intelligence ($1,250/mo) — entitlement key `platform`. */
+export function intelligenceSubscriptionPriceIds(): string[] {
+  return [
+    process.env.PADDLE_PRICE_INTELLIGENCE,
+    process.env.PADDLE_PRICE_PROFESSIONAL,
+    process.env.PADDLE_PRICE_SAAS_PROFESSIONAL,
+    process.env.PADDLE_PRICE_SAAS_GROWTH,
+  ]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+}
+
+/** One-time implementation price for Foundation ($1,500). */
+export function foundationImplementationPriceId(): string | null {
+  return (
+    process.env.PADDLE_PRICE_IMPLEMENTATION_FOUNDATION?.trim() ||
+    process.env.PADDLE_PRICE_IMPLEMENTATION?.trim() ||
+    process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
+    null
+  );
+}
+
+/** One-time implementation price for Intelligence ($3,500). */
+export function intelligenceImplementationPriceId(): string | null {
+  return (
+    process.env.PADDLE_PRICE_IMPLEMENTATION_INTELLIGENCE?.trim() ||
+    process.env.PADDLE_PRICE_IMPLEMENTATION?.trim() ||
+    process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
+    null
+  );
+}
+
+/** Legacy / generic implementation price (Enterprise floor / founding pilot). */
+export function genericImplementationPriceId(): string | null {
+  return (
+    process.env.PADDLE_PRICE_IMPLEMENTATION?.trim() ||
+    process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
+    null
+  );
+}
+
 /** Map Paddle price IDs → plan entitlements (env + optional JSON override). */
 export function paddlePlanByPriceId(priceId: string): PaddlePlanMeta | null {
   const id = String(priceId || "").trim();
   if (!id) return null;
 
-  // Env var names reflect legacy Paddle product titles — map by price ID, not env key label.
-  // PADDLE_PRICE_PLATFORM → $499/mo Professional · PADDLE_PRICE_PROFESSIONAL → $1,250/mo Platform
-  const fromEnv: Array<[string | undefined, PaddlePlanMeta]> = [
-    [
-      process.env.PADDLE_PRICE_PLATFORM || process.env.PADDLE_PRICE_SAAS_PLATFORM,
-      { plan: "professional", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
-    ],
-    [
-      process.env.PADDLE_PRICE_PROFESSIONAL || process.env.PADDLE_PRICE_SAAS_PROFESSIONAL,
-      { plan: "platform", productAllowance: 2_000, passportAllowance: 2_000, kind: "subscription" },
-    ],
-    [
-      process.env.PADDLE_PRICE_IMPLEMENTATION || process.env.PADDLE_PRICE_FOUNDING_PILOT,
-      { plan: "founding_pilot", productAllowance: 10, passportAllowance: 10, kind: "implementation" },
-    ],
-    [
-      process.env.PADDLE_PRICE_SAAS_STARTER,
-      { plan: "professional", productAllowance: 500, passportAllowance: 500, kind: "subscription" },
-    ],
-    [
-      process.env.PADDLE_PRICE_SAAS_GROWTH,
-      { plan: "platform", productAllowance: 2_000, passportAllowance: 2_000, kind: "subscription" },
-    ],
-  ];
-  for (const [envId, meta] of fromEnv) {
-    if (envId && envId === id) return meta;
+  for (const envId of foundationSubscriptionPriceIds()) {
+    if (envId === id) return subscriptionMeta("professional", "Foundation");
   }
+  for (const envId of intelligenceSubscriptionPriceIds()) {
+    if (envId === id) return subscriptionMeta("platform", "Intelligence");
+  }
+
+  const implIds = new Set(
+    [
+      process.env.PADDLE_PRICE_IMPLEMENTATION_FOUNDATION,
+      process.env.PADDLE_PRICE_IMPLEMENTATION_INTELLIGENCE,
+      process.env.PADDLE_PRICE_IMPLEMENTATION,
+      process.env.PADDLE_PRICE_FOUNDING_PILOT,
+    ]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean)
+  );
+  if (implIds.has(id)) return implementationMeta();
 
   try {
     const raw = process.env.PADDLE_PRICE_PLAN_MAP_JSON;
@@ -480,27 +547,13 @@ export async function createPaddleModuleCheckout(input: {
 export function defaultCheckoutPriceForPlan(plan: PlanKey): string | null {
   const normalized = normalizePlanKey(plan);
   if (normalized === "professional" || plan === "saas") {
-    return (
-      process.env.PADDLE_PRICE_PLATFORM?.trim() ||
-      process.env.PADDLE_PRICE_SAAS_PLATFORM?.trim() ||
-      process.env.PADDLE_PRICE_SAAS_STARTER?.trim() ||
-      null
-    );
+    return foundationSubscriptionPriceIds()[0] || null;
   }
   if (normalized === "platform") {
-    return (
-      process.env.PADDLE_PRICE_PROFESSIONAL?.trim() ||
-      process.env.PADDLE_PRICE_SAAS_PROFESSIONAL?.trim() ||
-      process.env.PADDLE_PRICE_SAAS_GROWTH?.trim() ||
-      null
-    );
+    return intelligenceSubscriptionPriceIds()[0] || null;
   }
   if (normalized === "founding_pilot") {
-    return (
-      process.env.PADDLE_PRICE_IMPLEMENTATION?.trim() ||
-      process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
-      null
-    );
+    return genericImplementationPriceId();
   }
   return null;
 }
@@ -509,12 +562,22 @@ export function checkoutPricesForPlan(plan: PlanKey): {
   subscriptionPriceId: string | null;
   implementationPriceId: string | null;
 } {
+  const normalized = normalizePlanKey(plan);
+  if (normalized === "professional" || plan === "saas") {
+    return {
+      subscriptionPriceId: defaultCheckoutPriceForPlan("professional"),
+      implementationPriceId: foundationImplementationPriceId(),
+    };
+  }
+  if (normalized === "platform") {
+    return {
+      subscriptionPriceId: defaultCheckoutPriceForPlan("platform"),
+      implementationPriceId: intelligenceImplementationPriceId(),
+    };
+  }
   return {
     subscriptionPriceId: defaultCheckoutPriceForPlan(plan),
-    implementationPriceId:
-      process.env.PADDLE_PRICE_IMPLEMENTATION?.trim() ||
-      process.env.PADDLE_PRICE_FOUNDING_PILOT?.trim() ||
-      null,
+    implementationPriceId: genericImplementationPriceId(),
   };
 }
 

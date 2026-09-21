@@ -5,11 +5,15 @@
 
 import type { PlanKey } from "./entitlements";
 import {
+  FOUNDATION_IMPLEMENTATION_USD,
+  FOUNDATION_MONTHLY_USD,
+  FOUNDATION_PRODUCT_LIMIT,
+  FOUNDATION_SEAT_LIMIT,
+  INTELLIGENCE_IMPLEMENTATION_USD,
+  INTELLIGENCE_MONTHLY_USD,
+  INTELLIGENCE_PRODUCT_LIMIT,
+  INTELLIGENCE_SEAT_LIMIT,
   PILOT_PRODUCT_LIMIT,
-  PLATFORM_MONTHLY_USD,
-  PLATFORM_PRODUCT_LIMIT,
-  PROFESSIONAL_MONTHLY_USD,
-  PROFESSIONAL_PRODUCT_LIMIT,
   resolveOnboardingFeeUsd,
 } from "./pricing";
 
@@ -93,30 +97,30 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
   },
   professional: {
     key: "professional",
-    label: "Professional",
+    label: "Foundation",
     billingProvider: "paddle",
-    maxProducts: PROFESSIONAL_PRODUCT_LIMIT,
-    maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
-    maxTeamMembers: 3,
-    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    implementationUsd: resolveOnboardingFeeUsd(),
+    maxProducts: FOUNDATION_PRODUCT_LIMIT,
+    maxHostedPassports: FOUNDATION_PRODUCT_LIMIT,
+    maxTeamMembers: FOUNDATION_SEAT_LIMIT,
+    monthlyUsd: FOUNDATION_MONTHLY_USD,
+    implementationUsd: FOUNDATION_IMPLEMENTATION_USD,
     features: f(
       "publish_passports",
       "suppliers",
       "advanced_benchmarking",
-      "regulatory_program",
-      "api_access"
+      "regulatory_program"
+      // Foundation: file/data imports only — no general API (matches public matrix)
     ),
   },
   platform: {
     key: "platform",
-    label: "Platform",
+    label: "Intelligence",
     billingProvider: "paddle",
-    maxProducts: PLATFORM_PRODUCT_LIMIT,
-    maxHostedPassports: PLATFORM_PRODUCT_LIMIT,
-    maxTeamMembers: 10,
-    monthlyUsd: PLATFORM_MONTHLY_USD,
-    implementationUsd: resolveOnboardingFeeUsd(),
+    maxProducts: INTELLIGENCE_PRODUCT_LIMIT,
+    maxHostedPassports: INTELLIGENCE_PRODUCT_LIMIT,
+    maxTeamMembers: INTELLIGENCE_SEAT_LIMIT,
+    monthlyUsd: INTELLIGENCE_MONTHLY_USD,
+    implementationUsd: INTELLIGENCE_IMPLEMENTATION_USD,
     features: f(
       "publish_passports",
       "suppliers",
@@ -133,19 +137,18 @@ export const PLAN_DEFINITIONS: Record<PlanKey, PlanDefinition> = {
   },
   saas: {
     key: "saas",
-    label: "Professional",
+    label: "Foundation",
     billingProvider: "paddle",
-    maxProducts: PROFESSIONAL_PRODUCT_LIMIT,
-    maxHostedPassports: PROFESSIONAL_PRODUCT_LIMIT,
-    maxTeamMembers: 3,
-    monthlyUsd: PROFESSIONAL_MONTHLY_USD,
-    implementationUsd: resolveOnboardingFeeUsd(),
+    maxProducts: FOUNDATION_PRODUCT_LIMIT,
+    maxHostedPassports: FOUNDATION_PRODUCT_LIMIT,
+    maxTeamMembers: FOUNDATION_SEAT_LIMIT,
+    monthlyUsd: FOUNDATION_MONTHLY_USD,
+    implementationUsd: FOUNDATION_IMPLEMENTATION_USD,
     features: f(
       "publish_passports",
       "suppliers",
       "advanced_benchmarking",
-      "regulatory_program",
-      "api_access"
+      "regulatory_program"
     ),
   },
   enterprise: {
