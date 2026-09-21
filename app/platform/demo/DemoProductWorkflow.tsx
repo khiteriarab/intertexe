@@ -65,50 +65,51 @@ export const FLOW_STEPS = [
 export type FlowStepId = (typeof FLOW_STEPS)[number]["id"];
 
 /**
- * Follow the Record — Attio-style sticky rail + scroll-driven stage visuals.
- * As the user scrolls Source → Measure, the left rail updates and the right image swaps.
+ * Follow the Record — pinned Attio scroll:
+ * left rail + dominant right visual stay fixed until Source→Measure finishes, then the page continues.
  */
 export function DemoProductWorkflow() {
   const reducedMotion = useReducedMotion();
-  const [activeStep, setActiveStep] = useState<FlowStepId>("source");
-  const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const pinRef = useRef<HTMLDivElement | null>(null);
-  const step = FLOW_STEPS.find((item) => item.id === activeStep) ?? FLOW_STEPS[0];
+  const step = FLOW_STEPS[activeIndex] ?? FLOW_STEPS[0];
 
   useEffect(() => {
-    const markers = markerRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (!markers.length) return;
+    const pin = pinRef.current;
+    if (!pin) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const top = visible[0];
-        if (!top) return;
-        const id = (top.target as HTMLElement).dataset.step as FlowStepId | undefined;
-        if (id) setActiveStep(id);
-      },
-      {
-        // Center band of the viewport drives the active stage
-        root: null,
-        rootMargin: "-35% 0px -35% 0px",
-        threshold: [0.15, 0.4, 0.7],
-      },
-    );
+    const update = () => {
+      const rect = pin.getBoundingClientRect();
+      const scrollable = pin.offsetHeight - window.innerHeight;
+      if (scrollable <= 0) {
+        setActiveIndex(0);
+        return;
+      }
+      const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
+      const progress = scrolled / scrollable;
+      const next = Math.min(FLOW_STEPS.length - 1, Math.floor(progress * FLOW_STEPS.length + 0.001));
+      setActiveIndex(next);
+    };
 
-    markers.forEach((marker) => observer.observe(marker));
-    return () => observer.disconnect();
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
-  function goToStep(id: FlowStepId, index: number) {
-    setActiveStep(id);
-    const marker = markerRefs.current[index];
-    if (!marker) return;
-    marker.scrollIntoView({
-      behavior: reducedMotion ? "auto" : "smooth",
-      block: "center",
-    });
+  function goToStep(index: number) {
+    const pin = pinRef.current;
+    if (!pin) {
+      setActiveIndex(index);
+      return;
+    }
+    const scrollable = pin.offsetHeight - window.innerHeight;
+    const pinTop = pin.getBoundingClientRect().top + window.scrollY;
+    const target = pinTop + (scrollable * (index + 0.5)) / FLOW_STEPS.length;
+    window.scrollTo({ top: target, behavior: reducedMotion ? "auto" : "smooth" });
   }
 
   return (
@@ -134,13 +135,13 @@ export function DemoProductWorkflow() {
             <nav className="demo-flow-rail" aria-label="Product workflow steps">
               <ol className="demo-flow-rail-list">
                 {FLOW_STEPS.map((item, index) => {
-                  const active = activeStep === item.id;
+                  const active = index === activeIndex;
                   return (
                     <li key={item.id}>
                       <button
                         type="button"
                         className={`demo-flow-rail-btn${active ? " is-active" : ""}`}
-                        onClick={() => goToStep(item.id, index)}
+                        onClick={() => goToStep(index)}
                         aria-current={active ? "step" : undefined}
                       >
                         <span className="demo-flow-rail-indicator" aria-hidden />
@@ -163,7 +164,7 @@ export function DemoProductWorkflow() {
                   initial={reducedMotion ? false : { opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
-                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <div className="demo-flow-visual">
                     <img
@@ -175,7 +176,6 @@ export function DemoProductWorkflow() {
                       fetchPriority="high"
                     />
                   </div>
-
                   <div className="demo-flow-copy">
                     <p className="demo-flow-meta">
                       {step.num} · {step.title}
@@ -189,20 +189,6 @@ export function DemoProductWorkflow() {
               </AnimatePresence>
             </div>
           </div>
-        </div>
-
-        {/* Scroll markers — drive Source → Measure as the user scrolls */}
-        <div className="demo-flow-markers" aria-hidden>
-          {FLOW_STEPS.map((item, index) => (
-            <div
-              key={item.id}
-              className="demo-flow-marker"
-              data-step={item.id}
-              ref={(el) => {
-                markerRefs.current[index] = el;
-              }}
-            />
-          ))}
         </div>
       </div>
     </section>

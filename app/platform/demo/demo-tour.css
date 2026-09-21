@@ -837,34 +837,31 @@
   color: var(--flow-muted);
 }
 
-/* Tall pin region — one viewport band per stage */
+/* Tall pin region — one full viewport per stage; sticky until last stage releases */
 .demo-flow-pin {
   --flow-steps: 6;
   position: relative;
-  height: calc(var(--flow-steps) * 95vh);
+  height: calc(var(--flow-steps) * 100vh);
 }
 
 .demo-flow-sticky {
   position: sticky;
-  top: 5.25rem;
+  top: 0;
   z-index: 2;
-  height: calc(100vh - 5.75rem);
+  height: 100vh;
   display: flex;
   align-items: stretch;
-  padding-bottom: 1.25rem;
+  padding: 1.25rem 0 1.75rem;
   box-sizing: border-box;
   background: var(--flow-bg);
 }
 
 .demo-flow-markers {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
 
 .demo-flow-marker {
-  height: calc(100% / var(--flow-steps));
+  display: none;
 }
 
 .demo-flow-layout {
