@@ -32,7 +32,7 @@ export const FOLLOW_STAGES: FollowStage[] = [
     number: "01",
     label: "SOURCE",
     headline: "Fragmented inputs, one product.",
-    body: "Ingest product data from PLM, ERP, suppliers, or your existing systems, preserved as submitted.",
+    body: "Ingest product data from PLM, ERP, suppliers, or your existing systems — preserved as submitted.",
     image: "/platform/demo-source.png",
     alt: "Fragmented inputs from PLM, ERP, spreadsheet, supplier file, and retailer feed converging into one INTERTEXE product record",
   },

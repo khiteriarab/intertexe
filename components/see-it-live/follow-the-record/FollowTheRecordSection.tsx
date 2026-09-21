@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SERIF } from "../../../app/platform/platform-ui";
 import { FOLLOW_HEADER, FOLLOW_STAGES, type FollowStageId } from "./follow-the-record-data";
-import { StickyDemoCanvas } from "./StickyDemoCanvas";
 import styles from "./FollowTheRecordSection.module.css";
 
-const STAGE_VH = 85;
+/** Short scroll triggers — states, not full-page slides. */
+const STAGE_VH = 52;
+const ease = [0.22, 1, 0.36, 1] as const;
 
 function StageRail({
   activeIndex,
@@ -42,10 +43,67 @@ function StageRail({
   );
 }
 
+function StageVisual({ stageId }: { stageId: FollowStageId }) {
+  const reducedMotion = useReducedMotion();
+  const active = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
+
+  return (
+    <div className={styles.visualShell} aria-live="polite">
+      <div className={styles.visualGlow} aria-hidden />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={active.id}
+          className={styles.visualFrame}
+          initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? undefined : { opacity: 0, y: -12, scale: 0.99 }}
+          transition={{ duration: 0.55, ease }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- original demo stage PNGs */}
+          <img
+            src={active.image}
+            alt={active.alt}
+            width={1672}
+            height={941}
+            decoding="async"
+            fetchPriority="high"
+          />
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function StageCopy({ stageId }: { stageId: FollowStageId }) {
+  const reducedMotion = useReducedMotion();
+  const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={stage.id}
+        className={styles.stageCopy}
+        initial={reducedMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
+        transition={{ duration: 0.45, ease }}
+        aria-live="polite"
+      >
+        <p className={styles.stageMeta}>
+          {stage.number} {stage.label}
+        </p>
+        <h3 className={styles.stageHeadline} style={SERIF}>
+          {stage.headline}
+        </h3>
+        <p className={styles.stageBody}>{stage.body}</p>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 /**
- * See It Live — Attio-style strip-flow walkthrough.
- * Left narrative + stage rail; right sticky evolving product record.
- * Homepage lifecycle is a separate section.
+ * See It Live — Attio-style sticky scrollytelling.
+ * Short scroll triggers swap one pinned visual; left rail stays fixed.
  */
 export function FollowTheRecordSection() {
   const reducedMotion = useReducedMotion();
@@ -112,30 +170,17 @@ export function FollowTheRecordSection() {
                   <span aria-hidden>→</span>
                 </Link>
               </header>
-
               <StageRail activeIndex={activeIndex} onSelect={goToStep} />
-
-              <div className={styles.activeCopy} aria-live="polite">
-                <p className={styles.activeMeta}>
-                  {stage.number} {stage.label}
-                </p>
-                <h3 className={styles.activeHeadline} style={SERIF}>
-                  {stage.headline}
-                </h3>
-                <p className={styles.activeBody}>{stage.body}</p>
-              </div>
             </div>
 
-            <div className={styles.divider} aria-hidden />
-
             <div className={styles.right}>
-              <StickyDemoCanvas stage={stage.id as FollowStageId} />
+              <StageVisual stageId={stage.id} />
+              <StageCopy stageId={stage.id} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile stacked stages — shown only under 900px via CSS */}
       <div className={styles.mobileStack}>
         <header className={styles.intro}>
           <p className={styles.eyebrow}>{FOLLOW_HEADER.eyebrow}</p>
@@ -143,18 +188,23 @@ export function FollowTheRecordSection() {
             {FOLLOW_HEADER.headline}
           </h2>
           <p className={styles.lede}>{FOLLOW_HEADER.lede}</p>
+          <Link href={FOLLOW_HEADER.primaryCta.href} className={styles.primaryCta}>
+            {FOLLOW_HEADER.primaryCta.label}
+            <span aria-hidden>→</span>
+          </Link>
         </header>
         {FOLLOW_STAGES.map((item) => (
           <article key={item.id} className={styles.mobileStage} id={`journey-${item.id}`}>
-            <p className={styles.activeMeta}>
+            <p className={styles.stageMeta}>
               {item.number} {item.label}
             </p>
-            <h3 className={styles.activeHeadline} style={SERIF}>
+            <h3 className={styles.stageHeadline} style={SERIF}>
               {item.headline}
             </h3>
-            <p className={styles.activeBody}>{item.body}</p>
-            <div className={styles.mobileCanvas}>
-              <StickyDemoCanvas stage={item.id} />
+            <p className={styles.stageBody}>{item.body}</p>
+            <div className={styles.mobileVisual}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={item.image} alt={item.alt} width={1672} height={941} decoding="async" />
             </div>
           </article>
         ))}

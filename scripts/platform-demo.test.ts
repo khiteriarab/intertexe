@@ -267,7 +267,8 @@ describe("Permanent 10-product demonstration catalog", () => {
     );
     assert.match(workflow, /FollowTheRecordSection/);
     assert.match(followSection, /activeIndex|goToStep/);
-    assert.match(followSection, /StickyDemoCanvas/);
+    assert.match(followSection, /STAGE_VH\s*=\s*52|52vh/);
+    assert.match(followSection, /demo-source|active\.image|item\.image/);
     assert.match(followData, /id: "source"/);
     assert.match(followData, /Fragmented inputs, one product\./);
     assert.match(followData, /Claims become evidence-backed\./);
@@ -283,9 +284,11 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followCss, /\.pin/);
     assert.match(followCss, /\.sticky/);
     assert.match(followCss, /\.rail/);
-    assert.match(followCss, /\.canvas/);
-    assert.match(followCss, /\.stageVisual/);
+    assert.match(followCss, /\.visualShell/);
+    assert.match(followCss, /\.visualFrame/);
+    assert.match(followCss, /52vh|--ftr-stage-vh:\s*52vh/);
     assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
+    assert.doesNotMatch(followCss, /min-height:\s*100vh/);
     assert.doesNotMatch(followSection, /demo-workflow-rail-product/);
     assert.doesNotMatch(followSection, /Featured product/);
     assert.doesNotMatch(followSection, /demo-workflow-panel-inner/);
