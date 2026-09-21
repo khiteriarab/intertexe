@@ -122,7 +122,7 @@ export function ProductLifecycleSection() {
             use, repair, resale and end-of-life.
           </p>
           <div className="plc-intro-actions">
-            <Link href="#passport" className="demo-editorial-btn-primary">
+            <Link href="/p/itx_5h454m6h0c673h5g0n6d" className="demo-editorial-btn-primary">
               See a live product →
             </Link>
             <Link href="#journey" className="demo-editorial-btn-text">
