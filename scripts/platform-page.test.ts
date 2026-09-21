@@ -68,40 +68,24 @@ describe("Platform B2B sales page", () => {
     assert.match(saasCss, /--platform-bg: #faf9f6/);
     assert.match(chrome, /platform-saas\.css/);
     assert.match(chrome, /platform-luxury\.css/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
-    const processVisual = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"),
-      "utf8",
-    );
-    assert.match(processVisual, /Create/);
-    assert.match(processVisual, /Verify/);
-    assert.match(processVisual, /Comply/);
-    assert.match(processVisual, /Distribute/);
-    assert.match(processVisual, /Extend/);
-    assert.match(processVisual, /Discover/);
-    assert.match(processVisual, /platform-lifecycle-journey/);
-    assert.match(processVisual, /Input/);
-    assert.match(processVisual, /Validation/);
-    assert.match(processVisual, /Compliance/);
-    assert.match(processVisual, /Delivery/);
-    assert.match(processVisual, /Circularity/);
+    assert.match(howItWorks, /ProductLifecycleSystem/);
+    assert.match(howItWorks, /PlatformProductPillarsVisual/);
+    assert.doesNotMatch(howItWorks, /WhatItIsProcessVisual/);
+    assert.doesNotMatch(howItWorks, /From raw product data to intelligent action/);
+    assert.match(howItWorks, /Three layers\. One governed source of truth\./);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.doesNotMatch(howItWorks, /platform-product-story-flow-line/);
     assert.doesNotMatch(howItWorks, /platform-product-story-bridge/);
     assert.doesNotMatch(howItWorks, /PlatformCapabilityNav/);
-    assert.match(howItWorks, /From raw product data to intelligent action/);
     assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
     assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
     assert.doesNotMatch(home, /PlatformWorkflowDeepDive/);
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.doesNotMatch(home, /SalesIntelligenceSection/);
-    assert.match(home, /SalesDeliverySection/);
+    assert.doesNotMatch(home, /SalesDeliverySection/);
     assert.match(home, /sales-home-sections/);
     assert.doesNotMatch(home, /from \".\/sales-sections\"/);
     assert.doesNotMatch(home, /SalesPlatformBreadthSection/);
-    assert.match(howItWorks, /PlatformProductPillarsVisual/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
-    assert.match(howItWorks, /Three layers\. One governed source of truth\./);
     assert.doesNotMatch(home, /PlatformProofSection/);
     assert.match(home, /PlatformFaq/);
     assert.doesNotMatch(home, /SalesStartFreeSection/);
@@ -120,7 +104,8 @@ describe("Platform B2B sales page", () => {
 
   it("routes live QR flow and API detail to dedicated pages", () => {
     assert.match(demo, /PlatformDemoClient/);
-    assert.match(demoClient, /ProductLifecycleSystem/);
+    assert.match(demoClient, /GovernedRecordStageSection/);
+    assert.doesNotMatch(demoClient, /ProductLifecycleSystem/);
     assert.doesNotMatch(demoClient, /ProductLifecycleSection/);
     assert.doesNotMatch(demoClient, /DemoHero/);
     assert.doesNotMatch(demoClient, /DemoIntertexeFlow/);
@@ -156,8 +141,7 @@ describe("Platform B2B sales page", () => {
     assert.match(hero, /Distribute/);
     assert.match(hero, /Extend/);
     assert.doesNotMatch(hero, /Start with 10 products/);
-    assert.match(howItWorks, /Discover/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
+    assert.match(howItWorks, /ProductLifecycleSystem/);
     assert.doesNotMatch(howItWorks, /Start with 10 products/);
     assert.match(sections, /Start with 10 products/);
     assert.match(homeSections, /PlatformBrandShowcaseHero/);

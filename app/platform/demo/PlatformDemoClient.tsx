@@ -1,13 +1,13 @@
 "use client";
 
-import ProductLifecycleSystem from "../../../components/see-it-live/ProductLifecycleSystem";
+import { GovernedRecordStageSection } from "../GovernedRecordStageSection";
 import { DemoProductWorkflow } from "./DemoProductWorkflow";
 
-/** See it live — product system map, then software walkthrough. */
+/** See it live — governed-record stage overview, then software walkthrough. */
 export function PlatformDemoClient() {
   return (
     <>
-      <ProductLifecycleSystem />
+      <GovernedRecordStageSection />
       <DemoProductWorkflow />
     </>
   );

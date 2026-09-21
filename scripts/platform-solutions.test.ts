@@ -55,10 +55,12 @@ describe("Platform solutions page", () => {
     assert.match(css, /prefers-reduced-motion/);
   });
 
-  it("closes on the connected record and a single CTA pair", () => {
+  it("closes with conversion CTAs and places consumer delivery on Solutions", () => {
     const close = fs.readFileSync(path.join(process.cwd(), "app/platform/SolutionsClose.tsx"), "utf8");
     assert.match(page, /SolutionsClose/);
-    assert.match(page, /One governed record\. Every stage connected\./);
+    assert.match(page, /SalesDeliverySection/);
+    assert.doesNotMatch(page, /One governed record\. Every stage connected\./);
+    assert.doesNotMatch(page, /solutions-governed-record\.png/);
     assert.match(close, /One product record\. Every use case connected\./);
     assert.match(close, /Know more/);
     assert.match(close, /Prove more/);
@@ -66,15 +68,13 @@ describe("Platform solutions page", () => {
     assert.match(close, /Book a demo/);
     assert.match(close, /Explore pricing/);
     assert.doesNotMatch(page, /Start with the problem you need to solve\./);
-    assert.match(page, /solutions-governed-record\.png/);
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/solutions-governed-record.png")));
     assert.doesNotMatch(page, /workspace-product-record\.png/);
     assert.doesNotMatch(page, /solutions-shot-overlay/);
   });
 
-  it("keeps the public page free of module pricing and API language", () => {
+  it("keeps the public page free of module pricing language", () => {
     const close = fs.readFileSync(path.join(process.cwd(), "app/platform/SolutionsClose.tsx"), "utf8");
-    assert.doesNotMatch(page, /\bAPI\b/);
     assert.doesNotMatch(page, /module/i);
     assert.doesNotMatch(page, /€/);
     assert.match(close, /Explore pricing/);
