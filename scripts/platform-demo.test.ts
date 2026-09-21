@@ -272,10 +272,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(lifecycleData, /Source & Make/);
     assert.match(lifecycleData, /Repair & Recirculate/);
     assert.match(lifecycleData, /shortDescription/);
-    assert.match(lifecycleData, /LIFECYCLE_PATH_D|buildLifecyclePath/);
+    assert.match(lifecycleData, /LIFECYCLE_PATH_D|buildTransitPath/);
+    assert.match(lifecycleData, /stageAnchor/);
+    assert.match(lifecycleData, /LIFECYCLE_TRAVEL_MS/);
     assert.match(lifecycleData, /id: "source-make"/);
     assert.match(lifecycleData, /id: "repair-recirculate"/);
     assert.doesNotMatch(lifecycle, /plc-marker|plc-node|LifecycleMarker/);
+    assert.doesNotMatch(lifecycleData, /geo:|label: "left"|label: "right"/);
     assert.equal([...lifecycleData.matchAll(/id: "[a-z-]+"/g)].length, 7);
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
