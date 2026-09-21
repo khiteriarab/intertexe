@@ -14,9 +14,9 @@ describe("Platform success stories", () => {
   const chrome = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformChrome.tsx"), "utf8");
   const paths = fs.readFileSync(path.join(process.cwd(), "lib/enterprise-marketing/paths.ts"), "utf8");
 
-  it("shows a Fall 2026 coming-soon page with demo CTAs", () => {
+  it("shows a Winter 2026 coming-soon page with demo CTAs", () => {
     assert.match(listing, /Case studies coming/);
-    assert.match(listing, /Fall 2026/);
+    assert.match(listing, /Winter 2026/);
     assert.match(listing, /Interested in being a case study/);
     assert.match(listing, /Start a free demo/);
     assert.match(listing, /request\?intent=snapshot&cta=success_stories_coming/);
