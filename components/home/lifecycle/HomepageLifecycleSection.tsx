@@ -47,7 +47,7 @@ function LifecycleRowBlock({ row, index }: { row: LifecycleRow; index: number })
   );
 
   return (
-    <div className={styles.row}>
+    <div className={styles.row} data-align={row.align}>
       <div className={styles.rowSide}>{textFirst ? text : diagram}</div>
       <div className={styles.spineSlot} aria-hidden>
         <span className={`${styles.spineNode} ${index === 1 ? styles.spineNodeAccent : ""}`} />

@@ -185,12 +185,11 @@
   max-width: 28rem;
 }
 
-.row:nth-child(odd) .rowCopy {
-  justify-self: start;
+.row[data-align="left"] .rowCopy {
+  margin-right: auto;
 }
 
-.row:nth-child(even) .rowCopy {
-  justify-self: end;
+.row[data-align="right"] .rowCopy {
   margin-left: auto;
 }
 
@@ -321,7 +320,7 @@
   }
 
   .rowCopy,
-  .row:nth-child(even) .rowCopy {
+  .row[data-align="right"] .rowCopy {
     margin-left: 0;
     max-width: none;
   }
