@@ -284,23 +284,23 @@ button.solution-card {
 
 @media (min-width: 900px) {
   .governed-opener {
-    min-height: min(92vh, 920px);
+    min-height: calc(100vh - 4.5rem);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 3.5rem 0 0;
+    padding: 2.75rem 0 0;
   }
 }
 
 .governed-opener-head {
-  width: min(44rem, calc(100% - 2.5rem));
+  width: min(42rem, calc(100% - 2.5rem));
   margin: 0 auto;
   text-align: center;
   animation: governed-opener-rise 0.7s ease-out both;
 }
 
 .governed-opener-eyebrow {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.7rem;
   font-family: var(--itx-sans, sans-serif);
   font-size: 0.6875rem;
   font-weight: 500;
@@ -310,8 +310,8 @@ button.solution-card {
 }
 
 .governed-opener-title {
-  margin: 0 0 0.85rem;
-  font-size: clamp(2.35rem, 5vw, 3.85rem);
+  margin: 0 0 0.7rem;
+  font-size: clamp(2.2rem, 4.4vw, 3.5rem);
   font-weight: 400;
   line-height: 1.02;
   letter-spacing: -0.035em;
@@ -319,11 +319,11 @@ button.solution-card {
 }
 
 .governed-opener-body {
-  margin: 0 auto 1.5rem;
-  max-width: 34rem;
+  margin: 0 auto 1.25rem;
+  max-width: 32rem;
   font-family: var(--itx-sans, sans-serif);
-  font-size: 1.0625rem;
-  line-height: 1.55;
+  font-size: 1.05rem;
+  line-height: 1.5;
   color: var(--governed-quiet);
 }
 
@@ -333,7 +333,7 @@ button.solution-card {
   justify-content: center;
   align-items: center;
   gap: 0.85rem 1.35rem;
-  margin-bottom: 1.15rem;
+  margin-bottom: 0.95rem;
 }
 
 .governed-opener-cta-primary {
@@ -394,25 +394,37 @@ button.solution-card {
 
 .governed-opener-visual {
   width: min(1240px, calc(100% - 1rem));
-  margin: 2.5rem auto 0;
-  flex: 1;
+  margin: 1.75rem auto 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
   animation: governed-opener-rise 0.85s ease-out 0.12s both;
 }
 
 @media (min-width: 900px) {
   .governed-opener-visual {
-    width: min(1400px, calc(100% - 1.5rem));
-    margin-top: 3rem;
+    width: min(1360px, calc(100% - 1.25rem));
+    margin-top: 2rem;
+    max-height: calc(100vh - 22rem);
   }
 }
 
 .governed-opener-image {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
+  max-height: min(58vh, 640px);
+  object-fit: contain;
   filter: drop-shadow(0 36px 80px rgba(0, 0, 0, 0.45));
+}
+
+@media (min-width: 900px) {
+  .governed-opener-image {
+    max-height: min(62vh, 700px);
+  }
 }
 
 @keyframes governed-opener-rise {
