@@ -2,15 +2,17 @@
 @import "../../shared/intertexe-editorial.css";
 
 .ent-login-page {
-  --ent-login-petrol: #e8dcc8;
-  --ent-login-petrol-hover: #d9c9a8;
+  --ent-login-petrol: #e8dcc8; /* --itx-accent-soft — branded soft tan */
+  --ent-login-petrol-hover: #d9c9a8; /* --itx-accent-muted */
   --ent-login-forest: #2c2620;
   --ent-login-ivory: #ffffff;
-  --ent-login-surface: #f7f7f4;
-  --ent-login-accent-soft: #f3f0ea;
-  --ent-login-ink: #171715;
-  --ent-login-muted: #77746f;
-  --ent-login-border: #e8e6e1;
+  --ent-login-surface: #faf8f4; /* --itx-surface */
+  --ent-login-accent-soft: #e8dcc8; /* branded soft tan (not #f3f0ea) */
+  --ent-login-ink: #1c1915; /* --itx-ink */
+  --ent-login-muted: #6f6a63; /* --itx-muted */
+  --ent-login-border: #e8e0d4; /* --itx-border */
+  --ent-login-gold: #c9a962; /* --itx-gold */
+  --ent-login-accent: #c4a574; /* --itx-accent */
 
   min-height: 100vh;
   min-height: 100dvh;
@@ -264,7 +266,7 @@
 }
 
 .ent-login-input:focus {
-  border-color: #c9a962;
+  border-color: var(--ent-login-gold);
   box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.12);
 }
 
@@ -429,7 +431,7 @@
 }
 
 .ent-login-sso:hover:not(:disabled) {
-  border-color: #c9a962;
+  border-color: var(--ent-login-gold);
   background: var(--ent-login-surface);
 }
 
