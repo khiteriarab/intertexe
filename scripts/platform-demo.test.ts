@@ -269,29 +269,53 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.doesNotMatch(client, /Data that moves fashion forward/);
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
-    assert.match(system, /From material/);
-    assert.match(system, /to next life/);
-    assert.match(system, /GovernedRecord/);
-    assert.match(system, /SourceStack/);
-    assert.match(system, /PublishingNetwork/);
-    assert.match(system, /FOLLOW THE RECORD/);
-    assert.match(system, /See the record evolve/);
-    assert.match(system, /RECORD_STATES/);
-    assert.match(system, /GOVERNED PRODUCT RECORD/);
-    assert.doesNotMatch(system, /stageAnchor|LIFECYCLE_PATH_D|plc-map-canvas/);
-    assert.match(system, /id: "source"/);
-    assert.match(system, /id: "recirculate"/);
-    assert.equal([...system.matchAll(/id: "(source|clean|trace|prepare|publish|learn|recirculate)"/g)].length, 7);
-    const systemCss = fs.readFileSync(
-      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.module.css"),
+    assert.match(system, /LifecycleHeroSection/);
+    assert.doesNotMatch(system, /GovernedRecord|SourceStack|PublishingNetwork|systemCanvas/);
+    const hero = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/LifecycleHeroSection.tsx"),
       "utf8",
     );
-    assert.match(systemCss, /--page:\s*#fafaf8|--canvas:\s*#ffffff/);
-    assert.match(systemCss, /--graphite:\s*#1d211e/);
-    assert.doesNotMatch(systemCss, /--bg:\s*#e8dcc8|--bg:\s*#f7f4ee/);
-    assert.match(systemCss, /\.systemCanvas/);
-    assert.match(systemCss, /\.recordHeader/);
-    assert.match(systemCss, /\.followRail/);
+    const map = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/LifecycleMapCanvas.tsx"),
+      "utf8",
+    );
+    const record = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/CentralProductRecord.tsx"),
+      "utf8",
+    );
+    const bridge = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/RecordTransitionBridge.tsx"),
+      "utf8",
+    );
+    const data = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/lifecycle-data.ts"),
+      "utf8",
+    );
+    assert.match(hero, /From material/);
+    assert.match(hero, /to next life/);
+    assert.match(hero, /See a live product/);
+    assert.match(map, /LIFECYCLE_PATH_D/);
+    assert.match(map, /CentralProductRecord/);
+    assert.match(record, /Silk Midi Skirt/);
+    assert.match(record, /ITX-4102/);
+    assert.match(bridge, /Follow the record/i);
+    assert.match(bridge, /See the record evolve/);
+    assert.match(data, /RECORD_STATES/);
+    assert.match(data, /id: "source"/);
+    assert.match(data, /id: "recirculate"/);
+    assert.equal([...data.matchAll(/id: "(source|clean|trace|prepare|publish|learn|recirculate)"/g)].length, 7);
+    const systemCss = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/lifecycle.module.css"),
+      "utf8",
+    );
+    assert.match(systemCss, /--bg:\s*#fcfbf8/);
+    assert.match(systemCss, /--gold:\s*#c4a574/);
+    assert.doesNotMatch(systemCss, /--bg:\s*#e8dcc8/);
+    assert.match(systemCss, /\.mapCanvas/);
+    assert.match(systemCss, /\.record/);
+    assert.match(systemCss, /\.bridge/);
+    assert.doesNotMatch(systemCss, /\.systemCanvas|\.ss-featured-band/);
+    assert.ok(!fs.existsSync(path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.module.css")));
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
     assert.match(featuredSection, /workspace-gods-true-linen-shirt/);

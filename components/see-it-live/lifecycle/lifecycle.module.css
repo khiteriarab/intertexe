@@ -1,0 +1,719 @@
+/* Premium lifecycle system map — Kessler/Attio-adjacent, not a dashboard. */
+
+.section {
+  --bg: #fcfbf8;
+  --ink: #1f1f1c;
+  --muted: #6b6760;
+  --line: #d8d2c8;
+  --gold: #c4a574;
+  --soft: #f7f4ee;
+  --white: #ffffff;
+
+  background: var(--bg);
+  color: var(--ink);
+  padding: 88px 0 0;
+}
+
+.intro {
+  width: min(1120px, calc(100% - 3.5rem));
+  margin: 0 auto 48px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.headline {
+  margin: 0;
+  max-width: 11ch;
+  font-size: clamp(2.5rem, 4.8vw, 3.5rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  color: var(--ink);
+}
+
+.lede {
+  margin: 1.25rem 0 0;
+  max-width: 34rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.35rem;
+  margin-top: 1.75rem;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.8rem 1.35rem;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 2px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.ctaPrimary:hover {
+  background: #000;
+}
+
+.ctaSecondary {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.ctaSecondary:hover {
+  color: var(--ink);
+  border-bottom-color: var(--line);
+}
+
+/* ── Map canvas ── */
+
+.mapCanvas {
+  position: relative;
+  width: min(1280px, calc(100% - 2.5rem));
+  height: clamp(520px, 58vw, 640px);
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.mapSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Stage anchors ── */
+
+.anchor {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  position: absolute;
+  transform: translate(-12px, -12px);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  z-index: 4;
+  max-width: 150px;
+  opacity: 0.58;
+  transition: opacity 0.25s ease;
+}
+
+.anchor:hover,
+.anchorActive {
+  opacity: 1;
+}
+
+.anchor:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+
+.anchorNode {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.25px solid var(--line);
+  background: var(--bg);
+}
+
+.anchorActive .anchorNode {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+.anchorPulse {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  pointer-events: none;
+}
+
+.anchorCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 0;
+}
+
+.anchorNum {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+}
+
+.anchorActive .anchorNum {
+  color: var(--gold);
+}
+
+.anchorTitle {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.anchorShort {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--muted);
+  max-width: 130px;
+}
+
+/* ── Central record ── */
+
+.recordSlot {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -42%);
+  z-index: 5;
+  width: min(280px, 72%);
+  pointer-events: none;
+}
+
+.record {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 22px 60px rgba(31, 31, 28, 0.05);
+  overflow: hidden;
+}
+
+.recordHead {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid rgba(216, 210, 200, 0.7);
+  background: linear-gradient(180deg, #fff 0%, #faf9f6 100%);
+}
+
+.recordEyebrow {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recordHeadRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.recordName {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.recordId {
+  margin: 4px 0 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.recordScore {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.recordScore span {
+  display: block;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recordScore strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.recordBody {
+  padding: 12px 16px 14px;
+}
+
+.recordComposition {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(216, 210, 200, 0.65);
+}
+
+.recordComposition span {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recordComposition strong {
+  display: block;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.recordGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.recordField {
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(216, 210, 200, 0.55);
+}
+
+.recordField:nth-child(odd) {
+  padding-right: 10px;
+}
+
+.recordField:nth-child(even) {
+  padding-left: 10px;
+  border-left: 1px solid rgba(216, 210, 200, 0.55);
+}
+
+.recordFieldLabel {
+  display: block;
+  margin-bottom: 3px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.recordFieldValue,
+.recordFieldGood {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.recordFieldValue {
+  color: var(--muted);
+}
+
+.dotGold,
+.dotMute {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotGold {
+  background: var(--gold);
+}
+
+.dotMute {
+  background: var(--line);
+}
+
+.recordBar {
+  margin-top: 12px;
+  height: 2px;
+  background: rgba(216, 210, 200, 0.7);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.recordBar span {
+  display: block;
+  height: 100%;
+  background: var(--gold);
+}
+
+/* ── Micro visuals ── */
+
+.microSlot {
+  position: absolute;
+  z-index: 3;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+
+.micro {
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 9px;
+  color: var(--muted);
+  max-width: 150px;
+}
+
+.microSource {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.microSource span {
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(216, 210, 200, 0.8);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  font-size: 9px;
+}
+
+.microNormalize {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.microMessy {
+  font-size: 8px;
+  letter-spacing: 0.02em;
+  opacity: 0.7;
+}
+
+.microArrow {
+  color: var(--gold);
+  font-size: 11px;
+}
+
+.microPill {
+  display: inline-block;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--white);
+  font-size: 9px;
+  color: var(--ink);
+}
+
+.microPillActive {
+  border-color: rgba(196, 165, 116, 0.55);
+  background: rgba(196, 165, 116, 0.08);
+}
+
+.microTrace {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.microSvg {
+  width: 100px;
+  height: auto;
+  display: block;
+}
+
+.microPrepare {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.microCheck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: var(--ink);
+}
+
+.microCheck i {
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  display: block;
+}
+
+.microPublish {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.microId {
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--white);
+}
+
+.microId span {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.microId strong {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.microChannels {
+  display: flex;
+  gap: 10px;
+}
+
+.microChannels span {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 2px;
+}
+
+.microLearn {
+  min-width: 120px;
+}
+
+.microLearnLabel {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 9px;
+  color: var(--ink);
+}
+
+.microChart {
+  position: relative;
+  height: 3px;
+  background: rgba(216, 210, 200, 0.7);
+  border-radius: 1px;
+}
+
+.microChart span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.microChart i {
+  position: absolute;
+  left: 52%;
+  top: -3px;
+  width: 1px;
+  height: 9px;
+  background: var(--gold);
+}
+
+.microLoop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.microLoop .microSvg {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.microLoop span {
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Bridge ── */
+
+.bridge {
+  width: min(1120px, calc(100% - 3.5rem));
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 8px 0 36px;
+  border-top: 1px solid rgba(216, 210, 200, 0.65);
+}
+
+.bridgeRail {
+  position: relative;
+  width: 1px;
+  height: 88px;
+  margin-left: 8px;
+  background: linear-gradient(to bottom, var(--gold), var(--line));
+  overflow: hidden;
+}
+
+.bridgeRail span {
+  position: absolute;
+  left: -2px;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.bridgeCopy {
+  padding-top: 12px;
+  max-width: 28rem;
+}
+
+.bridgeEyebrow {
+  margin: 0 0 8px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.bridgeTitle {
+  margin: 0;
+  font-size: clamp(1.65rem, 2.8vw, 2.15rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.bridgeLede {
+  margin: 10px 0 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anchorPulse {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .mapCanvas {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    padding-bottom: 12px;
+  }
+
+  .mapSvg {
+    position: relative;
+    height: 180px;
+    inset: auto;
+  }
+
+  .anchor {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    transform: none;
+    max-width: none;
+    opacity: 0.85;
+    padding: 4px 0;
+  }
+
+  .recordSlot {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: min(320px, 100%);
+    margin: 8px auto;
+    order: -1;
+  }
+
+  .microSlot {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+    margin: 4px 0 12px 22px;
+  }
+
+  .anchorShort {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-top: 64px;
+  }
+
+  .intro {
+    width: calc(100% - 2rem);
+    margin-bottom: 32px;
+  }
+
+  .headline {
+    font-size: 2.25rem;
+  }
+
+  .mapCanvas {
+    width: calc(100% - 1.5rem);
+  }
+
+  .bridge {
+    width: calc(100% - 2rem);
+    grid-template-columns: 16px 1fr;
+  }
+}
