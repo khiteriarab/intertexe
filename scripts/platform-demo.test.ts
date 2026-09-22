@@ -250,6 +250,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(governed, /to product intelligence\./);
     assert.match(governed, /demo-governed-workspace\.png/);
     assert.match(governed, /governed-opener-head/);
+    assert.match(governed, /<img/);
     assert.doesNotMatch(governed, /governed-opener-wrap|governed-opener-copy/);
     assert.doesNotMatch(governed, /solutions-governed-record\.png/);
     assert.doesNotMatch(governed, /solutions-lifecycle/);
@@ -259,6 +260,7 @@ describe("Permanent 10-product demonstration catalog", () => {
     const css = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/solutions.css"), "utf8");
     assert.match(css, /\.governed-opener-head/);
     assert.match(css, /text-align:\s*center/);
+    assert.match(css, /max-height:\s*none/);
     assert.doesNotMatch(css, /grid-template-columns:\s*minmax\(0,\s*0\.34fr\)/);
 
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");

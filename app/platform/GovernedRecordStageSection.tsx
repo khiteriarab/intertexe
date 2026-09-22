@@ -1,9 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { SERIF } from "./platform-ui";
 import "./solutions/solutions.css";
 
-/** See it live hero — minimal top copy, dominant workspace graphic below. */
+/** See it live hero — minimal top copy, dominant floating workspace graphic. */
 export function GovernedRecordStageSection() {
   return (
     <section className="governed-opener" aria-labelledby="governed-record-heading">
@@ -27,14 +26,15 @@ export function GovernedRecordStageSection() {
       </div>
 
       <div className="governed-opener-visual">
-        <Image
-          src="/platform/demo-governed-workspace.png"
+        {/* Native img keeps PNG alpha reliable for the floating composition. */}
+        <img
+          src="/platform/demo-governed-workspace.png?v=float3"
           alt="INTERTEXE workspace with catalog readiness, material intelligence, traceability, and passport activity cards."
-          width={1672}
-          height={941}
+          width={2552}
+          height={1868}
           className="governed-opener-image"
-          sizes="100vw"
-          priority
+          decoding="async"
+          fetchPriority="high"
         />
       </div>
     </section>
