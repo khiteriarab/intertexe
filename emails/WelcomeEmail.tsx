@@ -15,14 +15,28 @@ import {
 
 export interface WelcomeEmailProps {
   firstName: string;
-  /** Primary CTA — App Store URL until deep links are production-ready. */
+  /**
+   * Primary CTA kept for older Loops templates that bind a single button.
+   * Prefer appDownloadUrl + chromeExtensionUrl when both are available.
+   */
   ctaUrl: string;
+  /** iOS App Store via first-party /download hop. */
+  appDownloadUrl?: string;
+  /** Chrome Web Store listing for the Fabric Scanner extension. */
+  chromeExtensionUrl?: string;
 }
 
-export default function WelcomeEmail({ firstName, ctaUrl }: WelcomeEmailProps) {
+export default function WelcomeEmail({
+  firstName,
+  ctaUrl,
+  appDownloadUrl,
+  chromeExtensionUrl,
+}: WelcomeEmailProps) {
   const greeting = firstName?.trim()
     ? `Hi ${firstName.trim()},`
     : "Hi,";
+  const iosHref = appDownloadUrl || ctaUrl;
+  const chromeHref = chromeExtensionUrl || "";
 
   return (
     <Html>
@@ -81,9 +95,15 @@ export default function WelcomeEmail({ firstName, ctaUrl }: WelcomeEmailProps) {
           </Section>
 
           <Section style={{ ...styles.section, textAlign: "center" as const, paddingTop: 8 }}>
-            <Link href={ctaUrl} style={styles.button}>
-              Open INTERTEXE
+            <Text style={styles.ctaIntro}>Get INTERTEXE on the tools you already use:</Text>
+            <Link href={iosHref} style={styles.button}>
+              Download the iOS App
             </Link>
+            {chromeHref ? (
+              <Link href={chromeHref} style={styles.buttonSecondary}>
+                Add to Chrome
+              </Link>
+            ) : null}
           </Section>
 
           <Section style={{ ...styles.section, paddingTop: 0 }}>
@@ -174,6 +194,13 @@ const styles = {
     margin: "0",
     fontWeight: "300",
   },
+  ctaIntro: {
+    fontSize: "14px",
+    color: "#666666",
+    lineHeight: "1.5",
+    margin: "0 0 20px",
+    fontWeight: "300",
+  },
   button: {
     display: "inline-block",
     backgroundColor: "#1C2B2A",
@@ -183,6 +210,19 @@ const styles = {
     textTransform: "uppercase" as const,
     padding: "16px 40px",
     textDecoration: "none",
+    margin: "0 8px 12px",
+  },
+  buttonSecondary: {
+    display: "inline-block",
+    backgroundColor: "#FFFFFF",
+    color: "#1C2B2A",
+    fontSize: "11px",
+    letterSpacing: "2px",
+    textTransform: "uppercase" as const,
+    padding: "15px 40px",
+    textDecoration: "none",
+    border: "1px solid #1C2B2A",
+    margin: "0 8px 12px",
   },
   signature: {
     fontSize: "15px",
