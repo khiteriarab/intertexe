@@ -1,16 +1,14 @@
 "use client";
 
-import { DemoFeaturedExample } from "./DemoFeaturedExample";
-import { DemoHero } from "./DemoHero";
+import { GovernedRecordStageSection } from "../GovernedRecordStageSection";
 import { DemoProductWorkflow } from "./DemoProductWorkflow";
 
-/** See it live — editorial layout with the Silk Midi Skirt record and sample passports. */
+/** See it live — governed-record stage overview, then software walkthrough. */
 export function PlatformDemoClient() {
   return (
     <>
-      <DemoHero />
+      <GovernedRecordStageSection />
       <DemoProductWorkflow />
-      <DemoFeaturedExample />
     </>
   );
 }

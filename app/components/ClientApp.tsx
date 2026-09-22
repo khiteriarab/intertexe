@@ -17,7 +17,7 @@ import { UtmCapture } from "./UtmCapture";
 import { AppDownloadPrompt } from "./AppDownloadPrompt";
 import { isPlatformHost } from "@/lib/dashboard/constants";
 
-const B2B_ROUTE_PREFIXES = ["/platform", "/partners", "/khiteri", "/dashboard"];
+const B2B_ROUTE_PREFIXES = ["/brands", "/platform", "/partners", "/khiteri", "/dashboard", "/digital-product-passport"];
 const DOCUMENT_ROUTE_PREFIXES = ["/press-kit"];
 const PASSPORT_ROUTE_PREFIX = "/p/";
 
@@ -111,7 +111,7 @@ function AppFrame({
       {showConsumerChrome ? <Analytics /> : null}
       {showConsumerChrome ? <MetaPixel /> : null}
       <div
-        className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-hidden ${
+        className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-clip ${
           minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"
         }`}
       >

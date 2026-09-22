@@ -22,7 +22,7 @@ const HERO_STAGES: HeroStage[] = [
     title: "Capture and structure product data",
     copy: "Bring together product identity, composition, supplier inputs, specifications, and manufacturing details into one structured foundation.",
     points: ["Product identity", "Materials & composition", "Supplier + factory data", "Source files & specifications"],
-    href: "/platform/demo#create",
+    href: "/brands/demo#create",
   },
   {
     id: "verify",
@@ -31,7 +31,7 @@ const HERO_STAGES: HeroStage[] = [
     title: "Find gaps before they become risk",
     copy: "Identify missing composition, incomplete traceability, unsupported claims, and supplier evidence gaps across the product record.",
     points: ["Missing composition", "Supplier evidence gaps", "Unsupported claims", "Incomplete manufacturing details"],
-    href: "/platform/demo#verify",
+    href: "/brands/demo#verify",
   },
   {
     id: "comply",
@@ -40,7 +40,7 @@ const HERO_STAGES: HeroStage[] = [
     title: "Prepare products for trust and regulation",
     copy: "Turn approved product data into a governed record ready for Digital Product Passports, regulatory requirements, and controlled transparency.",
     points: ["Digital Product Passport ready", "Traceability structure", "Regulatory requirements", "Approved evidence layer"],
-    href: "/platform/demo#comply",
+    href: "/brands/demo#comply",
   },
   {
     id: "distribute",
@@ -49,7 +49,7 @@ const HERO_STAGES: HeroStage[] = [
     title: "One record, every channel",
     copy: "Publish product data through hosted passports, branded experiences, or API so every channel works from the same governed source.",
     points: ["Hosted passport", "Brand domain", "Headless API", "One record, every channel"],
-    href: "/platform/demo#distribute",
+    href: "/brands/demo#distribute",
   },
   {
     id: "extend",
@@ -58,7 +58,7 @@ const HERO_STAGES: HeroStage[] = [
     title: "Support the product after the sale",
     copy: "Power scan-based care, repair, resale, transfer, and circular next-life experiences from the same product record.",
     points: ["Composition & origin", "Care & aftercare", "Repair guidance", "Resale & transfer"],
-    href: "/platform/demo#extend",
+    href: "/brands/demo#extend",
   },
 ];
 

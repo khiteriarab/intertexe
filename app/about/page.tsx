@@ -109,14 +109,21 @@ export default async function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row flex-wrap gap-4">
             <Link
-              href="/platform"
+              href="/brands"
               className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-foreground border-b border-foreground/30 pb-1 w-fit hover:text-muted-foreground transition-colors"
               data-testid="link-platform-brands"
             >
               Material intelligence for brands →
             </Link>
             <Link
-              href="/platform/request"
+              href="/digital-product-passport"
+              className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-foreground border-b border-foreground/30 pb-1 w-fit hover:text-muted-foreground transition-colors"
+              data-testid="link-dpp-brands"
+            >
+              Digital Product Passport software →
+            </Link>
+            <Link
+              href="/brands/request"
               className="inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-muted-foreground border-b border-border pb-1 w-fit hover:text-foreground transition-colors"
               data-testid="link-platform-request"
             >

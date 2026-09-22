@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
-import { getServerSupabase } from "../supabase-service-client";
-import { getEnterpriseServiceClient } from "./client";
+import { getConsumerSupabase } from "../supabase-service-client";
+import { getObeliskServiceClient } from "./client";
 import { CUSTOMER_ZERO_SLUG, technicalPrincipalEmail } from "./constants";
 import { getActiveIdentityLinkByHqUserId, upsertActiveIdentityLink } from "./identity-links";
 
@@ -13,7 +13,7 @@ export type ProvisionedStaffPrincipal = {
 };
 
 async function findHqAuthUserIdByEmail(email: string): Promise<string | null> {
-  const hq = getServerSupabase();
+  const hq = getConsumerSupabase();
   if (!hq) return null;
   const target = email.trim().toLowerCase();
   let page = 1;
@@ -39,9 +39,9 @@ export async function provisionStaffEnterprisePrincipal(input: {
   fullName?: string | null;
   createdBy?: string | null;
 }): Promise<ProvisionedStaffPrincipal> {
-  const hq = getServerSupabase();
-  const enterprise = getEnterpriseServiceClient();
-  if (!hq || !enterprise) throw new Error("Both HQ and Enterprise service clients are required.");
+  const hq = getConsumerSupabase();
+  const enterprise = getObeliskServiceClient();
+  if (!hq || !enterprise) throw new Error("Both HQ (consumer) and Obelisk service clients are required.");
 
   const hqEmail = input.hqEmail.trim().toLowerCase();
   const hqUserId = input.hqUserId || (await findHqAuthUserIdByEmail(hqEmail));

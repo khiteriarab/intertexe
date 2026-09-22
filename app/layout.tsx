@@ -111,6 +111,10 @@ const orgSchema = {
     "cotton clothing",
     "luxury fashion",
     "sustainable fashion",
+    "Digital Product Passport",
+    "fashion Digital Product Passport",
+    "fashion material intelligence",
+    "fashion product data platform",
   ],
 };
 
@@ -158,7 +162,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body className="w-full min-h-screen overflow-x-hidden" suppressHydrationWarning>
+      <body className="w-full min-h-screen overflow-x-clip" suppressHydrationWarning>
         <AppShell>{children}</AppShell>
         <DeferredGoogleFonts />
         <Suspense fallback={null}>

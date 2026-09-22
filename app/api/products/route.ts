@@ -7,6 +7,7 @@ import {
 } from "../../../lib/supabase-server";
 
 export const revalidate = 300;
+export const maxDuration = 15;
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get("category");
   const brandSlug = searchParams.get("brandSlug");
   const ids = searchParams.get("ids");
-  const limit = parseInt(searchParams.get("limit") || "100", 10);
+  const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "48", 10) || 48, 1), 100);
 
   try {
     if (ids) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(products, { headers: CACHE_HEADERS });
     }
     if (brandSlug) {
-      const { products } = await fetchProductsByBrand(brandSlug, { limit: 100, offset: 0 });
+      const { products } = await fetchProductsByBrand(brandSlug, { limit: Math.min(limit, 100), offset: 0 });
       return NextResponse.json(products, { headers: CACHE_HEADERS });
     }
     if (fiber) {
@@ -38,6 +39,6 @@ export async function GET(request: NextRequest) {
     const products = await fetchAllProducts(limit, 0, category || undefined);
     return NextResponse.json(products, { headers: CACHE_HEADERS });
   } catch {
-    return NextResponse.json([], { status: 500 });
+    return NextResponse.json([], { status: 500, headers: CACHE_HEADERS });
   }
 }

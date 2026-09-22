@@ -2,37 +2,61 @@
 
 .demo-editorial-hero {
   background: var(--platform-bg);
+  overflow: hidden;
+}
+
+.demo-editorial-hero-layout {
+  overflow: visible;
 }
 
 .demo-editorial-hero-art {
   position: relative;
-  overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--platform-border) 70%, transparent);
-  background: #f3efe8;
-  min-height: 280px;
-  aspect-ratio: 16 / 10;
+  overflow: visible;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+  min-height: 0;
+  aspect-ratio: auto;
+  box-shadow: none;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-hero-art {
-    min-height: 420px;
-    aspect-ratio: 16 / 11;
+    min-height: 0;
+    aspect-ratio: auto;
+    margin-right: -1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-hero-art {
+    margin-right: -2.5rem;
   }
 }
 
 .demo-editorial-hero-art-image {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* Crop to hero scan → passport → lifecycle circles from editorial mock */
-  object-position: 62% 10%;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+  object-position: center center;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-hero-art-image {
+    width: 100%;
+    max-width: none;
+    object-position: center right;
+  }
 }
 
 @media (max-width: 1023px) {
   .demo-editorial-hero-art-image {
-    object-position: 50% 8%;
+    width: 100%;
+    max-width: 36rem;
+    margin-inline: auto;
+    object-position: center center;
   }
 }
 
@@ -118,18 +142,54 @@
   background: var(--platform-bg);
 }
 
+.demo-editorial-passport-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.demo-editorial-passport-eyebrow {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
+}
+
+.demo-editorial-passport-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--platform-muted);
+}
+
 .demo-editorial-passport-grid {
   display: grid;
-  gap: 2rem;
+  gap: 1.75rem;
   align-items: start;
 }
 
 @media (min-width: 1024px) {
   .demo-editorial-passport-grid {
-    grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 0.95fr) minmax(0, 1.2fr);
-    gap: 1.75rem 2rem;
+    grid-template-columns: minmax(14rem, 0.62fr) minmax(0, 0.78fr) minmax(0, 1.55fr);
+    gap: 1.5rem 1.75rem;
     align-items: start;
   }
+}
+
+.demo-editorial-passport-caption {
+  margin: 0 0 0.65rem;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--platform-quiet);
 }
 
 .demo-editorial-passport-thumb {
@@ -176,8 +236,8 @@
 
 .demo-editorial-passport-lifestyle-image {
   width: 100%;
-  height: 100%;
-  max-height: 620px;
+  height: auto;
+  max-height: 560px;
   object-fit: cover;
   object-position: center top;
   border-radius: 0.35rem;
@@ -191,28 +251,41 @@
   transform: translateX(-50%);
   display: grid;
   place-items: center;
-  padding: 0.45rem;
+  padding: 0.4rem;
   background: #fff;
   border-radius: 0.35rem;
   box-shadow: 0 10px 28px rgba(22, 21, 19, 0.18);
 }
 
 .demo-editorial-passport-page {
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   overflow: hidden;
   border: 1px solid var(--platform-border);
   background: #f7f5f1;
-  box-shadow: 0 24px 60px rgba(22, 21, 19, 0.06);
+  box-shadow: 0 28px 70px rgba(22, 21, 19, 0.08);
 }
 
 .demo-editorial-passport-page-image {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1448 / 1006;
+  min-height: 420px;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   object-position: top left;
   background: #f7f5f1;
+}
+
+@media (min-width: 1024px) {
+  .demo-editorial-passport-page-image {
+    min-height: 520px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .demo-editorial-passport-page-image {
+    min-height: 580px;
+  }
 }
 
 .demo-editorial-passport-card {
@@ -714,7 +787,330 @@
   }
 }
 
-/* Scroll workflow chart — sticky rail + product panels */
+/* Follow the Record — Attio-style sticky rail + scroll-driven stage pane */
+
+.demo-flow {
+  --flow-bg: #fcfbf8;
+  --flow-ink: #1f1f1c;
+  --flow-muted: #6b6760;
+  --flow-line: #e8e4dc;
+  --flow-gold: #c4a574;
+
+  background: var(--flow-bg);
+  color: var(--flow-ink);
+  border-top: 1px solid var(--flow-line);
+  padding: 0;
+}
+
+.demo-flow-intro {
+  width: min(1240px, calc(100% - 3.5rem));
+  margin: 0 auto;
+  padding: 3.5rem 0 2rem;
+}
+
+.demo-flow-eyebrow {
+  margin: 0 0 0.75rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--flow-muted);
+}
+
+.demo-flow-heading {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(1.85rem, 3.4vw, 2.55rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--flow-ink);
+}
+
+.demo-flow-lede {
+  margin: 0.9rem 0 0;
+  max-width: 36rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--flow-muted);
+}
+
+/* Tall pin region — one full viewport per stage; sticky until last stage releases */
+.demo-flow-pin {
+  --flow-steps: 6;
+  position: relative;
+  height: calc(var(--flow-steps) * 100vh);
+}
+
+.demo-flow-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  padding: 1.25rem 0 1.75rem;
+  box-sizing: border-box;
+  background: var(--flow-bg);
+}
+
+.demo-flow-markers {
+  display: none;
+}
+
+.demo-flow-marker {
+  display: none;
+}
+
+.demo-flow-layout {
+  width: min(1360px, calc(100% - 2.5rem));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  height: 100%;
+  align-items: stretch;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-layout {
+    grid-template-columns: minmax(9.5rem, 11.5rem) minmax(0, 1fr);
+    gap: 2.25rem;
+  }
+}
+
+.demo-flow-rail {
+  /* Nested sticky not needed — parent is already sticky */
+  align-self: center;
+}
+
+.demo-flow-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-list {
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    border-left: 1px solid var(--flow-line);
+    padding-bottom: 0;
+  }
+}
+
+.demo-flow-rail-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  width: auto;
+  padding: 0.55rem 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+  color: #a8a49c;
+  transition: color 0.2s ease;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-btn {
+    width: 100%;
+    padding: 0.72rem 0 0.72rem 1.15rem;
+    white-space: normal;
+  }
+}
+
+.demo-flow-rail-btn:hover {
+  color: var(--flow-ink);
+}
+
+.demo-flow-rail-btn.is-active {
+  color: var(--flow-ink);
+}
+
+.demo-flow-rail-indicator {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .demo-flow-rail-indicator {
+    display: block;
+    width: 2px;
+    margin: 0.15rem 0 0.15rem -1.15rem;
+    background: transparent;
+    border-radius: 1px;
+    flex-shrink: 0;
+    transition: background 0.2s ease;
+  }
+
+  .demo-flow-rail-btn.is-active .demo-flow-rail-indicator {
+    background: var(--flow-gold);
+  }
+}
+
+.demo-flow-rail-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.demo-flow-rail-btn.is-active .demo-flow-rail-label {
+  font-weight: 500;
+}
+
+.demo-flow-rail-num {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.demo-flow-stage {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-flow-stage-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Dominant stage visual — Attio-style open pane */
+.demo-flow-visual {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid var(--flow-line);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(31, 31, 28, 0.05);
+}
+
+.demo-flow-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  background: #fff;
+}
+
+.demo-flow-copy {
+  flex: 0 0 auto;
+  padding: 1rem 0 0;
+  max-width: 40rem;
+}
+
+.demo-flow-meta {
+  margin: 0 0 0.4rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--flow-muted);
+}
+
+.demo-flow-title {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--flow-ink);
+}
+
+.demo-flow-body {
+  margin: 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--flow-muted);
+}
+
+@media (max-width: 959px) {
+  .demo-flow-intro,
+  .demo-flow-layout {
+    width: calc(100% - 1.5rem);
+  }
+
+  .demo-flow-pin {
+    height: auto;
+  }
+
+  .demo-flow-sticky {
+    position: relative;
+    top: auto;
+    height: auto;
+    padding-bottom: 2.5rem;
+  }
+
+  .demo-flow-markers {
+    display: none;
+  }
+
+  .demo-flow-visual {
+    min-height: 52vw;
+    max-height: none;
+    aspect-ratio: 16 / 10;
+  }
+
+  .demo-flow-visual img {
+    object-fit: contain;
+    background: #fff;
+  }
+
+  .demo-flow-rail-btn.is-active {
+    background: rgba(196, 165, 116, 0.1);
+    border-radius: 2px;
+  }
+
+  .demo-flow {
+    padding-bottom: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-flow-pin {
+    height: auto;
+  }
+
+  .demo-flow-sticky {
+    position: relative;
+    top: auto;
+    height: auto;
+  }
+
+  .demo-flow-markers {
+    display: none;
+  }
+}
+
+/* Legacy scroll workflow chart — sticky rail + product panels */
 .demo-workflow-chart {
   background: var(--platform-bg);
 }

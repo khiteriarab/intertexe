@@ -431,7 +431,7 @@ function affiliateHref(alt: CaptureAlt): string | null {
     return `/leaving?brand=${brand}&url=${encodeURIComponent(tracked)}`;
   }
   if (alt.id) return `/product/${encodeURIComponent(alt.id)}`;
-  if (alt.brand_slug) return `/brands/${encodeURIComponent(alt.brand_slug)}`;
+  if (alt.brand_slug) return `/designers/${encodeURIComponent(alt.brand_slug)}`;
   return null;
 }
 

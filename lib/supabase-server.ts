@@ -70,8 +70,8 @@ export type CatalogFetchOpts = {
   liveRowCap?: number;
 };
 
-import { getServerSupabase } from "./supabase-service-client";
-export { getServerSupabase };
+import { getServerSupabase, getConsumerSupabase } from "./supabase-service-client";
+export { getServerSupabase, getConsumerSupabase };
 
 export interface Designer {
   id: string;
@@ -1578,28 +1578,21 @@ export async function fetchProductsByBrand(
 export async function fetchAllProducts(limit = 200, offset = 0, category?: string): Promise<Product[]> {
   const supabase = getServerSupabase();
   if (!supabase) return [];
-  let rows =
-    (await rpcCatalogList(supabase, {
-      preferred: "us",
-      fallback: "us",
-      fiber: null,
-      category: category || null,
-      brandSlug: null,
-      search: null,
-      minNfp: 80,
-      limit,
-      offset,
-    })) || [];
-
-  if (rows.length === 0) {
-    let fb = liveProductsApparelFrom(supabase).select("*").gte("natural_fiber_percent", 80);
-    if (category) fb = applyCategoryFilter(fb, category);
-    const { data } = await fb
-      .order("natural_fiber_percent", { ascending: false })
-      .range(offset, offset + limit - 1);
-    rows = dedupeLiveApparelRows(data || [], "us", "us");
+  // Unfiltered catalog_list RPC can hang under load (no fiber/brand predicate).
+  // Callers of this helper only need a small page of products — use the direct
+  // live apparel path so /api/products?limit=N never stalls the site.
+  const safeLimit = Math.min(Math.max(Number(limit) || 48, 1), 100);
+  const safeOffset = Math.max(Number(offset) || 0, 0);
+  let fb = liveProductsApparelFrom(supabase).select("*").gte("natural_fiber_percent", 80);
+  if (category) fb = applyCategoryFilter(fb, category);
+  const { data, error } = await fb
+    .order("natural_fiber_percent", { ascending: false })
+    .range(safeOffset, safeOffset + safeLimit - 1);
+  if (error) {
+    console.warn("fetchAllProducts live apparel query failed:", error.message);
+    return [];
   }
-
+  const rows = dedupeLiveApparelRows(data || [], "us", "us");
   return rows.filter(isClothingProduct).filter(isNotMensProduct).map(mapProductRow);
 }
 

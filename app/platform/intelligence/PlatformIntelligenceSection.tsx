@@ -15,8 +15,8 @@ export function PlatformIntelligenceSection() {
             readiness to surface opportunities, risks and recommended actions.
           </Body>
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
-            <PrimaryLink href="/platform/demo">See it in action →</PrimaryLink>
-            <SecondaryLink href="/platform/demo#benchmark">Explore materials →</SecondaryLink>
+            <PrimaryLink href="/brands/demo">See it in action →</PrimaryLink>
+            <SecondaryLink href="/brands/demo#benchmark">Explore materials →</SecondaryLink>
           </div>
         </div>
         <PlatformIntelligenceLayer />

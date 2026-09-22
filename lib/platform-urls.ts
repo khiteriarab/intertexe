@@ -2,8 +2,10 @@
 
 const DEFAULT_PLATFORM_ORIGIN = "https://platform.intertexe.com";
 
-/** Public B2B sales page (always on the consumer site). */
-export const PLATFORM_SALES_PATH = "/platform";
+export const PLATFORM_SALES_PATH = "/brands";
+
+/** @deprecated Use PLATFORM_SALES_PATH — /platform is a legacy alias. */
+export const PLATFORM_SALES_LEGACY_PATH = "/platform";
 
 /**
  * Customer-facing enterprise origin.

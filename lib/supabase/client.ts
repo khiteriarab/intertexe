@@ -2,7 +2,8 @@ import { createClient as createSupabaseClient, type SupabaseClient } from "@supa
 
 let browserClient: SupabaseClient | null = null;
 
-export function createClientComponentClient() {
+/** Browser client for consumer/HQ Auth (intertexe). Not for obelisk SaaS. */
+export function createConsumerBrowserClient() {
   if (browserClient) return browserClient;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -18,4 +19,9 @@ export function createClientComponentClient() {
   }
   browserClient = createSupabaseClient(url, key);
   return browserClient;
+}
+
+/** @deprecated Prefer createConsumerBrowserClient */
+export function createClientComponentClient() {
+  return createConsumerBrowserClient();
 }

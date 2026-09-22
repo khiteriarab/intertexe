@@ -2,7 +2,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let cachedAuthClient: SupabaseClient | null = null;
 
-export function getSupabaseAnonAuthClient() {
+/** Consumer/HQ anon auth client (intertexe). Not for obelisk organization operators. */
+export function getConsumerAnonAuthClient() {
   if (cachedAuthClient) return cachedAuthClient;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -17,17 +18,27 @@ export function getSupabaseAnonAuthClient() {
   return cachedAuthClient;
 }
 
-/** Resolve Supabase Auth user id from Bearer access token (shared web + iOS). */
-export async function getSupabaseAuthUserId(accessToken: string): Promise<string | null> {
-  const user = await getSupabaseAuthUser(accessToken);
+/** @deprecated Prefer getConsumerAnonAuthClient */
+export function getSupabaseAnonAuthClient() {
+  return getConsumerAnonAuthClient();
+}
+
+/** Resolve consumer Auth user id from Bearer access token (shared web + iOS). */
+export async function getConsumerAuthUserId(accessToken: string): Promise<string | null> {
+  const user = await getConsumerAuthUser(accessToken);
   return user?.id ?? null;
 }
 
-/** Resolve Supabase Auth user (id + email) from Bearer access token. */
-export async function getSupabaseAuthUser(
+/** @deprecated Prefer getConsumerAuthUserId */
+export async function getSupabaseAuthUserId(accessToken: string): Promise<string | null> {
+  return getConsumerAuthUserId(accessToken);
+}
+
+/** Resolve consumer Auth user (id + email) from Bearer access token. */
+export async function getConsumerAuthUser(
   accessToken: string
 ): Promise<{ id: string; email: string | null; firstName: string | null } | null> {
-  const client = getSupabaseAnonAuthClient();
+  const client = getConsumerAnonAuthClient();
   if (!client || !accessToken) return null;
   const { data, error } = await client.auth.getUser(accessToken);
   if (error || !data.user?.id) return null;
@@ -42,4 +53,11 @@ export async function getSupabaseAuthUser(
     email: data.user.email ? data.user.email.trim().toLowerCase() : null,
     firstName,
   };
+}
+
+/** @deprecated Prefer getConsumerAuthUser */
+export async function getSupabaseAuthUser(
+  accessToken: string
+): Promise<{ id: string; email: string | null; firstName: string | null } | null> {
+  return getConsumerAuthUser(accessToken);
 }

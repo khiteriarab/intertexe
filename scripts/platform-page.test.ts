@@ -35,7 +35,7 @@ describe("Platform B2B sales page", () => {
     assert.match(homeSections, /PlatformBrandShowcaseHero/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /See it live/i);
-    assert.match(showcaseHero, /\/platform\/demo/);
+    assert.match(showcaseHero, /\/brands\/demo/);
     assert.ok(showcaseHero.indexOf("platform-showcase-hero-sub") < showcaseHero.indexOf("platform-showcase-hero-cta"));
     const showcaseCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-tokens.css"), "utf8");
     assert.match(showcaseCss, /@media \(max-width: 767px\)/);
@@ -62,48 +62,74 @@ describe("Platform B2B sales page", () => {
   it("uses a focused home hierarchy without redundant lifecycle or pricing blocks", () => {
     assert.match(home, /SalesHeroSection/);
     assert.match(homeSections, /PlatformBrandShowcaseHero/);
+    assert.match(home, /HomepageHeroLifecycleBridge/);
     assert.match(home, /PlatformHowItWorksSection/);
+    assert.match(
+      home,
+      /SalesHeroSection[\s\S]*PlatformHowItWorksSection[\s\S]*HomepageHeroLifecycleBridge[\s\S]*HomepageLifecycleSection/,
+    );
     assert.doesNotMatch(home, /PlatformFabricCinema/);
     const saasCss = fs.readFileSync(path.join(process.cwd(), "app/platform/platform-saas.css"), "utf8");
     assert.match(saasCss, /--platform-bg: #faf9f6/);
     assert.match(chrome, /platform-saas\.css/);
     assert.match(chrome, /platform-luxury\.css/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
-    const processVisual = fs.readFileSync(
-      path.join(process.cwd(), "app/platform/b2b-visuals/WhatItIsProcessVisual.tsx"),
+    assert.match(home, /HomepageLifecycleSection/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/hero-lifecycle-bridge.png")));
+    assert.doesNotMatch(howItWorks, /ProductLifecycleSystem/);
+    assert.doesNotMatch(howItWorks, /ProductLifecycleMap/);
+    assert.doesNotMatch(howItWorks, /HomepageLifecycleSection/);
+    const lifecycleMap = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/HomepageLifecycleSection.tsx"), "utf8");
+    const lifecycleData = fs.readFileSync(path.join(process.cwd(), "components/home/lifecycle/lifecycle-data.ts"), "utf8");
+    const lifecycleMapCss = fs.readFileSync(
+      path.join(process.cwd(), "components/home/lifecycle/HomepageLifecycleSection.module.css"),
       "utf8",
     );
-    assert.match(processVisual, /Create/);
-    assert.match(processVisual, /Verify/);
-    assert.match(processVisual, /Comply/);
-    assert.match(processVisual, /Distribute/);
-    assert.match(processVisual, /Extend/);
-    assert.match(processVisual, /Discover/);
-    assert.match(processVisual, /platform-lifecycle-journey/);
-    assert.match(processVisual, /Input/);
-    assert.match(processVisual, /Validation/);
-    assert.match(processVisual, /Compliance/);
-    assert.match(processVisual, /Delivery/);
-    assert.match(processVisual, /Circularity/);
+    const lifecycleVisuals = fs.readFileSync(
+      path.join(process.cwd(), "components/home/lifecycle/LifecycleStageVisuals.tsx"),
+      "utf8",
+    );
+    assert.match(lifecycleData, /Source & Make/);
+    assert.match(lifecycleData, /Clean & Connect/);
+    assert.match(lifecycleData, /Trace & Prove/);
+    assert.match(lifecycleData, /Check & Prepare/);
+    assert.match(lifecycleData, /Passport & Publish/);
+    assert.match(lifecycleData, /Use & Learn/);
+    assert.match(lifecycleData, /Repair & Recirculate/);
+    assert.equal((lifecycleData.match(/number: "0[1-7]"/g) || []).length, 7);
+    assert.doesNotMatch(lifecycleData, /Product Intelligence/);
+    assert.doesNotMatch(lifecycleData, /Connected Product/);
+    assert.match(lifecycleMap, /LIFECYCLE_STAGES/);
+    assert.match(lifecycleData, /From material/);
+    assert.match(lifecycleMap, /LIFECYCLE_HEADER/);
+    assert.match(lifecycleMapCss, /--hlc-bg/);
+    assert.match(lifecycleMapCss, /\.spine/);
+    assert.doesNotMatch(lifecycleMapCss, /--canvas:\s*#111514/);
+    assert.doesNotMatch(lifecycleMapCss, /\.mapFrame/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "components/home/lifecycle/LifecycleStageVisuals.tsx")));
+    assert.match(lifecycleVisuals, /SourceMakeVisual/);
+    assert.match(lifecycleVisuals, /RepairRecirculateVisual/);
+    assert.match(lifecycleData, /See it live/i);
+    assert.match(lifecycleData, /See a live product/i);
+    assert.doesNotMatch(home, /LifecycleOverviewSection/);
+    assert.doesNotMatch(home, /DemoProductWorkflow/);
+    assert.doesNotMatch(howItWorks, /WhatItIsProcessVisual/);
+    assert.doesNotMatch(howItWorks, /From raw product data to intelligent action/);
+    assert.match(howItWorks, /Three layers\. One governed source of truth\./);
     assert.doesNotMatch(howItWorks, /PlatformIntelligenceLayer/);
     assert.doesNotMatch(howItWorks, /platform-product-story-flow-line/);
     assert.doesNotMatch(howItWorks, /platform-product-story-bridge/);
     assert.doesNotMatch(howItWorks, /PlatformCapabilityNav/);
-    assert.match(howItWorks, /From raw product data to intelligent action/);
     assert.doesNotMatch(howItWorks, /understand-ingest-laptop\.jpg/);
     assert.doesNotMatch(howItWorks, /platform-editorial-step-grid/);
     assert.doesNotMatch(home, /PlatformWorkflowDeepDive/);
     assert.doesNotMatch(home, /PlatformScrollShowcase/);
     assert.doesNotMatch(home, /SalesIntelligenceSection/);
-    assert.match(home, /SalesDeliverySection/);
+    assert.doesNotMatch(home, /SalesDeliverySection/);
     assert.match(home, /sales-home-sections/);
     assert.doesNotMatch(home, /from \".\/sales-sections\"/);
     assert.doesNotMatch(home, /SalesPlatformBreadthSection/);
-    assert.match(howItWorks, /PlatformProductPillarsVisual/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
-    assert.match(howItWorks, /Three layers\. One governed source of truth\./);
     assert.doesNotMatch(home, /PlatformProofSection/);
-    assert.match(home, /PlatformFaq/);
+    assert.doesNotMatch(home, /PlatformFaq/);
     assert.doesNotMatch(home, /SalesStartFreeSection/);
     assert.match(home, /PlatformCircularWardrobeBanner/);
     assert.match(requestPage, /platform-request-page/);
@@ -120,20 +146,24 @@ describe("Platform B2B sales page", () => {
 
   it("routes live QR flow and API detail to dedicated pages", () => {
     assert.match(demo, /PlatformDemoClient/);
-    assert.match(demoClient, /DemoHero/);
+    assert.match(demoClient, /GovernedRecordStageSection/);
+    assert.doesNotMatch(demoClient, /ProductLifecycleSystem/);
+    assert.doesNotMatch(demoClient, /ProductLifecycleSection/);
+    assert.doesNotMatch(demoClient, /DemoHero/);
     assert.doesNotMatch(demoClient, /DemoIntertexeFlow/);
     assert.match(demoClient, /DemoProductWorkflow/);
-    assert.match(demoClient, /DemoFeaturedExample/);
+    assert.doesNotMatch(demoClient, /DemoFeaturedExample/);
     assert.doesNotMatch(demoClient, /DemoClosingQuote/);
     assert.doesNotMatch(demoClient, /DemoBookSection/);
-    const demoHero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
-    assert.match(demoHero, /demo-hero-scanner\.jpg/);
+    assert.match(demo, /SolutionsClose/);
+    assert.match(demo, /demo_close/);
     assert.match(demo, /See INTERTEXE live/i);
     const banner = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformCircularWardrobeBanner.tsx"), "utf8");
     assert.match(banner, /Request a demo/);
-    assert.match(banner, /\/platform\/request/);
-    assert.match(banner, /Ebook/);
+    assert.match(banner, /\/brands\/request/);
+    assert.match(banner, /Guide/);
     assert.match(banner, /platform-ebook/);
+    assert.doesNotMatch(banner, /<em>Ebook<\/em>/);
     assert.doesNotMatch(banner, /Build the record your product deserves/);
     const showcaseHero = fs.readFileSync(path.join(process.cwd(), "app/platform/PlatformBrandShowcaseHero.tsx"), "utf8");
     assert.match(showcaseHero, /flipMode="composition"/);
@@ -154,8 +184,10 @@ describe("Platform B2B sales page", () => {
     assert.match(hero, /Distribute/);
     assert.match(hero, /Extend/);
     assert.doesNotMatch(hero, /Start with 10 products/);
-    assert.match(howItWorks, /Discover/);
-    assert.match(howItWorks, /WhatItIsProcessVisual/);
+    assert.match(home, /HomepageLifecycleSection/);
+    assert.doesNotMatch(howItWorks, /ProductLifecycleSystem/);
+    assert.doesNotMatch(howItWorks, /ProductLifecycleMap/);
+    assert.doesNotMatch(howItWorks, /HomepageLifecycleSection/);
     assert.doesNotMatch(howItWorks, /Start with 10 products/);
     assert.match(sections, /Start with 10 products/);
     assert.match(homeSections, /PlatformBrandShowcaseHero/);
@@ -164,7 +196,7 @@ describe("Platform B2B sales page", () => {
     assert.match(nav, /Request a demo/);
     assert.match(nav, /Sign in/);
     assert.match(nav, /Solutions/);
-    assert.match(nav, /\/platform\/solutions/);
+    assert.match(nav, /marketingPath\("solutions"\)|\/brands\/solutions/);
     assert.doesNotMatch(nav, /\/platform\/discover/);
     assert.match(chrome, /getEnterpriseLoginUrl/);
     assert.match(login, /getEnterpriseLoginUrl/);
@@ -213,11 +245,14 @@ describe("Platform B2B sales page", () => {
     assert.match(page, /headless API/i);
   });
 
-  it("keeps detailed comparison off the home page but includes FAQ", () => {
+  it("keeps detailed comparison and FAQ off the home page; Solutions has no FAQ block", () => {
+    const solutionsPage = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/page.tsx"), "utf8");
     assert.match(faq, /more transparent industry/i);
     assert.match(faq, /does not fabricate product data/i);
     assert.match(faq, /headless API/i);
-    assert.match(home, /PlatformFaq/);
+    assert.doesNotMatch(home, /PlatformFaq/);
+    assert.doesNotMatch(solutionsPage, /PlatformFaq/);
+    assert.doesNotMatch(solutionsPage, /SalesDeliverySection/);
     assert.doesNotMatch(home, /ComparisonView/);
     assert.match(page, /PlatformHome/);
     assert.match(page, /dynamic = "force-static"/);
@@ -336,8 +371,8 @@ describe("Platform B2B sales page", () => {
     assert.match(pillarsVisual, /symbols\/story-carrier-qr-nfc\.png/);
     assert.match(pillarsVisual, /symbols\/story-delivery-channels\.png/);
     assert.doesNotMatch(pillarsVisual, /platform-product-pillar-visual/);
-    assert.match(pillarsVisual, /\/platform\/demo#journey/);
-    assert.match(pillarsVisual, /\/platform#delivery/);
+    assert.match(pillarsVisual, /\/brands\/demo#journey/);
+    assert.match(pillarsVisual, /\/brands#delivery/);
     assert.match(visuals, /Discover · Scan · Compare/);
     assert.match(workspaceExplorer, /lifecycleModuleCatalogByGroup/);
   });

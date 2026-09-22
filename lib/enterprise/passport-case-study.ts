@@ -1,7 +1,7 @@
 import { getConsumerSiteUrl } from "../platform-urls";
 
 /**
- * Customer Zero ITX-LIVE-07 — Ganni cotton poplin from the editor-pick clothing set.
+ * Customer Zero ITX-LIVE-07 — Ganni cotton poplin from the live HQ catalog.
  */
 export const PASSPORT_CASE_STUDY = {
   styleCode: "ITX-LIVE-07",

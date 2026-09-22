@@ -24,9 +24,9 @@ describe("public passport content — data integrity", () => {
   it("resolves pilot product image from fixture", () => {
     const content = buildConsumerPassportContent({
       styleCode: "ITX-LIVE-08",
-      sku: "P01136600",
+      sku: "P01060555-4",
     });
-    assert.ok(content.imageUrl?.includes("toteme-leather-coat"));
+    assert.ok(content.imageUrl?.includes("itx-live-08"));
   });
 
   it("exposes sell action in next life when passport is valid", () => {
@@ -39,8 +39,8 @@ describe("public passport content — data integrity", () => {
       publicId: "itx_test",
       snapshotFields: [{ key: "composition", value: "70% Wool, 30% Cashmere" }],
       traceNodes: [
-        { tier_label: "Raw material", facility_name: "European flax cultivation" },
-        { tier_label: "Manufacturing", facility_name: "Shirt assembly", country_code: "PT" },
+        { tier_label: "Raw material", facility_name: "Wool and cashmere fiber" },
+        { tier_label: "Manufacturing", facility_name: "Knitwear assembly", country_code: "PT" },
       ],
     });
     const sell = content.nextLife.find((item) => item.title === "Sell this item");

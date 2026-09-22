@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { marketingCanonical } from "../../../lib/enterprise-marketing/paths";
 import Link from "next/link";
 import { PILOT_PRODUCT_LIMIT, saasTierByKey } from "../../../lib/enterprise/pricing";
 import {
@@ -16,6 +17,7 @@ import { SERIF } from "../platform-ui";
 
 export const metadata: Metadata = {
   title: "Request a demo",
+  alternates: { canonical: marketingCanonical("request") },
   description: `Request a demo of INTERTEXE — start with ${PILOT_PRODUCT_LIMIT} products implemented free, or explore Professional, Platform, and Enterprise after qualification.`,
 };
 
@@ -139,7 +141,7 @@ export default async function PlatformRequestPage({
               </>
             ) : null}
 
-            <Link href="/platform/demo" className="platform-request-demo-link">
+            <Link href="/brands/demo" className="platform-request-demo-link">
               Prefer to explore first? See it live →
             </Link>
           </div>

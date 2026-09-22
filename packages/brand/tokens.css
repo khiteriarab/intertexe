@@ -1,0 +1,23 @@
+/**
+ * Canonical INTERTEXE brand primitives — SaaS + enterprise marketing.
+ * Consumer commerce UI should not import this for page chrome.
+ */
+:root {
+  --itx-serif: ui-serif, Georgia, "Playfair Display", "Iowan Old Style", Palatino, "Times New Roman", serif;
+  --itx-sans: ui-sans-serif, system-ui, "DM Sans", sans-serif;
+
+  --itx-ink: #1c1915;
+  --itx-ink-soft: #2c2620;
+  --itx-muted: #6f6a63;
+  --itx-quiet: #9c9488;
+  --itx-border: #e8e0d4;
+
+  --itx-gold: #c9a962;
+  --itx-accent: #c4a574;
+  --itx-accent-soft: #e8dcc8;
+  --itx-accent-muted: #d9c9a8;
+  --itx-highlight: #f0ebe3;
+
+  --itx-canvas: #ffffff;
+  --itx-surface: #faf8f4;
+}

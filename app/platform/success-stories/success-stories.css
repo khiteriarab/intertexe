@@ -1,0 +1,110 @@
+/* Success Stories — coming soon (Winter 2026) + reserved story styles. */
+
+.ss-page {
+  background: #ffffff;
+  color: var(--platform-ink, #111);
+}
+
+.ss-coming {
+  padding: 5rem 0 7rem;
+}
+
+@media (min-width: 900px) {
+  .ss-coming {
+    padding: 7rem 0 9rem;
+  }
+}
+
+.ss-coming-panel {
+  max-width: 40rem;
+}
+
+.ss-coming-eyebrow {
+  margin: 0 0 1rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--platform-quiet, #5a564f);
+}
+
+.ss-coming-title {
+  margin: 0;
+  font-size: clamp(2.2rem, 4.5vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--platform-ink, #111);
+}
+
+.ss-coming-title em {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.ss-coming-lede {
+  margin: 1.25rem 0 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--platform-muted, #3d3a36);
+}
+
+.ss-coming-invite {
+  margin: 1.5rem 0 0;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--platform-ink, #111);
+}
+
+.ss-coming-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.25rem;
+  margin-top: 2rem;
+}
+
+.ss-coming-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 48px;
+  padding: 0.9rem 1.5rem;
+  background: #101312;
+  color: #fff;
+  border-radius: 2px;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.ss-coming-primary:hover {
+  background: #000;
+}
+
+.ss-coming-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0.9rem 0.25rem;
+  font-family: var(--itx-sans, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--platform-ink, #111);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(15, 20, 18, 0.3);
+}
+
+.ss-coming-secondary:hover {
+  border-color: var(--platform-gold, #c9a962);
+  color: var(--platform-gold, #c9a962);
+}

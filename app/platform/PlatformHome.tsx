@@ -1,20 +1,21 @@
-import { SalesDeliverySection, SalesHeroSection } from "./sales-home-sections";
-import { PlatformFaq } from "./PlatformFaq";
+import { SalesHeroSection } from "./sales-home-sections";
 import { PlatformCircularWardrobeBanner } from "./PlatformCircularWardrobeBanner";
 import { PlatformHowItWorksSection } from "./PlatformHowItWorksSection";
+import { HomepageHeroLifecycleBridge } from "../../components/home/HomepageHeroLifecycleBridge";
+import { HomepageLifecycleSection } from "../../components/home/lifecycle/HomepageLifecycleSection";
 
 /**
- * Public B2B platform overview — intertexe.com/platform
- * Single conversion journey: hero → product story → delivery → FAQ → CTA.
- * Live tour on /platform/demo. API contract at /api/openapi.json.
+ * Public B2B platform overview — intertexe.com/platform (/brands)
+ * Journey: hero + stats → One Workspace pillars → cinematic bridge → PRODUCT LIFECYCLE → guide.
+ * Attio Follow the Record rail lives on /brands/demo only.
  */
 export function PlatformHome() {
   return (
     <div className="platform-home">
       <SalesHeroSection />
       <PlatformHowItWorksSection />
-      <SalesDeliverySection />
-      <PlatformFaq />
+      <HomepageHeroLifecycleBridge />
+      <HomepageLifecycleSection />
       <PlatformCircularWardrobeBanner />
     </div>
   );

@@ -25,8 +25,8 @@ export function DemoPilotCta() {
             workflow with your own assortment.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <PrimaryLink href="/platform/request?intent=snapshot&cta=demo_pilot">Start with 10 products</PrimaryLink>
-            <SecondaryLink href="/platform/request?intent=saas&cta=demo_pilot">Talk to us</SecondaryLink>
+            <PrimaryLink href="/brands/request?intent=snapshot&cta=demo_pilot">Start with 10 products</PrimaryLink>
+            <SecondaryLink href="/brands/request?intent=saas&cta=demo_pilot">Talk to us</SecondaryLink>
           </div>
         </div>
       </div>

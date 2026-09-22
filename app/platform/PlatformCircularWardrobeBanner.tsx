@@ -54,7 +54,7 @@ export function PlatformCircularWardrobeBanner() {
         <div className="platform-ebook-copy">
           <p className="platform-ebook-eyebrow">INTERTEXE platform</p>
           <h2 id="platform-ebook-title" className="platform-ebook-title" style={SERIF}>
-            <em>Ebook</em> download
+            <em>Guide</em> download
           </h2>
           <p className="platform-ebook-sub">
             A practical guide to using INTERTEXE software — from governed product records to Digital Product
@@ -65,10 +65,10 @@ export function PlatformCircularWardrobeBanner() {
         {state === "done" ? (
           <div className="platform-ebook-success">
             <p>Your guide is ready. If it did not open, use the link below.</p>
-            <a href={PLATFORM_EBOOK_HREF} className="platform-ebook-submit" download>
-              Download the guide
+            <a href={PLATFORM_EBOOK_HREF} className="platform-ebook-submit" target="_blank" rel="noopener noreferrer">
+              Open the guide
             </a>
-            <Link href="/platform/request?intent=snapshot&cta=ebook_demo" className="platform-ebook-demo">
+            <Link href="/brands/request?intent=snapshot&cta=ebook_demo" className="platform-ebook-demo">
               Request a demo →
             </Link>
           </div>
@@ -124,7 +124,7 @@ export function PlatformCircularWardrobeBanner() {
               {state === "submitting" ? "Preparing…" : "Download the guide"}
             </button>
 
-            <Link href="/platform/request?intent=snapshot&cta=request_demo" className="platform-ebook-demo">
+            <Link href="/brands/request?intent=snapshot&cta=request_demo" className="platform-ebook-demo">
               Request a demo →
             </Link>
           </form>

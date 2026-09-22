@@ -11,21 +11,21 @@ describe("passport integrity gate", () => {
       brand: "Róhe",
       category: "Knitwear",
       composition: "70% Wool, 30% Cashmere",
-      imageUrl: "/khiteri/rohe-turtleneck.jpg",
+      imageUrl: "/khiteri/live/itx-live-01.jpg",
       traceNodes: [
         { tier_label: "Raw material", facility_name: "Wool and cashmere fiber" },
-        { tier_label: "Manufacturing", facility_name: "Knit assembly" },
+        { tier_label: "Manufacturing", facility_name: "Knitwear assembly" },
       ],
       journeyStages: [
-        { title: "Wool and cashmere fiber", detail: "Natural knit yarns" },
-        { title: "Knit assembly", detail: "Portugal" },
+        { title: "Wool and cashmere fiber", detail: "Natural fiber blend" },
+        { title: "Knitwear assembly", detail: "Portugal" },
       ],
     });
     assert.equal(result.status, "valid");
     assert.equal(result.resaleEligible, true);
   });
 
-  it("blocks silk journey on linen product", () => {
+  it("blocks silk journey on wool product", () => {
     const result = auditPassportIntegrity({
       styleCode: "ITX-LIVE-01",
       sku: "P01103203",

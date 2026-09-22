@@ -53,7 +53,7 @@ export function PlatformProofSection() {
                 </div>
               ))}
             </dl>
-            <SecondaryLink href="/platform/demo">See it live</SecondaryLink>
+            <SecondaryLink href="/brands/demo">See it live</SecondaryLink>
           </div>
         </div>
       </div>

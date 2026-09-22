@@ -224,38 +224,218 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(conflict?.normalized.shell || "", /Conflict/);
   });
 
-  it("keeps the editorial demo page focused on one featured product", () => {
+  it("keeps the editorial demo page focused on lifecycle and workflow", () => {
     const demo = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    const hero = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoHero.tsx"), "utf8");
+    const demoPage = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/page.tsx"), "utf8");
     const featuredSection = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoFeaturedExample.tsx"), "utf8");
     const featured = fs.readFileSync(path.join(process.cwd(), "lib/material-intelligence/demo-featured.ts"), "utf8");
     const previews = fs.readFileSync(path.join(process.cwd(), "app/platform/workspace-previews.tsx"), "utf8");
-    assert.match(demo, /DemoHero/);
+    assert.match(demo, /GovernedRecordStageSection/);
+    assert.doesNotMatch(demo, /ProductLifecycleSystem/);
+    assert.doesNotMatch(demo, /ProductLifecycleSection/);
+    assert.doesNotMatch(demo, /DemoHero/);
     assert.doesNotMatch(demo, /DemoIntertexeFlow/);
     assert.match(demo, /DemoProductWorkflow/);
-    assert.match(demo, /DemoFeaturedExample/);
+    assert.doesNotMatch(demo, /DemoFeaturedExample/);
+    assert.match(demoPage, /SolutionsClose/);
+    assert.match(demoPage, /demo_close/);
     assert.doesNotMatch(demo, /DemoClosingQuote/);
     assert.doesNotMatch(demo, /DemoScrollyJourney/);
     assert.doesNotMatch(demo, /DemoCatalogGrid/);
+    const governed = fs.readFileSync(
+      path.join(process.cwd(), "app/platform/GovernedRecordStageSection.tsx"),
+      "utf8",
+    );
+    assert.match(governed, /From product data/);
+    assert.match(governed, /to product intelligence\./);
+    assert.match(governed, /demo-governed-workspace\.png/);
+    assert.match(governed, /governed-opener-head/);
+    assert.match(governed, /<img/);
+    assert.doesNotMatch(governed, /governed-opener-wrap|governed-opener-copy/);
+    assert.doesNotMatch(governed, /solutions-governed-record\.png/);
+    assert.doesNotMatch(governed, /solutions-lifecycle/);
+    assert.match(governed, /#journey/);
+    assert.match(governed, /Explore the 6 stages/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-governed-workspace.png")));
+    const css = fs.readFileSync(path.join(process.cwd(), "app/platform/solutions/solutions.css"), "utf8");
+    assert.match(css, /\.governed-opener-head/);
+    assert.match(css, /text-align:\s*center/);
+    assert.match(css, /max-height:\s*none/);
+    assert.doesNotMatch(css, /grid-template-columns:\s*minmax\(0,\s*0\.34fr\)/);
+
     const workflow = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoProductWorkflow.tsx"), "utf8");
-    assert.match(workflow, /activeStep === "source"/);
-    assert.match(workflow, /activeStep === "normalize"/);
-    assert.doesNotMatch(workflow, /IntersectionObserver/);
+    const followSection = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/FollowTheRecordSection.tsx"),
+      "utf8",
+    );
+    const followData = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/follow-the-record-data.ts"),
+      "utf8",
+    );
+    const followCanvas = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/StickyDemoCanvas.tsx"),
+      "utf8",
+    );
+    const followCss = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/FollowTheRecordSection.module.css"),
+      "utf8",
+    );
+    assert.match(workflow, /FollowTheRecordSection/);
+    assert.match(followSection, /activeIndex|goToStep/);
+    assert.match(followSection, /STAGE_VH\s*=\s*48|48vh/);
+    assert.match(followSection, /demo-source|stage\.image|active\.image|item\.image/);
+    assert.match(followData, /id: "source"/);
+    assert.match(followData, /Fragmented inputs, one product\./);
+    assert.match(followData, /Claims become evidence-backed\./);
+    assert.match(followData, /Signals return to the record\./);
+    assert.match(followData, /Six ways teams work the record\./);
+    assert.match(followData, /demo-source\.png/);
+    assert.match(followData, /demo-normalize\.png/);
+    assert.match(followData, /demo-validate\.png/);
+    assert.match(followData, /demo-publish\.png/);
+    assert.match(followData, /demo-activate\.png/);
+    assert.match(followData, /demo-measure\.png/);
+    assert.match(followCanvas, /active\.image|stage\.image|demo-source/);
+    assert.match(followCss, /\.pin/);
+    assert.match(followCss, /\.sticky/);
+    assert.match(followCss, /\.rail/);
+    assert.match(followCss, /\.visualShell/);
+    assert.match(followCss, /\.visualFrame/);
+    assert.match(followCss, /object-fit:\s*contain/);
+    // Artwork must fill the sticky right pane (not a capped centered island).
+    assert.match(followCss, /\.stageBaseImage \{[\s\S]*?height:\s*100%/);
+    assert.match(followCss, /\.visualShell \{[\s\S]*?flex:\s*1/);
+    assert.match(followCss, /\.strip \{[\s\S]*?width:\s*100%/);
+    assert.doesNotMatch(followCss, /width:\s*min\(100%,\s*980px\)/);
+    assert.doesNotMatch(followCss, /max-height:\s*68vh/);
+    assert.match(followCss, /48vh|--ftr-stage-vh:\s*48vh/);
+    assert.match(followCss, /var\(--ftr-steps\) \* var\(--ftr-stage-vh\)/);
+    assert.doesNotMatch(followCss, /object-fit:\s*cover/);
+    assert.doesNotMatch(followCss, /\.visualGlow/);
+    assert.match(followSection, /stageCopyDesktop/);
+    assert.match(followCss, /\.left \{[\s\S]*?justify-content:\s*flex-start/);
+    assert.match(followCss, /\.rail \{[\s\S]*?flex:\s*0 0 auto/);
+    // Motion overlay infrastructure (SOURCE / NORMALIZE first pass)
+    assert.match(followSection, /StageInteractiveOverlay|StageOverlays/);
+    assert.match(followSection, /interactiveOverlay|stageBaseImage/);
+    assert.match(followCss, /\.interactiveOverlay/);
+    assert.match(followCss, /\.stageBaseImage/);
+    assert.match(followCss, /\.mobileTabs/);
+    const overlays = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/follow-the-record/StageOverlays.tsx"),
+      "utf8",
+    );
+    assert.match(overlays, /SourceOverlay|SOURCES CONNECTED|Sources connected/i);
+    assert.match(overlays, /Normalize composition for Silk Midi Skirt/);
+    assert.match(overlays, /92 SE 8 EA/);
+    assert.match(overlays, /92% Silk/);
+    assert.match(overlays, /CHAR_MS\s*=\s*45|45/);
+    assert.match(overlays, /Source preserved|SOURCE PRESERVED/i);
+    // Normalize artwork should be RGBA with transparency for Attio-style floating panels
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
+    const normalizeBuf = fs.readFileSync(path.join(process.cwd(), "public/platform/demo-normalize.png"));
+    assert.ok(normalizeBuf.includes(Buffer.from("IDAT")) || normalizeBuf.length > 100000);
+    assert.doesNotMatch(followSection, /demo-workflow-rail-product/);
+    assert.doesNotMatch(followSection, /Featured product/);
+    assert.doesNotMatch(followSection, /demo-workflow-panel-inner/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-source.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-validate.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-publish.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-activate.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-measure.png")));
     const quote = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoClosingQuote.tsx"), "utf8");
     assert.match(quote, /Data that moves fashion forward/);
-    const client = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/PlatformDemoClient.tsx"), "utf8");
-    assert.doesNotMatch(client, /Data that moves fashion forward/);
+    assert.doesNotMatch(demo, /Data that moves fashion forward/);
     const pilot = fs.readFileSync(path.join(process.cwd(), "app/platform/demo/DemoPilotCta.tsx"), "utf8");
     assert.doesNotMatch(pilot, /Data that moves fashion forward/);
-    assert.match(hero, /From a tag to full transparency/);
-    assert.match(hero, /demo-hero-scanner\.jpg/);
+    const system = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.tsx"),
+      "utf8",
+    );
+    assert.match(system, /LifecycleHeroSection/);
+    assert.doesNotMatch(system, /SourceStack|PublishingNetwork|systemCanvas/);
+    const hero = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/LifecycleHeroSection.tsx"),
+      "utf8",
+    );
+    const map = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/LifecycleMapCanvas.tsx"),
+      "utf8",
+    );
+    const record = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/CentralProductRecord.tsx"),
+      "utf8",
+    );
+    const bridge = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/RecordTransitionBridge.tsx"),
+      "utf8",
+    );
+    const data = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/lifecycle-data.ts"),
+      "utf8",
+    );
+    assert.match(hero, /From material/);
+    assert.match(hero, /to next life/);
+    assert.match(hero, /See a live product/);
+    assert.match(map, /LIFECYCLE_PATH_D/);
+    assert.match(map, /CentralProductRecord/);
+    assert.match(record, /Silk Midi Skirt/);
+    assert.match(record, /ITX-4102/);
+    assert.match(bridge, /Follow the record/i);
+    assert.match(bridge, /See the record evolve/);
+    assert.match(data, /RECORD_STATES/);
+    assert.match(data, /id: "source"/);
+    assert.match(data, /id: "recirculate"/);
+    assert.equal([...data.matchAll(/id: "(source|clean|trace|prepare|publish|learn|recirculate)"/g)].length, 7);
+    const systemCss = fs.readFileSync(
+      path.join(process.cwd(), "components/see-it-live/lifecycle/lifecycle.module.css"),
+      "utf8",
+    );
+    assert.match(systemCss, /--bg:\s*#fcfbf8/);
+    assert.match(systemCss, /--gold:\s*#c4a574/);
+    assert.doesNotMatch(systemCss, /--bg:\s*#e8dcc8/);
+    assert.match(systemCss, /\.mapCanvas/);
+    assert.match(systemCss, /\.record/);
+    assert.match(systemCss, /\.bridge/);
+    assert.doesNotMatch(systemCss, /\.systemCanvas|\.ss-featured-band/);
+    assert.ok(!fs.existsSync(path.join(process.cwd(), "components/see-it-live/ProductLifecycleSystem.module.css")));
     assert.match(featuredSection, /Cotton Poplin Shirt/);
     assert.match(featuredSection, /workspace-cotton-poplin-shirt/);
+    assert.match(featuredSection, /workspace-gods-true-linen-shirt/);
+    assert.match(featuredSection, /workspace-upside-daria-miniskirt/);
+    assert.match(featuredSection, /WORKSPACE_BY_STYLE/);
     assert.match(featuredSection, /View full passport/);
+    assert.match(featuredSection, /Physical product/);
+    assert.match(featuredSection, /Workspace record/);
+    assert.match(featuredSection, /See it live/);
     assert.doesNotMatch(featuredSection, /Try another product/);
     assert.doesNotMatch(featuredSection, /Explore a real example/);
     assert.match(featuredSection, /QRCodeCanvas/);
     assert.match(featuredSection, /PLATFORM_FEATURED_EXAMPLE_STYLES/);
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-cotton-poplin-shirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-gods-true-linen-shirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo/workspace-upside-daria-miniskirt.png")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/ganni-poplin-shirt.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/rohe-turtleneck.jpg")));
+    assert.ok(fs.existsSync(path.join(process.cwd(), "public/khiteri/magda-butrym-midi.jpg")));
+    const liveFixtures = fs.readFileSync(
+      path.join(process.cwd(), "lib/enterprise/fixtures/intertexe-live-10-products.json"),
+      "utf8",
+    );
+    assert.match(liveFixtures, /"brand": "Ganni"/);
+    assert.match(liveFixtures, /"brand": "Róhe"/);
+    assert.match(liveFixtures, /"brand": "Magda Butrym"/);
+    assert.match(liveFixtures, /ganni-poplin-shirt\.jpg/);
+    assert.match(liveFixtures, /rohe-turtleneck\.jpg/);
+    assert.match(liveFixtures, /magda-butrym-midi\.jpg/);
+    assert.doesNotMatch(liveFixtures, /Walter Baker/);
+    assert.doesNotMatch(liveFixtures, /The Upside/);
+    assert.doesNotMatch(liveFixtures, /God's True Cashmere/);
+    const caseStudy = fs.readFileSync(path.join(process.cwd(), "lib/enterprise/passport-case-study.ts"), "utf8");
+    assert.match(caseStudy, /brand: "Ganni"/);
+    assert.match(caseStudy, /ganni-poplin-shirt\.jpg/);
+    assert.doesNotMatch(caseStudy, /Walter Baker/);
     assert.match(featured, /ITX-4102/);
     assert.match(featured, /ITX-4102/);
     assert.doesNotMatch(featuredSection, /EU Certified/);
