@@ -346,19 +346,64 @@
 
 @media (max-width: 640px) {
   .section {
-    padding: 4rem 0 4.5rem;
+    padding: 3.25rem 0 4rem;
   }
 
   .shell {
-    width: calc(100% - 2.5rem);
+    width: calc(100% - 2rem);
+  }
+
+  .eyebrow,
+  .stageNumber {
+    font-size: 0.6875rem;
+  }
+
+  .headline {
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+  }
+
+  .body {
+    font-size: 0.95rem;
   }
 
   .actions {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .primaryCta,
+  .secondaryCta,
+  .seeItLive {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .secondaryCta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 0;
+  }
+
+  .tags li {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
+  }
+
+  .rowTitle {
+    font-size: clamp(1.35rem, 6.5vw, 1.65rem);
   }
 
   .rowDiagram {
-    min-height: 12rem;
+    min-height: 11rem;
+    padding: 0;
+  }
+
+  .rows {
+    gap: 3.25rem;
   }
 }

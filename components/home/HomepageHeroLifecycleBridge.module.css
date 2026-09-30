@@ -65,10 +65,20 @@
   }
 
   .section {
-    padding-top: 2rem;
+    padding-top: 1.75rem;
+  }
+
+  .eyebrow {
+    font-size: 0.6875rem;
   }
 
   .line {
     max-width: none;
+    font-size: 0.98rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .fade {
+    height: 3rem;
   }
 }

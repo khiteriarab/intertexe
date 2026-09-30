@@ -24,6 +24,14 @@
 }
 
 @media (max-width: 639px) {
+  .solutions-intro {
+    padding: 3rem 0 2.25rem;
+  }
+
+  .solutions-intro-copy .platform-display {
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+  }
+
   .solutions-intro-actions,
   .solutions-close-actions {
     flex-direction: column;
@@ -41,6 +49,14 @@
     width: 100%;
     border-bottom: 0;
     min-height: 44px;
+  }
+
+  .solutions-grid-section {
+    padding: 0.5rem 0 3.5rem;
+  }
+
+  .solution-card {
+    padding: 1.5rem 1.25rem 1.4rem;
   }
 }
 
