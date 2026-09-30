@@ -28,10 +28,10 @@ export function GovernedRecordStageSection() {
       <div className="governed-opener-visual">
         {/* Native img keeps PNG alpha reliable for the floating composition. */}
         <img
-          src="/platform/demo-governed-workspace.png?v=alpha2"
+          src="/platform/demo-governed-workspace.png?v=alpha3"
           alt="INTERTEXE workspace with catalog readiness, material intelligence, traceability, and passport activity cards."
-          width={3344}
-          height={1882}
+          width={3360}
+          height={1890}
           className="governed-opener-image"
           decoding="async"
           fetchPriority="high"
