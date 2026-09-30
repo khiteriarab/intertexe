@@ -674,13 +674,14 @@
   }
 
   /* Keep desktop secondary next to primary; mobile uses the after-mosaic CTA */
-  .platform-showcase-hero-cta-secondary--desktop {
-    display: none;
+  .platform-showcase-hero-actions .platform-showcase-hero-cta-secondary--desktop {
+    display: none !important;
   }
 
-  .platform-showcase-hero-cta-secondary--mobile {
-    display: inline-flex;
+  a.platform-showcase-hero-cta-secondary--mobile {
+    display: inline-flex !important;
     justify-content: center;
+    align-items: center;
     width: 100%;
     min-height: 48px;
     margin: 0 0 1.25rem;
@@ -689,6 +690,7 @@
     border-radius: 999px;
     color: #f5f3ef;
     gap: 0.45rem;
+    text-decoration: none;
   }
 
   .platform-showcase-hero-sub {
@@ -763,8 +765,8 @@
 }
 
 @media (min-width: 768px) {
-  .platform-showcase-hero-cta-secondary--mobile {
-    display: none;
+  a.platform-showcase-hero-cta-secondary--mobile {
+    display: none !important;
   }
 }
 
