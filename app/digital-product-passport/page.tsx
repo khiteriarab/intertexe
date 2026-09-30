@@ -230,10 +230,10 @@ export default function DigitalProductPassportLandingPage() {
           </div>
           <div className="dpp-split-visual">
             <Image
-              src="/platform/workspace-product-record.png"
-              alt="Fashion product record showing material composition, traceability and Digital Product Passport data"
-              width={960}
-              height={720}
+              src="/platform/dpp-publish-channels.png?v=1"
+              alt="One product passport connected across web, mobile, hangtag QR, API, and analytics channels"
+              width={1672}
+              height={941}
               className="dpp-hero-image"
               sizes="(max-width: 899px) 92vw, 42vw"
               unoptimized
