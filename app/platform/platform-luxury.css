@@ -604,6 +604,42 @@
   }
 }
 
+@media (max-width: 639px) {
+  .platform-product-story {
+    padding-top: 3.25rem !important;
+    padding-bottom: 3.5rem !important;
+  }
+
+  .platform-product-pillars-grid {
+    gap: 0.85rem;
+  }
+
+  .platform-product-pillars-grid--light .platform-product-pillar,
+  .platform-product-pillar {
+    padding: 1.65rem 1.35rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  .platform-product-pillar-mark {
+    height: 2.35rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .platform-product-pillar-title {
+    font-size: clamp(1.25rem, 5.8vw, 1.5rem);
+  }
+
+  .platform-product-pillar-copy {
+    font-size: 0.9375rem;
+    margin-bottom: 1.35rem;
+  }
+
+  .platform-product-pillar-cta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
 .platform-product-pillar-mark {
   display: inline-flex;
   align-items: center;

@@ -126,7 +126,7 @@ export function PlatformBrandShowcaseHero() {
               Explore the platform
               <span aria-hidden>→</span>
             </Link>
-            <Link href="/brands/demo" className="platform-showcase-hero-cta-secondary">
+            <Link href="/brands/demo" className="platform-showcase-hero-cta-secondary platform-showcase-hero-cta-secondary--desktop">
               See it live
             </Link>
           </div>
@@ -141,17 +141,23 @@ export function PlatformBrandShowcaseHero() {
           </div>
         </div>
 
-        <div className="platform-showcase-stats">
-          {PLATFORM_SHOWCASE_STATS.map((stat) => (
-            <div key={stat.label} className="platform-showcase-stat">
-              <p className="platform-showcase-stat-value" style={SERIF}>
-                {stat.figure}
-                <span className="sr-only"> {stat.qualifier}</span>
-              </p>
-              <p className="platform-showcase-stat-qualifier">{stat.qualifier}</p>
-              <p className="platform-showcase-stat-label">{stat.label}</p>
-            </div>
-          ))}
+        <div className="platform-showcase-hero-after">
+          <Link href="/brands/demo" className="platform-showcase-hero-cta-secondary platform-showcase-hero-cta-secondary--mobile">
+            See it live
+            <span aria-hidden>→</span>
+          </Link>
+          <div className="platform-showcase-stats">
+            {PLATFORM_SHOWCASE_STATS.map((stat) => (
+              <div key={stat.label} className="platform-showcase-stat">
+                <p className="platform-showcase-stat-value" style={SERIF}>
+                  {stat.figure}
+                  <span className="sr-only"> {stat.qualifier}</span>
+                </p>
+                <p className="platform-showcase-stat-qualifier">{stat.qualifier}</p>
+                <p className="platform-showcase-stat-label">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
