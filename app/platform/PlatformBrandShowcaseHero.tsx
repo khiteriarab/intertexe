@@ -36,8 +36,8 @@ function ShowcaseTileCard({
       src={tile.imageUrl}
       alt={tile.name}
       fill
-      className="object-contain p-1.5 scale-110"
-      sizes="160px"
+      className="object-contain p-0.5 scale-105 sm:p-1.5 sm:scale-110"
+      sizes="(max-width: 767px) 22vw, 160px"
       unoptimized
     />
   );
