@@ -709,7 +709,7 @@
     overflow: visible;
   }
 
-  /* 4-up mosaic on phone — denser Centric-style box grid */
+  /* 4×4 mosaic on phone — denser Centric-style box grid, hard cut after 16 */
   .platform-showcase-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -733,6 +733,10 @@
     animation: none;
     transform: none;
     opacity: 1;
+  }
+
+  .platform-showcase-tile--mobile-cut {
+    display: none;
   }
 
   .platform-showcase-brand-label {

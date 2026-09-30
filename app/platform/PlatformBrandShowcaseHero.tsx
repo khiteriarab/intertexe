@@ -12,20 +12,26 @@ import { SERIF } from "./platform-ui";
 
 type FlipMode = "composition" | "brand";
 
+/** Mobile shows a hard 4×4 mosaic; desktop keeps the extended rows. */
+const MOBILE_MOSAIC_LIMIT = 16;
+
 function ShowcaseTileCard({
   tile,
   delayMs,
   flipMode,
+  mobileCut = false,
 }: {
   tile: ShowcaseTile;
   delayMs: number;
   flipMode: FlipMode;
+  mobileCut?: boolean;
 }) {
   const style = { animationDelay: `${delayMs}ms` } as React.CSSProperties;
+  const cutClass = mobileCut ? " platform-showcase-tile--mobile-cut" : "";
 
   if (tile.kind === "brand") {
     return (
-      <div className="platform-showcase-tile platform-showcase-tile--brand" style={style}>
+      <div className={`platform-showcase-tile platform-showcase-tile--brand${cutClass}`} style={style}>
         <span className="platform-showcase-brand-label">{tile.brand}</span>
       </div>
     );
@@ -45,7 +51,11 @@ function ShowcaseTileCard({
   // Bottom row: turn to brand name only — no composition line.
   if (flipMode === "brand") {
     return (
-      <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+      <div
+        className={`platform-showcase-tile platform-showcase-tile--product${cutClass}`}
+        style={style}
+        title={tile.name}
+      >
         <div className="platform-showcase-flip" style={style}>
           <div className="platform-showcase-face platform-showcase-face--front">{photo}</div>
           <div className="platform-showcase-face platform-showcase-face--back platform-showcase-face--brand">
@@ -58,7 +68,11 @@ function ShowcaseTileCard({
 
   if (!tile.composition) {
     return (
-      <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+      <div
+        className={`platform-showcase-tile platform-showcase-tile--product${cutClass}`}
+        style={style}
+        title={tile.name}
+      >
         <div className="platform-showcase-tile-photo">{photo}</div>
       </div>
     );
@@ -66,7 +80,11 @@ function ShowcaseTileCard({
 
   // Top row: turn to composition + verified meta.
   return (
-    <div className="platform-showcase-tile platform-showcase-tile--product" style={style} title={tile.name}>
+    <div
+      className={`platform-showcase-tile platform-showcase-tile--product${cutClass}`}
+      style={style}
+      title={tile.name}
+    >
       <div className="platform-showcase-flip" style={style}>
         <div className="platform-showcase-face platform-showcase-face--front">{photo}</div>
         <div className="platform-showcase-face platform-showcase-face--back">
@@ -85,10 +103,12 @@ function ShowcaseTileCard({
 function ShowcaseRow({
   tiles,
   offset = 0,
+  startIndex = 0,
   flipMode,
 }: {
   tiles: ShowcaseTile[];
   offset?: number;
+  startIndex?: number;
   flipMode: FlipMode;
 }) {
   return (
@@ -99,6 +119,7 @@ function ShowcaseRow({
           tile={tile}
           delayMs={(index + offset) * 180}
           flipMode={flipMode}
+          mobileCut={startIndex + index >= MOBILE_MOSAIC_LIMIT}
         />
       ))}
     </div>
@@ -135,8 +156,13 @@ export function PlatformBrandShowcaseHero() {
         <div className="platform-showcase-hero-stage">
           <div className="platform-showcase-grid-wrap">
             <div className="platform-showcase-grid" aria-hidden>
-              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} flipMode="composition" />
-              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_B} offset={4} flipMode="brand" />
+              <ShowcaseRow tiles={PLATFORM_SHOWCASE_ROW_A} startIndex={0} flipMode="composition" />
+              <ShowcaseRow
+                tiles={PLATFORM_SHOWCASE_ROW_B}
+                startIndex={PLATFORM_SHOWCASE_ROW_A.length}
+                offset={4}
+                flipMode="brand"
+              />
             </div>
           </div>
         </div>
