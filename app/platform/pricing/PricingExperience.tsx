@@ -33,7 +33,7 @@ export function PricingExperience() {
         <div className="platform-lux-wrap">
           <div className="saas-pricing-hero-copy">
             <Eyebrow>Pricing</Eyebrow>
-            <Heading className="mb-4">Plans for product intelligence at every stage.</Heading>
+            <Heading as="h1" className="mb-4">Plans for product intelligence at every stage.</Heading>
             <Body className="mb-0">
               Monthly USD subscription with a clear commitment and one-time implementation. EUR figures are
               approximate references only.

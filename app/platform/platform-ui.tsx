@@ -11,15 +11,19 @@ export function Heading({
   children,
   className = "",
   id,
+  as = "h2",
 }: {
   children: ReactNode;
   className?: string;
   id?: string;
+  /** Use `h1` for page-level titles so mobile/SEO hierarchy stays correct. */
+  as?: "h1" | "h2" | "h3";
 }) {
+  const Tag = as;
   return (
-    <h2 id={id} className={`platform-display text-[var(--platform-ink,#111111)] ${className}`} style={SERIF}>
+    <Tag id={id} className={`platform-display text-[var(--platform-ink,#111111)] ${className}`} style={SERIF}>
       {children}
-    </h2>
+    </Tag>
   );
 }
 
