@@ -162,31 +162,44 @@ export default function DigitalProductPassportLandingPage() {
       </section>
 
       <section className="dpp-section" aria-labelledby="dpp-what-heading">
-        <div className="platform-lux-wrap">
-          <div className="dpp-section-head">
-            <Eyebrow>What INTERTEXE does</Eyebrow>
-            <Heading id="dpp-what-heading" className="mb-4">
-              From fragmented product data to a publishable passport.
-            </Heading>
-            <Body className="mb-0 max-w-3xl">
-              Fashion brands rarely lack product information — they lack a governed way to normalize it, prove it, and
-              publish it. INTERTEXE turns that fragmentation into{" "}
-              <Link href="/brands" className="dpp-inline-link">
-                material intelligence
-              </Link>{" "}
-              and a living Digital Product Passport.
-            </Body>
+        <div className="platform-lux-wrap dpp-what-layout">
+          <div className="dpp-what-copy">
+            <div className="dpp-section-head dpp-section-head--tight">
+              <Eyebrow>What INTERTEXE does</Eyebrow>
+              <Heading id="dpp-what-heading" className="mb-4">
+                From fragmented product data to a publishable passport.
+              </Heading>
+              <Body className="mb-0">
+                Fashion brands rarely lack product information — they lack a governed way to normalize it, prove it, and
+                publish it. INTERTEXE turns that fragmentation into{" "}
+                <Link href="/brands" className="dpp-inline-link">
+                  material intelligence
+                </Link>{" "}
+                and a living Digital Product Passport.
+              </Body>
+            </div>
+            <ul className="dpp-capability-grid dpp-capability-grid--beside">
+              {CAPABILITIES.map((item) => (
+                <li key={item.title}>
+                  <h3 className="dpp-capability-title" style={SERIF}>
+                    {item.title}
+                  </h3>
+                  <p>{item.copy}</p>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="dpp-capability-grid">
-            {CAPABILITIES.map((item) => (
-              <li key={item.title}>
-                <h3 className="dpp-capability-title" style={SERIF}>
-                  {item.title}
-                </h3>
-                <p>{item.copy}</p>
-              </li>
-            ))}
-          </ul>
+          <div className="dpp-what-visual">
+            <Image
+              src="/platform/dpp-what-passport.png?v=1"
+              alt="Product data sources flowing into a cotton poplin dress passport with consumer QR and channel outputs"
+              width={1672}
+              height={941}
+              className="dpp-hero-image"
+              sizes="(max-width: 899px) 92vw, 48vw"
+              unoptimized
+            />
+          </div>
         </div>
       </section>
 

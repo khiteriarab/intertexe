@@ -72,7 +72,8 @@
 }
 
 .dpp-hero-visual,
-.dpp-split-visual {
+.dpp-split-visual,
+.dpp-what-visual {
   overflow: hidden;
   border: 1px solid rgba(15, 20, 18, 0.1);
   border-radius: 4px;
@@ -84,6 +85,25 @@
   width: 100%;
   height: auto;
 }
+
+.dpp-what-layout {
+  display: grid;
+  gap: 2.25rem;
+}
+
+@media (min-width: 900px) {
+  .dpp-what-layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .dpp-what-visual {
+    position: sticky;
+    top: 5.5rem;
+  }
+}
+
 
 .dpp-section {
   background: #ffffff;
@@ -106,6 +126,11 @@
   margin-bottom: 2.5rem;
 }
 
+.dpp-section-head--tight {
+  max-width: none;
+  margin-bottom: 1.75rem;
+}
+
 .dpp-capability-grid {
   list-style: none;
   margin: 0;
@@ -119,6 +144,25 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2rem 2.5rem;
   }
+}
+
+.dpp-capability-grid--beside {
+  gap: 1.35rem;
+}
+
+@media (min-width: 800px) {
+  .dpp-capability-grid--beside {
+    grid-template-columns: 1fr;
+    gap: 1.15rem;
+  }
+}
+
+.dpp-capability-grid--beside li {
+  padding-top: 1rem;
+}
+
+.dpp-capability-grid--beside .dpp-capability-title {
+  font-size: 1.2rem;
 }
 
 .dpp-capability-grid li {
