@@ -147,10 +147,10 @@ export default function DigitalProductPassportLandingPage() {
             </div>
             <div className="dpp-hero-visual">
               <Image
-                src="/platform/act-passport.png"
-                alt="INTERTEXE fashion Digital Product Passport lifecycle dashboard"
-                width={960}
-                height={720}
+                src="/platform/dpp-hero-passport.png?v=1"
+                alt="Cotton poplin dress Digital Product Passport — material evidence, supply chain, and consumer QR"
+                width={1672}
+                height={941}
                 className="dpp-hero-image"
                 sizes="(max-width: 899px) 92vw, 44vw"
                 priority
