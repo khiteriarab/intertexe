@@ -24,7 +24,7 @@ export default function PlatformSolutionsPage() {
         <div className="platform-lux-wrap">
           <div className="solutions-intro-copy">
             <Eyebrow>Solutions</Eyebrow>
-            <Heading className="mb-5">One product record. Six ways to use it.</Heading>
+            <Heading as="h1" className="mb-5">One product record. Six ways to use it.</Heading>
             <Body className="mb-8">
               INTERTEXE connects product creation, traceability, environmental intelligence, compliance, consumer
               transparency, and next-life experiences through one governed product record — including{" "}

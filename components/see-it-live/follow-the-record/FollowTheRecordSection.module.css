@@ -508,17 +508,20 @@
     position: sticky;
     top: 3.75rem;
     z-index: 5;
-    background: linear-gradient(180deg, var(--ftr-bg) 70%, rgba(251, 250, 247, 0));
+    background: linear-gradient(180deg, var(--ftr-bg) 78%, rgba(251, 250, 247, 0));
     padding: 0.35rem 0 0.85rem;
   }
 
   .mobileTabs {
     display: flex;
-    gap: 0.35rem;
+    gap: 0.15rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 0 16px 0.35rem;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 16px;
+    padding: 0 16px 0.45rem;
+    mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 18px), transparent);
   }
 
   .mobileTabs::-webkit-scrollbar {
@@ -530,17 +533,25 @@
     border: 0;
     background: transparent;
     flex: 0 0 auto;
-    padding: 0.55rem 0.7rem;
+    padding: 0.55rem 0.65rem;
     font-size: 0.6875rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: #b0aaa1;
     white-space: nowrap;
+    scroll-snap-align: center;
+    border-bottom: 2px solid transparent;
   }
 
   .mobileTabActive {
     color: var(--ftr-ink);
     font-weight: 500;
+    border-bottom-color: var(--ftr-gold);
+  }
+
+  .mobileStack > .intro .primaryCta {
+    width: 100%;
+    justify-content: center;
   }
 
   .mobileStage {
@@ -548,6 +559,7 @@
     margin: 0 auto;
     padding: 2rem 0 4.5rem;
     border-top: 1px solid var(--ftr-line);
+    scroll-margin-top: 7.5rem;
   }
 
   .mobileStageHeadline {

@@ -15,6 +15,25 @@
   }
 }
 
+@media (max-width: 639px) {
+  .saas-pricing-hero {
+    padding: 2.75rem 0 1.75rem;
+  }
+
+  .saas-pricing-hero-copy {
+    margin-bottom: 1.25rem;
+  }
+
+  .saas-pricing-card {
+    padding: 1.5rem 1.25rem 1.35rem;
+  }
+
+  .saas-pricing-card-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 .saas-pricing-hero-copy {
   max-width: 44rem;
   margin-bottom: 1.75rem;
