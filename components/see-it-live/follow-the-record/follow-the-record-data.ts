@@ -22,9 +22,11 @@ export type FollowStage = {
 export const FOLLOW_HEADER = {
   eyebrow: "Follow the record",
   headline: "Six ways teams work the record.",
-  lede: "Scroll through how teams work the Silk Midi Skirt, from messy inputs to the passport your customer scans.",
+  lede: "Scroll through how teams work the Cotton Poplin Shirt, from messy inputs to the passport your customer scans.",
   primaryCta: { label: "See a live product", href: "/brands/request?intent=demo&cta=follow_record" },
 } as const;
+
+const STAGE_CACHE = "v=stages1";
 
 export const FOLLOW_STAGES: FollowStage[] = [
   {
@@ -33,8 +35,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "SOURCE",
     headline: "Fragmented inputs, one product.",
     body: "Ingest product data from PLM, ERP, suppliers, or your existing systems — preserved as submitted.",
-    image: "/platform/demo-source.png",
-    alt: "Fragmented inputs from PLM, ERP, spreadsheet, supplier file, and retailer feed converging into one INTERTEXE product record",
+    image: `/platform/demo-source.png?${STAGE_CACHE}`,
+    alt: "INTERTEXE product workspace for the Cotton Poplin Shirt with raw material, traceability, and environmental impact cards",
   },
   {
     id: "normalize",
@@ -42,8 +44,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "NORMALIZE",
     headline: "Messy strings become structured intelligence.",
     body: "Clean, enrich, and standardize key product attributes and material composition without overwriting source strings.",
-    image: "/platform/demo-normalize.png?v=transparent",
-    alt: "INTERTEXE issues workspace resolving a composition conflict — current approved vs incoming source",
+    image: `/platform/demo-normalize.png?${STAGE_CACHE}`,
+    alt: "Fragmented product inputs — photos, spreadsheet, PDF, and handwritten notes — converging into one INTERTEXE product record",
   },
   {
     id: "validate",
@@ -51,8 +53,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "VALIDATE",
     headline: "Claims become evidence-backed.",
     body: "Connect material and product claims to supplier evidence, provenance, and chain-of-custody records.",
-    image: "/platform/demo-validate.png",
-    alt: "INTERTEXE product workspace with key indicators for a ready-to-publish record",
+    image: `/platform/demo-validate.png?${STAGE_CACHE}`,
+    alt: "INTERTEXE traceability validation with tier status, validation checklist, and publish readiness alerts",
   },
   {
     id: "publish",
@@ -60,8 +62,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "PUBLISH",
     headline: "One governed record, published everywhere.",
     body: "Turn the verified product record into a Digital Product Passport and distribute it through connected channels.",
-    image: "/platform/demo-publish.png",
-    alt: "Publish once — digital product passport powering web, QR, mobile app, API, and retail channels",
+    image: `/platform/demo-publish.png?${STAGE_CACHE}`,
+    alt: "Publish passport flow — INTERTEXE workspace, consumer passport on phone, and QR hangtag on the Cotton Poplin Shirt",
   },
   {
     id: "activate",
@@ -69,8 +71,8 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "ACTIVATE",
     headline: "The product becomes a live digital touchpoint.",
     body: "Use QR, NFC, or passport delivery to support transparency, care, repair, resale, and post-purchase engagement.",
-    image: "/platform/demo-activate.png",
-    alt: "INTERTEXE product record with preview QR and full source-to-next-life lifecycle",
+    image: `/platform/demo-activate.png?${STAGE_CACHE}`,
+    alt: "Live consumer passport on mobile with care, resell, repair, and recycle guidance linked from the product QR",
   },
   {
     id: "measure",
@@ -78,7 +80,7 @@ export const FOLLOW_STAGES: FollowStage[] = [
     label: "MEASURE",
     headline: "Signals return to the record.",
     body: "Use engagement, scan activity, benchmarks, and product intelligence to understand performance and improve the record over time.",
-    image: "/platform/demo-measure.png",
-    alt: "Material Benchmark dashboard — governed record coverage, peer medians, and passport performance",
+    image: `/platform/demo-measure.png?${STAGE_CACHE}`,
+    alt: "INTERTEXE workspace overview with catalog readiness, traceability, environmental impact, and circularity signals",
   },
 ];

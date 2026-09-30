@@ -207,7 +207,9 @@ export function StageInteractiveOverlay({
   stageId: FollowStageId;
   active: boolean;
 }) {
-  if (stageId === "source") return <SourceOverlay active={active} />;
-  if (stageId === "normalize") return <NormalizeOverlay active={active} />;
+  // Stage PNGs ship as complete compositions — skip motion overlays so cards
+  // and typed panels do not stack on top of the artwork.
+  void stageId;
+  void active;
   return null;
 }

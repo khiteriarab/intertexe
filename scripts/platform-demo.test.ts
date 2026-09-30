@@ -315,22 +315,13 @@ describe("Permanent 10-product demonstration catalog", () => {
     assert.match(followSection, /stageCopyDesktop/);
     assert.match(followCss, /\.left \{[\s\S]*?justify-content:\s*flex-start/);
     assert.match(followCss, /\.rail \{[\s\S]*?flex:\s*0 0 auto/);
-    // Motion overlay infrastructure (SOURCE / NORMALIZE first pass)
-    assert.match(followSection, /StageInteractiveOverlay|StageOverlays/);
-    assert.match(followSection, /interactiveOverlay|stageBaseImage/);
-    assert.match(followCss, /\.interactiveOverlay/);
+    // Stage PNGs are complete compositions — no motion overlays on the artwork
+    assert.doesNotMatch(followSection, /StageInteractiveOverlay|StageOverlays/);
+    assert.match(followSection, /stageBaseImage/);
     assert.match(followCss, /\.stageBaseImage/);
     assert.match(followCss, /\.mobileTabs/);
-    const overlays = fs.readFileSync(
-      path.join(process.cwd(), "components/see-it-live/follow-the-record/StageOverlays.tsx"),
-      "utf8",
-    );
-    assert.match(overlays, /SourceOverlay|SOURCES CONNECTED|Sources connected/i);
-    assert.match(overlays, /Normalize composition for Silk Midi Skirt/);
-    assert.match(overlays, /92 SE 8 EA/);
-    assert.match(overlays, /92% Silk/);
-    assert.match(overlays, /CHAR_MS\s*=\s*45|45/);
-    assert.match(overlays, /Source preserved|SOURCE PRESERVED/i);
+    assert.match(followData, /v=stages1|stages1/);
+    assert.match(followData, /Cotton Poplin Shirt/);
     // Normalize artwork should be RGBA with transparency for Attio-style floating panels
     assert.ok(fs.existsSync(path.join(process.cwd(), "public/platform/demo-normalize.png")));
     const normalizeBuf = fs.readFileSync(path.join(process.cwd(), "public/platform/demo-normalize.png"));

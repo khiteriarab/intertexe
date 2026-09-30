@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { SERIF } from "../../../app/platform/platform-ui";
 import { FOLLOW_HEADER, FOLLOW_STAGES, type FollowStageId } from "./follow-the-record-data";
-import { StageInteractiveOverlay } from "./StageOverlays";
 import styles from "./FollowTheRecordSection.module.css";
 
 /** Short scroll triggers — states, not full-page slides. */
 const STAGE_VH = 48;
-const ease = [0.22, 1, 0.36, 1] as const;
 
 function StageRail({
   activeIndex,
@@ -44,104 +42,60 @@ function StageRail({
   );
 }
 
-function StageVisual({ stageId, active }: { stageId: FollowStageId; active: boolean }) {
-  const reducedMotion = useReducedMotion();
+function StageVisual({ stageId }: { stageId: FollowStageId; active?: boolean }) {
   const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
 
   return (
     <div className={styles.visualShell} aria-live="polite">
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={stage.id}
-          className={styles.visualFrame}
-          initial={reducedMotion ? false : { opacity: 0, y: 16, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reducedMotion ? undefined : { opacity: 0, y: -12, scale: 0.99 }}
-          transition={{ duration: 0.55, ease }}
-        >
-          <div className={styles.stageVisual}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- original demo stage PNGs */}
-            <img
-              className={styles.stageBaseImage}
-              src={stage.image}
-              alt={stage.alt}
-              width={1672}
-              height={941}
-              decoding="async"
-              fetchPriority="high"
-            />
-            <div className={styles.interactiveOverlay}>
-              <StageInteractiveOverlay stageId={stage.id} active={active} />
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
+      <div key={stage.id} className={styles.visualFrame}>
+        <div className={styles.stageVisual}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- original demo stage PNGs */}
+          <img
+            className={styles.stageBaseImage}
+            src={stage.image}
+            alt={stage.alt}
+            width={1448}
+            height={1086}
+            decoding="async"
+            fetchPriority="high"
+          />
+        </div>
+      </div>
     </div>
   );
 }
 
 function StageCopy({ stageId }: { stageId: FollowStageId }) {
-  const reducedMotion = useReducedMotion();
   const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={stage.id}
-        className={styles.stageCopy}
-        initial={reducedMotion ? false : { opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
-        transition={{ duration: 0.45, ease }}
-        aria-live="polite"
-      >
-        <p className={styles.stageMeta}>
-          {stage.number} {stage.label}
-        </p>
-        <h3 className={styles.stageHeadline} style={SERIF}>
-          {stage.headline}
-        </h3>
-        <p className={styles.stageBody}>{stage.body}</p>
-      </motion.div>
-    </AnimatePresence>
+    <div key={stage.id} className={styles.stageCopy} aria-live="polite">
+      <p className={styles.stageMeta}>
+        {stage.number} {stage.label}
+      </p>
+      <h3 className={styles.stageHeadline} style={SERIF}>
+        {stage.headline}
+      </h3>
+      <p className={styles.stageBody}>{stage.body}</p>
+    </div>
   );
 }
 
 function MobileStageVisual({ stageId }: { stageId: FollowStageId }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [active, setActive] = useState(false);
   const stage = FOLLOW_STAGES.find((item) => item.id === stageId) ?? FOLLOW_STAGES[0];
 
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && entry.intersectionRatio >= 0.5) {
-          setActive(true);
-        }
-      },
-      { threshold: [0.5] },
-    );
-    io.observe(node);
-    return () => io.disconnect();
-  }, [stageId]);
-
   return (
-    <div ref={ref} className={styles.mobileVisual}>
+    <div className={styles.mobileVisual}>
       <div className={styles.stageVisual}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={styles.stageBaseImage}
           src={stage.image}
           alt={stage.alt}
-          width={1672}
-          height={941}
+          width={1448}
+          height={1086}
           decoding="async"
         />
-        <div className={styles.interactiveOverlay}>
-          <StageInteractiveOverlay stageId={stage.id} active={active} />
-        </div>
       </div>
     </div>
   );
@@ -283,7 +237,7 @@ export function FollowTheRecordSection() {
             </div>
 
             <div className={styles.right}>
-              <StageVisual stageId={stage.id} active />
+              <StageVisual stageId={stage.id} />
               {/* Stage headlines are baked into the PNGs — keep live text for screen readers only. */}
               <div className={styles.stageCopyDesktop}>
                 <StageCopy stageId={stage.id} />
