@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { SERIF } from "../../../app/platform/platform-ui";
 import {
   LIFECYCLE_HEADER,
@@ -72,6 +73,55 @@ function LifecycleHeader() {
   );
 }
 
+function MobileStageRail() {
+  const [active, setActive] = useState(LIFECYCLE_STAGES[0]?.id ?? "");
+
+  useEffect(() => {
+    const nodes = LIFECYCLE_STAGES.map((stage) => document.getElementById(`lifecycle-stage-block-${stage.id}`)).filter(
+      Boolean
+    ) as HTMLElement[];
+    if (!nodes.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        const id = visible?.target.getAttribute("data-stage-id");
+        if (id) setActive(id);
+      },
+      { rootMargin: "-28% 0px -48% 0px", threshold: [0.2, 0.45, 0.7] }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <nav className={styles.mobileRail} aria-label="Lifecycle stages">
+      <div className={styles.mobileRailTrack}>
+        {LIFECYCLE_STAGES.map((stage) => (
+          <button
+            key={stage.id}
+            type="button"
+            className={`${styles.mobileRailChip} ${active === stage.id ? styles.mobileRailChipActive : ""}`}
+            onClick={() => {
+              document.getElementById(`lifecycle-stage-block-${stage.id}`)?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+              setActive(stage.id);
+            }}
+          >
+            <span className={styles.mobileRailNum}>{stage.number}</span>
+            <span className={styles.mobileRailLabel}>{stage.title}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 function LifecycleStageBlock({ stage, index }: { stage: LifecycleStage; index: number }) {
   const textFirst = stage.align === "left";
   const headingId = `lifecycle-stage-${stage.id}`;
@@ -98,7 +148,13 @@ function LifecycleStageBlock({ stage, index }: { stage: LifecycleStage; index: n
   );
 
   return (
-    <article className={styles.row} data-align={stage.align} aria-labelledby={headingId}>
+    <article
+      id={`lifecycle-stage-block-${stage.id}`}
+      className={styles.row}
+      data-align={stage.align}
+      data-stage-id={stage.id}
+      aria-labelledby={headingId}
+    >
       <div className={styles.rowSide}>{textFirst ? copy : diagram}</div>
       <div className={styles.spineSlot} aria-hidden>
         <span className={`${styles.spineNode} ${index % 2 === 1 ? styles.spineNodeAccent : ""}`} />
@@ -117,6 +173,7 @@ export function HomepageLifecycleSection() {
     <section className={styles.section} id="product-lifecycle" aria-labelledby="homepage-lifecycle-heading">
       <div className={styles.shell}>
         <LifecycleHeader />
+        <MobileStageRail />
 
         <div className={styles.rows}>
           <div className={styles.spine} aria-hidden />

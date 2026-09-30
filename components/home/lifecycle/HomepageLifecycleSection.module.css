@@ -262,6 +262,11 @@
   display: block;
 }
 
+/* Mobile stage jump rail — hidden on desktop */
+.mobileRail {
+  display: none;
+}
+
 @media (max-width: 980px) {
   .shell {
     width: calc(100% - 3rem);
@@ -269,65 +274,93 @@
 
   .intro {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
   }
 
+  /* Duplicate of primary CTA on small screens */
   .introAside {
-    justify-content: flex-start;
+    display: none;
+  }
+
+  .mobileRail {
+    display: block;
+    position: sticky;
+    top: 3.75rem;
+    z-index: 4;
+    margin: 0 -0.25rem 1.75rem;
+    padding: 0.35rem 0 0.65rem;
+    background: linear-gradient(180deg, var(--hlc-bg) 72%, rgba(250, 250, 247, 0));
+  }
+
+  .mobileRailTrack {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.15rem 0.25rem 0.35rem;
+  }
+
+  .mobileRailTrack::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobileRailChip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.55rem;
+    border: 1px solid var(--hlc-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--hlc-body);
+    scroll-snap-align: start;
+    cursor: pointer;
+    font: inherit;
+    transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+  }
+
+  .mobileRailChipActive {
+    border-color: rgba(22, 22, 22, 0.55);
+    background: var(--hlc-ink);
+    color: #fff;
+  }
+
+  .mobileRailNum {
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    opacity: 0.72;
+  }
+
+  .mobileRailLabel {
+    font-size: 0.72rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
   }
 
   .spine {
-    left: 1.15rem;
+    left: 0.85rem;
     transform: none;
   }
 
-  .row {
-    grid-template-columns: 28px minmax(0, 1fr);
-    gap: 0 1rem;
-  }
-
-  .rowSide:first-child {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .spineSlot {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    align-self: stretch;
-  }
-
-  .rowSide:last-child {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  /* Always text then diagram on mobile */
-  .row .rowSide:first-child .rowDiagram,
-  .row .rowSide:last-child .rowCopy {
-    /* When align=right, diagram is first — swap via display order */
-  }
-
-  .rowCopy,
-  .row[data-align="right"] .rowCopy {
-    margin-left: 0;
-    max-width: none;
-  }
-}
-
-@media (max-width: 980px) {
-  /* Force text above diagram regardless of desktop align */
+  /* Visual-first stage stack on tablet/phone */
   .row {
     display: flex;
     flex-direction: column;
-    padding-left: 1.75rem;
+    padding-left: 1.55rem;
+    gap: 0.85rem;
+    scroll-margin-top: 7.5rem;
   }
 
   .spineSlot {
     position: absolute;
     left: 0;
-    top: 0.5rem;
-    bottom: 0.5rem;
+    top: 0.35rem;
+    bottom: 0.35rem;
     width: 28px;
   }
 
@@ -336,21 +369,64 @@
   }
 
   .row .rowSide:has(.rowDiagram) {
-    order: 2;
+    order: 1;
   }
 
   .row .rowSide:has(.rowCopy) {
-    order: 1;
+    order: 2;
+  }
+
+  .rowCopy,
+  .row[data-align="right"] .rowCopy {
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .rowDiagram {
+    min-height: 0;
+    padding: 0.85rem 0.65rem;
+    border: 1px solid rgba(22, 22, 22, 0.06);
+    border-radius: 1rem;
+    background: #fff;
+    justify-content: flex-start;
+  }
+
+  .rowDiagram :global(.hlc-diagram) {
+    width: 100%;
+    max-width: none;
+  }
+
+  .tags {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.35rem;
+    margin-bottom: 0;
+    padding-bottom: 0.15rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tags::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tags li {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .rows {
+    gap: 2.75rem;
   }
 }
 
 @media (max-width: 640px) {
   .section {
-    padding: 3.25rem 0 4rem;
+    padding: 2.75rem 0 3.5rem;
   }
 
   .shell {
-    width: calc(100% - 2rem);
+    width: calc(100% - 1.5rem);
   }
 
   .eyebrow,
@@ -360,22 +436,23 @@
 
   .headline {
     font-size: clamp(1.9rem, 8vw, 2.4rem);
+    margin-bottom: 1rem;
   }
 
   .body {
     font-size: 0.95rem;
+    margin-bottom: 1.25rem;
   }
 
   .actions {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: 0.7rem;
     width: 100%;
   }
 
   .primaryCta,
-  .secondaryCta,
-  .seeItLive {
+  .secondaryCta {
     width: 100%;
     justify-content: center;
     text-align: center;
@@ -387,23 +464,40 @@
     align-items: center;
     justify-content: center;
     border-bottom: 0;
+    border: 1px solid rgba(22, 22, 22, 0.18);
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
   }
 
   .tags li {
-    font-size: 0.72rem;
-    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+    padding: 0.32rem 0.65rem;
   }
 
   .rowTitle {
     font-size: clamp(1.35rem, 6.5vw, 1.65rem);
   }
 
-  .rowDiagram {
-    min-height: 11rem;
-    padding: 0;
+  .rowSubtitle {
+    margin-bottom: 0.65rem;
+  }
+
+  .rowBody {
+    margin-bottom: 0.9rem;
+  }
+
+  .mobileRail {
+    top: 3.5rem;
+    margin-bottom: 1.35rem;
   }
 
   .rows {
-    gap: 3.25rem;
+    gap: 2.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileRailChip {
+    transition: none;
   }
 }
