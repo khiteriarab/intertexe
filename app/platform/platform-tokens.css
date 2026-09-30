@@ -765,8 +765,8 @@
 }
 
 @media (min-width: 768px) {
-  .platform-showcase-hero-cta-secondary--mobile {
-    display: none;
+  a.platform-showcase-hero-cta-secondary--mobile {
+    display: none !important;
   }
 }
 
