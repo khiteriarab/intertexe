@@ -28,7 +28,12 @@
 .platform-shell.platform-editorial {
   position: relative;
   isolation: isolate;
+  /* clip only when needed — visible lets See it live floating cards avoid side crop */
   overflow-x: clip;
+}
+
+.platform-shell.platform-editorial:has(.governed-opener) {
+  overflow-x: visible;
 }
 
 .platform-shell.platform-editorial::before,
