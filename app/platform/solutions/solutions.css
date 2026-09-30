@@ -279,7 +279,8 @@ button.solution-card {
     linear-gradient(180deg, #121411 0%, #0c0e0c 100%);
   color: var(--governed-ink);
   padding: 2.75rem 0 0;
-  overflow: hidden;
+  /* visible so floating cards aren't clipped at the section edge */
+  overflow: visible;
 }
 
 @media (min-width: 900px) {
@@ -386,40 +387,44 @@ button.solution-card {
 }
 
 .governed-opener-visual {
-  width: min(1600px, 98vw);
+  width: min(1600px, 100%);
   margin: 0.75rem auto 0;
   flex: 1 1 auto;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 0;
+  padding: 0 1rem 1.5rem;
   background: transparent;
+  overflow: visible;
   animation: governed-opener-rise 0.85s ease-out 0.12s both;
 }
 
 @media (min-width: 900px) {
   .governed-opener-visual {
-    width: min(1680px, 98vw);
+    width: min(1680px, 100%);
     margin-top: 0.5rem;
+    padding: 0 1.25rem 2rem;
   }
 }
 
 .governed-opener-image {
   display: block;
-  width: min(1680px, 98vw);
-  max-width: 98vw;
+  width: min(1680px, 100%);
+  max-width: 100%;
   height: auto;
   max-height: none;
   margin: 0 auto;
   background: transparent !important;
   object-fit: contain;
-  filter: drop-shadow(0 28px 70px rgba(0, 0, 0, 0.55));
+  object-position: center center;
+  /* drop-shadow on premultiplied soft haze reads as a white blob — keep stage clean */
+  filter: none;
 }
 
 @media (min-width: 900px) {
   .governed-opener-image {
-    width: min(1680px, 98vw);
+    width: min(1680px, 100%);
     max-height: none;
   }
 }
