@@ -4,7 +4,8 @@
  * Flow: claim email_deliveries (provider=loops) → Loops transactional → mark sent.
  * Never falls back to Resend (prevents dual Welcome).
  */
-import { getAppStoreUrl, getUniversalOpenUrl, isAppDeepLinkReady } from "./app-store";
+import { APP_UNIVERSAL_ORIGIN, APP_DOWNLOAD_PATH, getAppStoreUrl } from "./app-store";
+import { getChromeWebStoreUrl } from "./chrome-extension";
 import {
   EMAIL_TYPES,
   founderWelcomeSubject,
@@ -22,6 +23,21 @@ import {
   syncContactToLoops,
 } from "./loops";
 import { createServiceClient } from "./supabase/server";
+
+const WELCOME_UTM = {
+  utm_source: "loops",
+  utm_medium: "email",
+  utm_campaign: "founder_welcome",
+} as const;
+
+function withWelcomeUtm(baseUrl: string, cta: string): string {
+  const url = new URL(baseUrl);
+  url.searchParams.set("utm_source", WELCOME_UTM.utm_source);
+  url.searchParams.set("utm_medium", WELCOME_UTM.utm_medium);
+  url.searchParams.set("utm_campaign", WELCOME_UTM.utm_campaign);
+  url.searchParams.set("itx_cta", cta.slice(0, 80));
+  return url.toString();
+}
 
 export type SendWelcomeEmailInput = {
   email: string;
@@ -41,19 +57,30 @@ export type SendWelcomeEmailResult = {
   provider?: "loops";
 };
 
+/**
+ * Primary CTA for Loops templates that still bind a single `ctaUrl`.
+ * Most welcome recipients have not installed yet — send them to download, not /open.
+ */
 export function resolveWelcomeCtaUrl(): string {
-  if (isAppDeepLinkReady()) {
-    // Post-registration: open the installed app. Do not send them back to Download.
-    return getUniversalOpenUrl("/", {
-      cta: "email_founder_welcome",
-      params: {
-        utm_source: "loops",
-        utm_medium: "email",
-        utm_campaign: "founder_welcome",
-      },
-    });
-  }
-  return getAppStoreUrl();
+  return resolveWelcomeAppDownloadUrl();
+}
+
+/** First-party /download hop → App Store (logs app_download_click). */
+export function resolveWelcomeAppDownloadUrl(): string {
+  return withWelcomeUtm(
+    `${APP_UNIVERSAL_ORIGIN}${APP_DOWNLOAD_PATH}`,
+    "email_founder_welcome_app"
+  );
+}
+
+/** Chrome Web Store listing for the Fabric Scanner extension. */
+export function resolveWelcomeChromeExtensionUrl(): string {
+  return withWelcomeUtm(getChromeWebStoreUrl(), "email_founder_welcome_chrome");
+}
+
+/** Direct App Store URL (no /download hop) — available as a Loops dataVariable. */
+export function resolveWelcomeAppStoreUrl(): string {
+  return withWelcomeUtm(getAppStoreUrl(), "email_founder_welcome_appstore");
 }
 
 /**
@@ -133,7 +160,11 @@ export async function sendWelcomeEmail(
     invitationCode: input.invitationCode,
   }).catch(() => null);
 
-  const ctaUrl = resolveWelcomeCtaUrl();
+  const appDownloadUrl = resolveWelcomeAppDownloadUrl();
+  const chromeExtensionUrl = resolveWelcomeChromeExtensionUrl();
+  const appStoreUrl = resolveWelcomeAppStoreUrl();
+  // Primary ctaUrl stays the app download link for existing Loops templates.
+  const ctaUrl = appDownloadUrl;
   const subject = founderWelcomeSubject(firstName);
   // Loops templates are case-sensitive. This published template requires
   // lowercase `firstname`; also send camelCase so either UI convention works.
@@ -147,6 +178,12 @@ export async function sendWelcomeEmail(
       firstname: firstName || "",
       ctaUrl,
       ctaurl: ctaUrl,
+      appDownloadUrl,
+      appdownloadurl: appDownloadUrl,
+      chromeExtensionUrl,
+      chromeextensionurl: chromeExtensionUrl,
+      appStoreUrl,
+      appstoreurl: appStoreUrl,
       subject,
     },
   });

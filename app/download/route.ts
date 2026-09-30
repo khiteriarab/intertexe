@@ -15,13 +15,15 @@ export async function GET(request: NextRequest) {
   const existing = request.cookies.get(SESSION_COOKIE)?.value?.trim();
   const sessionId = existing || newSessionId();
   const ft = extractFirstTouchFromRequest(request);
+  const itxCta = (request.nextUrl.searchParams.get("itx_cta") || "").trim().slice(0, 80);
+  const ctaLocation = itxCta || "download_redirect";
   const channel = classifyAppDownloadChannel({
     utm_source: ft.utm_source,
     utm_medium: ft.utm_medium,
     utm_campaign: ft.utm_campaign,
     fbclid: ft.fbclid,
     ttclid: ft.ttclid,
-    cta_location: "download_redirect",
+    cta_location: ctaLocation,
   });
 
   const supabase = getServerSupabase();
@@ -49,7 +51,7 @@ export async function GET(request: NextRequest) {
       metadata: {
         source_page: request.headers.get("referer") || "/download",
         landing_path: "/download",
-        cta_location: "download_redirect",
+        cta_location: ctaLocation,
         destination: "app_store",
         utm_source: ft.utm_source || null,
         utm_medium: ft.utm_medium || null,
