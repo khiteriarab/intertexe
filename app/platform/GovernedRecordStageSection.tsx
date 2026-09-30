@@ -28,10 +28,10 @@ export function GovernedRecordStageSection() {
       <div className="governed-opener-visual">
         {/* Native img keeps PNG alpha reliable for the floating composition. */}
         <img
-          src="/platform/demo-governed-passport.png?v=1"
+          src="/platform/demo-governed-passport.png?v=2"
           alt="INTERTEXE Digital Product Passport for the GANNI Cotton Poplin Shirt — product data, traceability, impact, and live passport."
-          width={2032}
-          height={774}
+          width={2005}
+          height={714}
           className="governed-opener-image"
           decoding="async"
           fetchPriority="high"

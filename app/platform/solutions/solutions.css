@@ -502,15 +502,15 @@ button.solution-card {
 }
 
 .governed-opener-visual {
-  /* Keep the ultrawide passport graphic compact so more page shows below */
-  width: min(1080px, 100%);
-  margin: 0.75rem auto 0;
+  /* Wider stage so the passport graphic fills the frame without huge side gutters */
+  width: min(1360px, 100%);
+  margin: 0.55rem auto 0;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 0 1rem 1.25rem;
+  padding: 0 0.5rem 1rem;
   background: transparent;
   overflow: visible;
   animation: governed-opener-rise 0.85s ease-out 0.12s both;
@@ -518,18 +518,18 @@ button.solution-card {
 
 @media (min-width: 900px) {
   .governed-opener-visual {
-    width: min(1120px, calc(100% - 3rem));
-    margin-top: 0.35rem;
-    padding: 0 1rem 1.5rem;
+    width: min(1480px, calc(100% - 1.5rem));
+    margin-top: 0.25rem;
+    padding: 0 0.5rem 1.15rem;
   }
 }
 
 .governed-opener-image {
   display: block;
   width: 100%;
-  max-width: 1120px;
+  max-width: 1480px;
   height: auto;
-  max-height: min(42vh, 420px);
+  max-height: min(54vh, 560px);
   margin: 0 auto;
   background: transparent !important;
   object-fit: contain;
@@ -540,19 +540,19 @@ button.solution-card {
 
 @media (min-width: 900px) {
   .governed-opener-image {
-    max-width: 1120px;
-    max-height: min(46vh, 460px);
+    max-width: 1480px;
+    max-height: min(58vh, 620px);
   }
 }
 
 @media (max-width: 639px) {
   .governed-opener-visual {
-    width: min(100%, calc(100% - 0.5rem));
-    padding: 0 0.5rem 1rem;
+    width: min(100%, calc(100% - 0.25rem));
+    padding: 0 0.25rem 0.85rem;
   }
 
   .governed-opener-image {
-    max-height: min(36vh, 280px);
+    max-height: min(42vh, 340px);
   }
 }
 
