@@ -124,40 +124,37 @@ export default function DigitalProductPassportLandingPage() {
       <JsonLd data={faqPageJsonLd([...FAQ])} />
 
       <section className="dpp-hero">
-        <div className="platform-lux-wrap">
-          <div className="dpp-hero-grid">
-            <div className="dpp-hero-copy">
-              <Eyebrow>Digital Product Passport</Eyebrow>
-              <h1 className="dpp-h1" style={SERIF}>
-                Digital Product Passport software built for fashion.
-              </h1>
-              <Body className="mb-6">
-                INTERTEXE structures and governs product data for DPP readiness and publication — connecting product,
-                material, supplier, and lifecycle information into one record brands can trust across teams and
-                channels.
-              </Body>
-              <Body className="mb-8 dpp-careful">
-                Prepare product records for emerging EU Digital Product Passport requirements. Textile-specific
-                requirements are still being finalized; INTERTEXE helps you organize, evidence, and publish product data
-                as those frameworks mature.
-              </Body>
-              <div className="dpp-actions">
-                <PrimaryLink href="/brands/demo">See it live</PrimaryLink>
-                <SecondaryLink href="/brands/request?intent=demo&cta=dpp_landing">Request a demo</SecondaryLink>
-              </div>
+        <div className="platform-lux-wrap dpp-stack">
+          <div className="dpp-stack-copy">
+            <Eyebrow>Digital Product Passport</Eyebrow>
+            <h1 className="dpp-h1" style={SERIF}>
+              Digital Product Passport software built for fashion.
+            </h1>
+            <Body className="dpp-stack-lead">
+              INTERTEXE structures and governs product data for DPP readiness and publication — connecting product,
+              material, supplier, and lifecycle information into one record brands can trust across teams and channels.
+            </Body>
+            <Body className="dpp-stack-support dpp-careful">
+              Prepare product records for emerging EU Digital Product Passport requirements. Textile-specific
+              requirements are still being finalized; INTERTEXE helps you organize, evidence, and publish product data
+              as those frameworks mature.
+            </Body>
+            <div className="dpp-actions dpp-actions--center">
+              <PrimaryLink href="/brands/demo">See it live</PrimaryLink>
+              <SecondaryLink href="/brands/request?intent=demo&cta=dpp_landing">Request a demo</SecondaryLink>
             </div>
-            <div className="dpp-hero-visual">
-              <Image
-                src="/platform/dpp-hero-passport.png?v=1"
-                alt="Cotton poplin dress Digital Product Passport — material evidence, supply chain, and consumer QR"
-                width={1672}
-                height={941}
-                className="dpp-hero-image"
-                sizes="(max-width: 899px) 92vw, 44vw"
-                priority
-                unoptimized
-              />
-            </div>
+          </div>
+          <div className="dpp-stack-visual">
+            <Image
+              src="/platform/dpp-hero-passport.png?v=1"
+              alt="Cotton poplin dress Digital Product Passport — material evidence, supply chain, and consumer QR"
+              width={1672}
+              height={941}
+              className="dpp-hero-image"
+              sizes="(max-width: 899px) 94vw, 72vw"
+              priority
+              unoptimized
+            />
           </div>
         </div>
       </section>
@@ -183,13 +180,13 @@ export default function DigitalProductPassportLandingPage() {
       </section>
 
       <section className="dpp-section dpp-section--soft" aria-labelledby="dpp-publish-heading">
-        <div className="platform-lux-wrap dpp-split">
-          <div>
+        <div className="platform-lux-wrap dpp-stack">
+          <div className="dpp-stack-copy">
             <Eyebrow>Publish everywhere</Eyebrow>
-            <Heading id="dpp-publish-heading" className="mb-4">
+            <Heading id="dpp-publish-heading" className="dpp-stack-heading">
               One governed record. Many connected channels.
             </Heading>
-            <Body className="mb-5">
+            <Body className="dpp-stack-lead">
               Once product information is approved, INTERTEXE can publish a Digital Product Passport for clothing and
               apparel experiences — hosted by INTERTEXE, white-labeled for your brand, linked from QR, or delivered
               through your website, app, and{" "}
@@ -198,23 +195,23 @@ export default function DigitalProductPassportLandingPage() {
               </Link>
               .
             </Body>
-            <ul className="dpp-checklist">
+            <ul className="dpp-checklist dpp-checklist--center">
               {LIFECYCLE.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <div className="dpp-actions dpp-actions--tight">
+            <div className="dpp-actions dpp-actions--center dpp-actions--tight">
               <SecondaryLink href="/brands/demo">See a live product passport</SecondaryLink>
             </div>
           </div>
-          <div className="dpp-split-visual">
+          <div className="dpp-stack-visual">
             <Image
               src="/platform/dpp-publish-channels.png?v=1"
               alt="One product passport connected across web, mobile, hangtag QR, API, and analytics channels"
               width={1672}
               height={941}
               className="dpp-hero-image"
-              sizes="(max-width: 899px) 92vw, 42vw"
+              sizes="(max-width: 899px) 94vw, 72vw"
               unoptimized
             />
           </div>
