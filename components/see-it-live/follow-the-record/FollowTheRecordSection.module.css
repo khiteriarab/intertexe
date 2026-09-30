@@ -554,12 +554,26 @@
     justify-content: center;
   }
 
+  .mobileStack > .intro {
+    animation: ftrMobileRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mobileStack .eyebrow,
+  .mobileStack .stageMeta {
+    font-size: 0.6875rem;
+  }
+
   .mobileStage {
     width: calc(100vw - 32px);
     margin: 0 auto;
     padding: 2rem 0 4.5rem;
     border-top: 1px solid var(--ftr-line);
     scroll-margin-top: 7.5rem;
+    animation: ftrMobileRise 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mobileVisual {
+    transition: transform 0.35s ease;
   }
 
   .mobileStageHeadline {
@@ -639,6 +653,17 @@
   }
 }
 
+@keyframes ftrMobileRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .visualFrame,
   .stageCopy {
@@ -647,5 +672,10 @@
 
   .normalizeCursor {
     animation: none;
+  }
+
+  .mobileStack > .intro,
+  .mobileStage {
+    animation: none !important;
   }
 }

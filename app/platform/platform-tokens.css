@@ -782,6 +782,43 @@
   }
 }
 
+@media (max-width: 767px) {
+  .platform-request-page {
+    padding: 2.25rem 1rem 3.25rem;
+  }
+
+  .platform-request-copy,
+  .platform-request-form-card {
+    animation: platform-request-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .platform-request-form-card {
+    animation-delay: 0.1s;
+  }
+
+  .platform-request-form-kicker {
+    font-size: 0.6875rem;
+  }
+}
+
+@keyframes platform-request-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .platform-request-copy,
+  .platform-request-form-card {
+    animation: none !important;
+  }
+}
+
 .platform-request-page-inner {
   max-width: 1180px;
   margin: 0 auto;

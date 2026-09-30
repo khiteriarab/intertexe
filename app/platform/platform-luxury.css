@@ -467,11 +467,7 @@
   max-width: 13rem;
 }
 
-@media (max-width: 767px) {
-  .platform-showcase-stat-value {
-    font-size: clamp(3.25rem, 16vw, 4.5rem);
-  }
-}
+/* Mobile stat sizing lives in platform-tokens.css — avoid oversized overrides here. */
 
 @keyframes platform-lux-enter {
   from {
@@ -1214,5 +1210,137 @@
   .platform-lifecycle-graphic,
   .platform-product-pillar-visual img {
     transition: none;
+  }
+}
+
+/* ── Mobile pitch motion + readability ── */
+
+@keyframes platform-mobile-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes platform-mobile-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes platform-mobile-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .platform-showcase-hero-copy {
+    animation: platform-mobile-rise 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .platform-showcase-hero-stage {
+    animation: platform-mobile-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .platform-showcase-hero-after {
+    animation: platform-mobile-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
+  }
+
+  .platform-showcase-tile {
+    animation: platform-mobile-fade 0.55s ease both;
+  }
+
+  .platform-showcase-tile:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+
+  .platform-showcase-tile:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+
+  .platform-showcase-tile:nth-child(4) {
+    animation-delay: 0.15s;
+  }
+
+  /* Keep product fronts readable — no tiny flip-meta text on phones */
+  .platform-showcase-face--back {
+    display: none;
+  }
+
+  .platform-showcase-face--front {
+    display: block;
+    transform: none;
+  }
+
+  .platform-product-pillars-grid--light .platform-product-pillar,
+  .platform-product-pillar {
+    animation: platform-mobile-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .platform-product-pillars-grid--light .platform-product-pillar:nth-child(2),
+  .platform-product-pillar:nth-child(2) {
+    animation-delay: 0.08s;
+  }
+
+  .platform-product-pillars-grid--light .platform-product-pillar:nth-child(3),
+  .platform-product-pillar:nth-child(3) {
+    animation-delay: 0.16s;
+  }
+
+  .platform-lux-nav-drawer {
+    animation: platform-mobile-drawer-in 0.28s ease both;
+  }
+
+  .platform-lux-nav-drawer a {
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+
+  .platform-lux-nav-drawer a:active {
+    transform: translateX(3px);
+  }
+
+  .platform-showcase-hero-cta,
+  a.platform-showcase-hero-cta-secondary--mobile {
+    transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .platform-showcase-hero-cta:active,
+  a.platform-showcase-hero-cta-secondary--mobile:active {
+    transform: scale(0.985);
+  }
+
+  .platform-ebook-section {
+    animation: platform-mobile-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .platform-lux-footer {
+    animation: platform-mobile-fade 0.55s ease both;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .platform-showcase-hero-copy,
+  .platform-showcase-hero-stage,
+  .platform-showcase-hero-after,
+  .platform-showcase-tile,
+  .platform-product-pillar,
+  .platform-product-pillars-grid--light .platform-product-pillar,
+  .platform-lux-nav-drawer,
+  .platform-ebook-section,
+  .platform-lux-footer {
+    animation: none !important;
   }
 }
