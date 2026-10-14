@@ -41,7 +41,8 @@
 |---|---|---|
 | `WARM_CRON_ENABLED` | `0` | Must be `1` to run warm at all |
 | `BACKGROUND_JOBS_ENABLED` | `1` | Master off switch |
-| `EXPENSIVE_BACKGROUND_JOBS_ENABLED` | `1` | Disables expensive registry jobs |
+| `EXPENSIVE_BACKGROUND_JOBS_ENABLED` | `0` | Must be `1` to run expensive registry jobs |
+| `SUPABASE_FETCH_TIMEOUT_MS` | `8000` | Hard abort for Supabase HTTP so hung Postgres cannot bill Fluid memory until maxDuration |
 | `VERCEL_MONTHLY_BUDGET_USD` | `30` | Dashboard / Action Center budget |
 
 ## Incident reference

@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 10;
+export const maxDuration = 8;
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "../../../lib/supabase-server";
 

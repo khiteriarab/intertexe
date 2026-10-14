@@ -7,7 +7,7 @@ import {
 } from "../../../lib/supabase-server";
 
 export const revalidate = 300;
-export const maxDuration = 15;
+export const maxDuration = 10;
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
