@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseTimedFetch } from "./supabase-fetch";
 
 let cachedAuthClient: SupabaseClient | null = null;
 
@@ -14,6 +15,9 @@ export function getConsumerAnonAuthClient() {
   if (!url || !key) return null;
   cachedAuthClient = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: createSupabaseTimedFetch(8_000),
+    },
   });
   return cachedAuthClient;
 }

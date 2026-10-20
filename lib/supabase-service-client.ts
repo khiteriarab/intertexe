@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createSupabaseTimedFetch } from "./supabase-fetch";
 
 function getSupabaseUrl(): string {
   return (
@@ -42,6 +43,10 @@ export function getConsumerSupabase() {
   }
   cachedServiceClient = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      // Fail fast on hung Postgres — prevents Fluid provisioned-memory burn.
+      fetch: createSupabaseTimedFetch(8_000),
+    },
   });
   return cachedServiceClient;
 }

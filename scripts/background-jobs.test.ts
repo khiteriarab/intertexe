@@ -47,12 +47,29 @@ test("catalog-snapshot is registered but not scheduled", () => {
   );
 });
 
-test("gmail outreach sync is scheduled hourly and not expensive", () => {
+test("gmail outreach sync is scheduled every 6h and not expensive", () => {
   const job = BACKGROUND_JOBS.find((j) => j.id === "gmail-outreach-sync");
   assert.ok(job);
   assert.equal(job!.scheduledInProduction, true);
   assert.equal(job!.expensive, false);
-  assert.equal(job!.schedule, "15 * * * *");
+  assert.equal(job!.schedule, "15 */6 * * *");
+});
+
+test("expensive catalog/revenue crons stay unscheduled after Oct 2026 containment", () => {
+  for (const id of [
+    "daily-catalog-refresh",
+    "data-health",
+    "catalog-promote-verify",
+    "sync-designers",
+    "refresh-catalog-stats",
+    "rakuten-revenue-pull",
+    "rakuten-revenue-pull-afternoon",
+  ]) {
+    const job = BACKGROUND_JOBS.find((j) => j.id === id);
+    assert.ok(job, id);
+    assert.equal(job!.scheduledInProduction, false, id);
+    assert.equal(job!.schedule, null, id);
+  }
 });
 
 test("contacts sheet sync is retired after one-time import", () => {
