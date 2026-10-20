@@ -37,3 +37,13 @@ Only after Supabase status is **Healthy** on **Small+** compute for several stab
 1. Set `EXPENSIVE_BACKGROUND_JOBS_ENABLED=1` if classify/stats are needed.
 2. Re-schedule one expensive job at a time via registry + `vercel.json` (bump `APPROVED_CRON_BASELINE`).
 3. Watch Founder Dashboard → Operations / cost snapshot for longest job durations.
+
+## Related: Supabase CPU >80% (2026-10-20)
+
+Same root pattern — Small/Nano compute cannot absorb:
+
+- `catalog_browse_page_v2` material filters (~4–6s wall-clock; live silk probe ~5s)
+- Exact `count(*)` scans on `live_products_apparel` / `products` from expensive crons when `EXPENSIVE_BACKGROUND_JOBS_ENABLED=1`
+- Nightly Rakuten feed ingest (GitHub Actions) upserting large FTP chunks
+
+Containment: keep expensive Vercel crons unscheduled, keep `EXPENSIVE_BACKGROUND_JOBS_ENABLED=0`, pause GHA `rakuten-feed-sync` schedule, and use Supabase Dashboard → Reports → Query Performance to terminate stuck statements.

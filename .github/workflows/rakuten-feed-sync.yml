@@ -4,8 +4,10 @@
 name: Rakuten Feed Sync
 
 on:
-  schedule:
-    - cron: "0 2 * * *"
+  # Paused 2026-10-20: nightly FTP ingest was a top Supabase CPU driver on Small
+  # compute (>80% CPU). Keep workflow_dispatch for intentional manual runs only.
+  # schedule:
+  #   - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       file_limit:
