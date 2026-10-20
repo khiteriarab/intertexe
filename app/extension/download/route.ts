@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 const FILE_NAME = "INTERTEXE-Fabric-Scanner-1.0.20.zip";
 
-/** Chrome Web Store zip with Content-Disposition so the browser actually downloads it. */
+/** Chrome Web Store package: manifest.json at zip root. Do not unzip before upload. */
 export async function GET() {
   const filePath = path.join(process.cwd(), "public", "downloads", FILE_NAME);
   const body = await readFile(filePath);
