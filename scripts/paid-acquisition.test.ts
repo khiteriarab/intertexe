@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 import {
   classifyPaidPlatform,
@@ -50,5 +51,13 @@ describe("creativeKey", () => {
       campaign: "promote_a",
       creative: "creative_a",
     });
+  });
+});
+
+describe("HQ acquisition page", () => {
+  it("imports PaidAcquisitionSection so the page does not crash", () => {
+    const src = readFileSync("app/dashboard/(app)/acquisition/page.tsx", "utf8");
+    assert.match(src, /import\s*\{\s*PaidAcquisitionSection\s*\}\s*from\s*"\.\.\/\.\.\/components\/PaidAcquisitionSection"/);
+    assert.match(src, /<PaidAcquisitionSection\s+report=\{paidAcquisition\}\s*\/>/);
   });
 });
