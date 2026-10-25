@@ -48,3 +48,5 @@
 ## Incident reference
 
 See [`docs/p0-evidence/vercel-fluid-memory-incident-2026-08-02.md`](./p0-evidence/vercel-fluid-memory-incident-2026-08-02.md).
+
+See [`docs/p0-evidence/vercel-deployment-paused-spend-2026-10-25.md`](./p0-evidence/vercel-deployment-paused-spend-2026-10-25.md) — Production hard-paused on spend; all crons cleared (baseline v7).

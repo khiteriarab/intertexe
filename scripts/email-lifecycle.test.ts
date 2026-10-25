@@ -65,31 +65,32 @@ test("normalizeEmail lowercases and trims", () => {
   assert.equal(normalizeEmail("  A@B.Com "), "a@b.com");
 });
 
-test("price-check cron is unscheduled; price-drops remains canonical", () => {
+test("price-check cron is unscheduled; price-drops canonical but paused for spend emergency", () => {
   const priceCheck = BACKGROUND_JOBS.find((j) => j.id === "price-check");
   const priceDrops = BACKGROUND_JOBS.find((j) => j.id === "price-drops");
   assert.ok(priceCheck);
   assert.ok(priceDrops);
   assert.equal(priceCheck!.scheduledInProduction, false);
-  assert.equal(priceDrops!.scheduledInProduction, true);
+  assert.equal(priceDrops!.scheduledInProduction, false);
+  assert.equal(priceDrops!.path, "/api/notifications/price-drops");
   assert.equal(
     expectedVercelCrons().some((c) => c.path === "/api/cron/price-check"),
     false
   );
   assert.equal(
     expectedVercelCrons().some((c) => c.path === "/api/notifications/price-drops"),
-    true
+    false
   );
 });
 
-test("lifecycle checkpoint cron is scheduled", () => {
+test("lifecycle checkpoint cron registered but unscheduled during spend emergency", () => {
   const job = BACKGROUND_JOBS.find((j) => j.id === "lifecycle-checkpoints");
   assert.ok(job);
-  assert.equal(job!.scheduledInProduction, true);
+  assert.equal(job!.scheduledInProduction, false);
   assert.equal(job!.path, "/api/cron/lifecycle-checkpoints");
   assert.equal(
     expectedVercelCrons().some((c) => c.path === "/api/cron/lifecycle-checkpoints"),
-    true
+    false
   );
   assert.equal(lifecycleEmailTypeForDay(4), EMAIL_TYPES.LIFECYCLE_DAY4);
   assert.equal(lifecycleEmailTypeForDay(10), EMAIL_TYPES.LIFECYCLE_DAY10);

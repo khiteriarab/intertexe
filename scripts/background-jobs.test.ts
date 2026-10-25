@@ -47,12 +47,12 @@ test("catalog-snapshot is registered but not scheduled", () => {
   );
 });
 
-test("gmail outreach sync is scheduled every 6h and not expensive", () => {
+test("gmail outreach sync stays unscheduled during spend emergency", () => {
   const job = BACKGROUND_JOBS.find((j) => j.id === "gmail-outreach-sync");
   assert.ok(job);
-  assert.equal(job!.scheduledInProduction, true);
+  assert.equal(job!.scheduledInProduction, false);
   assert.equal(job!.expensive, false);
-  assert.equal(job!.schedule, "15 */6 * * *");
+  assert.equal(job!.schedule, null);
 });
 
 test("expensive catalog/revenue crons stay unscheduled after Oct 2026 containment", () => {
@@ -69,6 +69,14 @@ test("expensive catalog/revenue crons stay unscheduled after Oct 2026 containmen
     assert.ok(job, id);
     assert.equal(job!.scheduledInProduction, false, id);
     assert.equal(job!.schedule, null, id);
+  }
+});
+
+test("spend emergency: zero production crons scheduled", () => {
+  assert.equal(expectedVercelCrons().length, 0);
+  for (const job of BACKGROUND_JOBS) {
+    assert.equal(job.scheduledInProduction, false, job.id);
+    assert.equal(job.schedule, null, job.id);
   }
 });
 
