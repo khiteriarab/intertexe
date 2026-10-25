@@ -15,6 +15,10 @@ This is **not** organic traffic overload. Vercel paused Production after the acc
 
 Fluid **Provisioned Memory** bills for wall-clock while serverless requests wait on Supabase I/O — including slow catalog RPCs and hung Postgres — even when Active CPU and visitor counts look low.
 
+This was **not** caused by organic shopper volume. See [`docs/VERCEL_SPEND_NEVER_DOWN.md`](../VERCEL_SPEND_NEVER_DOWN.md) for the exact cron list and never-down rules.
+
+**Crons that amplified spend before they were cleared** (especially when expensive jobs were enabled): `daily-catalog-refresh`, `sync-designers`, `data-health`, `catalog-promote-verify`, `refresh-catalog-stats`, `rakuten-revenue-pull` (2×/day), plus frequent `gmail-outreach-sync`. Storefront waits during Unhealthy Nano were the main GB-hr source.
+
 ## Immediate operator steps (site online again)
 
 1. Vercel → Billing / Spending → raise or clear the hard pause limit → **Unpause** Production.

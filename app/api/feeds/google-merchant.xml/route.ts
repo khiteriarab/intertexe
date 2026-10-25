@@ -8,7 +8,8 @@ import {
 } from "../../../../lib/google-merchant-feed";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+/** Cap Fluid wall-clock — Googlebot must not hold a 300s isolate open. */
+export const maxDuration = 60;
 
 export async function GET() {
   const supabase = getGoogleMerchantSupabase();
