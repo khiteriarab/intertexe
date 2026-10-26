@@ -598,12 +598,199 @@ export const KHITERIS_EDIT_SEPTEMBER_2026: KhiterisEditConfig = {
   ],
 };
 
+/** November 2026 — winter edit: cashmere, wool coats, shearling boots. */
+export const KHITERIS_EDIT_NOVEMBER_2026: KhiterisEditConfig = {
+  slug: "khiteri",
+  monthLabel: "November 2026",
+  title: "KHITERI'S EDIT",
+  subtitle:
+    "November picks — cashmere and merino knits, wool coats, a leather outer layer, and the boots I'm living in now.",
+  coverImage: {
+    src: "/khiteri/cover-november.jpg",
+    alt: "Toteme Belted Leather Coat on model — winter outerwear",
+  },
+  moodBoard: {
+    caption: "Cashmere knits, wool coats, and shearling-lined boots for the cold months.",
+    images: [
+      {
+        src: "/khiteri/rohe-turtleneck.jpg",
+        alt: "Róhe Turtleneck Wool and Cashmere Top",
+      },
+      {
+        src: "/khiteri/whistles-wool-coat.jpg",
+        alt: "Whistles Morgan Funnel-Neck Wool Coat",
+      },
+      {
+        src: "/khiteri/toteme-shearling-boots.jpg",
+        alt: "Toteme Shearling-Lined Suede Ankle Boots",
+      },
+    ],
+  },
+  products: [
+    {
+      id: "01",
+      name: "Turtleneck Wool and Cashmere Top",
+      composition: "70% Wool, 30% Cashmere",
+      price: "$675",
+      brand: "Róhe",
+      catalogSku: "P01103203",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317212790762897526524965&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Frohe-turtleneck-wool-and-cashmere-top-black-p01103203%3Ffeed_num%3DP01103203%26feed_des%3DR%C3%B3he%26feed_mwg%3Dclothing",
+      image: {
+        src: "/khiteri/rohe-turtleneck.jpg",
+        alt: "Róhe Turtleneck Wool and Cashmere Top on model",
+      },
+    },
+    {
+      id: "02",
+      name: "Wool Long Sleeve Polo Sweater in Slate",
+      composition: "80% Wool, 10% Cashmere, 10% Silk",
+      price: "$224",
+      brand: "7 For All Mankind",
+      href: "https://click.linksynergy.com/deeplink?id=*8b0zWDyXo0&mid=36145&murl=https%3A%2F%2F7forallmankind.com%2Fproducts%2Fwool-long-sleeve-polo-sweater-in-slate%3Fvariant%3D41615587999829",
+      image: {
+        src: "/khiteri/7fam-polo-sweater.jpg",
+        alt: "7 For All Mankind Wool Long Sleeve Polo Sweater in Slate on model",
+      },
+    },
+    {
+      id: "03",
+      name: "Freya Brushed Alpaca Sweater",
+      composition: "Alpaca",
+      price: "$295",
+      brand: "A.L.C.",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=784479.4199318371375421764468836&type=15&murl=https%3A%2F%2Falcltd.com%2Fproducts%2Ffreya-top-charcoal",
+      image: {
+        src: "/khiteri/alc-freya.jpg",
+        alt: "A.L.C. Freya Brushed Alpaca Sweater on model",
+      },
+    },
+    {
+      id: "04",
+      name: "Greer Knit Asymmetrical Neck Top",
+      composition: "90% Merino Wool, 10% Cashmere",
+      price: "$295",
+      brand: "Milly",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386710479646845600893641&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fmilly-greer-knit-asymmetrical-neck-top%3FID%3D6224121%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "/khiteri/milly-greer.jpg",
+        alt: "Milly Greer Knit Asymmetrical Neck Top on model",
+      },
+    },
+    {
+      id: "05",
+      name: "Morgan Funnel-Neck Wool Coat",
+      composition: "Shell: 100% Wool",
+      price: "$659",
+      brand: "Whistles",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138678493444274302462461&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fwhistles-morgan-funnel-neck-coat%3FID%3D5085738%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "/khiteri/whistles-wool-coat.jpg",
+        alt: "Whistles Morgan Funnel-Neck Wool Coat on model",
+      },
+    },
+    {
+      id: "06",
+      name: "Belted Asymmetrical Wool Blazer",
+      composition: "100% Wool",
+      price: "$698",
+      brand: "Helmut Lang",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138674100792323729942085&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Fhelmut-lang-belted-asymmetrical-button-blazer%3FID%3D6089591%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "/khiteri/helmut-lang-blazer.jpg",
+        alt: "Helmut Lang Belted Asymmetrical Wool Blazer on model",
+      },
+    },
+    {
+      id: "07",
+      name: "Structured Wool Blazer",
+      composition: "86% Wool, 14% Silk",
+      price: "$2,620",
+      brand: "Rokh",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.138673520127105732191721&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Frokh-pleated-blazer%3FID%3D5437339%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "/khiteri/rokh-wool-blazer.jpg",
+        alt: "Rokh Structured Wool Blazer on model",
+      },
+    },
+    {
+      id: "08",
+      name: "Belted Leather Coat",
+      composition: "100% Lamb Leather",
+      price: "$3,840",
+      brand: "Toteme",
+      catalogSku: "P01136600",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431724392201428081725421&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-belted-leather-coat-black-p01136600%3Ffeed_num%3DP01136600%26feed_des%3DToteme%26feed_mwg%3Dclothing",
+      image: {
+        src: "/khiteri/toteme-leather-coat.jpg",
+        alt: "Toteme Belted Leather Coat on model",
+      },
+    },
+    {
+      id: "09",
+      name: "Shearling-Lined Suede Ankle Boots",
+      composition: "Upper: 100% Lamb Leather; Trim: 100% Lamb Shearling",
+      price: "$1,000",
+      brand: "Toteme",
+      catalogSku: "P01100337",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431721903067214914891537&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Ftoteme-shearling-lined-suede-ankle-boots-beige-p01100337%3Ffeed_num%3DP01100337%26feed_des%3DToteme%26feed_mwg%3Dshoes",
+      image: {
+        src: "/khiteri/toteme-shearling-boots.jpg",
+        alt: "Toteme Shearling-Lined Suede Ankle Boots",
+      },
+    },
+    {
+      id: "10",
+      name: "Vegas 100 Suede Cowboy Boots",
+      composition: "Upper: 100% Bovine Leather",
+      price: "$1,290",
+      brand: "Paris Texas",
+      catalogSku: "P01143900",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.4317212863668071763261030&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fparis-texas-vegas-100-suede-cowboy-boots-brown-p01143900%3Ffeed_num%3DP01143900%26feed_des%3DParisTexas%26feed_mwg%3Dshoes",
+      image: {
+        src: "/khiteri/paris-texas-boots.jpg",
+        alt: "Paris Texas Vegas Suede Cowboy Boots",
+      },
+    },
+    {
+      id: "11",
+      name: "Passeggiata Leather Combat Boots",
+      composition: "Upper: 100% Bovine Leather",
+      price: "$1,650",
+      brand: "The Attico",
+      catalogSku: "P01128780",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=2033543.431728026185948213648248&type=15&murl=https%3A%2F%2Fwww.mytheresa.com%2Fus%2Fen%2Fwomen%2Fthe-attico-passeggiata-leather-combat-boots-brown-p01128780%3Ffeed_num%3DP01128780%26feed_des%3DTheAttico%26feed_mwg%3Dshoes",
+      image: {
+        src: "/khiteri/attico-combat-boots.jpg",
+        alt: "The Attico Passeggiata Leather Combat Boots",
+      },
+    },
+    {
+      id: "12",
+      name: "Olina Silk Pants",
+      composition: "100% Silk",
+      price: "$178",
+      brand: "Reformation",
+      href: "https://click.linksynergy.com/link?id=*8b0zWDyXo0&offerid=1170371.1386710571345825183064491&type=15&murl=https%3A%2F%2Fwww.bloomingdales.com%2Fshop%2Fproduct%2Freformation-olina-silk-pants%3FID%3D5976540%26PartnerID%3DLINKSHARE%26cm_mmc%3DLINKSHARE-_-n-_-n-_-n",
+      image: {
+        src: "/khiteri/reformation-silk-pants.jpg",
+        alt: "Reformation Olina Silk Pants on model",
+      },
+    },
+  ],
+};
+
 export const KHITERIS_EDIT_ARCHIVE: Array<Pick<KhiterisEditConfig, "monthLabel" | "title" | "subtitle"> & { href: string }> = [
+  {
+    monthLabel: KHITERIS_EDIT_NOVEMBER_2026.monthLabel,
+    title: KHITERIS_EDIT_NOVEMBER_2026.title,
+    subtitle: KHITERIS_EDIT_NOVEMBER_2026.subtitle,
+    href: "/khiteri",
+  },
   {
     monthLabel: KHITERIS_EDIT_SEPTEMBER_2026.monthLabel,
     title: KHITERIS_EDIT_SEPTEMBER_2026.title,
     subtitle: KHITERIS_EDIT_SEPTEMBER_2026.subtitle,
-    href: "/khiteri",
+    href: "/khiteri?preview=2026-09",
   },
   {
     monthLabel: KHITERIS_EDIT_AUGUST_2026.monthLabel,
@@ -619,7 +806,7 @@ export const KHITERIS_EDIT_ARCHIVE: Array<Pick<KhiterisEditConfig, "monthLabel" 
   },
 ];
 
-export const ACTIVE_KHITERIS_EDIT = KHITERIS_EDIT_SEPTEMBER_2026;
+export const ACTIVE_KHITERIS_EDIT = KHITERIS_EDIT_NOVEMBER_2026;
 
 /** Editorial product links must be commission-tracked, never raw brand-store URLs. */
 export function isAffiliateTrackingUrl(value: string): boolean {

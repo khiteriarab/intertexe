@@ -5,6 +5,7 @@ import {
   getKhiterisEditConfig,
   KHITERIS_EDIT_AUGUST_2026,
   KHITERIS_EDIT_JULY_2026,
+  KHITERIS_EDIT_SEPTEMBER_2026,
   type KhiterisEditConfig,
 } from "../../lib/khiteris-edit";
 import { catalogRegionFromCountry, getCountryFromHeaders } from "../../lib/geo-detect";
@@ -18,7 +19,7 @@ const baseEdit = getKhiterisEditConfig();
 
 const seoDescription =
   baseEdit.subtitle ??
-  "A curated monthly edit of natural-fiber fashion — cashmere, wool, silk, and leather for fall.";
+  "A curated monthly edit of natural-fiber fashion — cashmere, wool, silk, and leather for winter.";
 
 function khiterisEditForPreview(preview?: string): KhiterisEditConfig {
   switch (preview) {
@@ -26,6 +27,8 @@ function khiterisEditForPreview(preview?: string): KhiterisEditConfig {
       return KHITERIS_EDIT_JULY_2026;
     case "2026-08":
       return KHITERIS_EDIT_AUGUST_2026;
+    case "2026-09":
+      return KHITERIS_EDIT_SEPTEMBER_2026;
     default:
       return baseEdit;
   }
@@ -41,10 +44,11 @@ export const metadata: Metadata = {
   keywords: [
     "Khiteri edit",
     "INTERTEXE",
-    "fall edit",
-    "September fall edit",
+    "November winter edit",
     "cashmere knit",
-    "wool blazer",
+    "merino wool",
+    "wool coat",
+    "shearling boots",
     "leather coat",
     "natural fiber fashion",
     "editorial fashion edit",
