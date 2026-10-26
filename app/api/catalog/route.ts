@@ -23,6 +23,7 @@ import {
 } from "../../../lib/catalog-fetch-limits";
 
 export const revalidate = 300;
+export const maxDuration = 10;
 const COLLECTION_FALLBACK_MIN_PRODUCTS = 3;
 const CACHE_TTL_MS = 300_000;
 const PRODUCT_CACHE_HEADERS = {

@@ -160,6 +160,62 @@ function checkJobGuardDefaults() {
   if (!/EXPENSIVE_BACKGROUND_JOBS_ENABLED\s*\?\?\s*["']0["']/.test(guard)) {
     fail('lib/job-guard.ts must default EXPENSIVE_BACKGROUND_JOBS_ENABLED to "0"');
   }
+  if (!/BACKGROUND_JOBS_ENABLED\s*\?\?\s*["']0["']/.test(guard)) {
+    fail('lib/job-guard.ts must default BACKGROUND_JOBS_ENABLED to "0" after spend pause');
+  }
+  const fetchSrc = readFileSync(join(root, "lib/supabase-fetch.ts"), "utf8");
+  if (!/defaultTimeoutMs\s*=\s*5_000/.test(fetchSrc) && !/defaultTimeoutMs\s*=\s*5000/.test(fetchSrc)) {
+    fail("lib/supabase-fetch.ts must default Supabase fetch timeout to 5000ms");
+  }
+}
+
+/** Prevent Fluid regressions: empty crons + short public maxDuration caps. */
+function checkFluidSpendGuards() {
+  const crons = loadVercelCrons();
+  if (crons.length !== 0) {
+    fail(
+      `vercel.json must have zero crons during Fluid spend lockdown (found ${crons.length}). See docs/VERCEL_SPEND_NEVER_DOWN.md`
+    );
+  }
+  if (expectedVercelCrons().length !== 0) {
+    fail("registry still schedules production crons — set scheduledInProduction false for all jobs");
+  }
+
+  const publicCaps: Array<{ file: string; max: number }> = [
+    { file: "app/api/health/route.ts", max: 5 },
+    { file: "app/api/products/route.ts", max: 10 },
+    { file: "app/api/catalog/route.ts", max: 10 },
+    { file: "app/api/catalog/stats/route.ts", max: 10 },
+    { file: "app/api/sale/route.ts", max: 10 },
+    { file: "app/api/scan/route.ts", max: 10 },
+    { file: "app/api/feeds/google-merchant.xml/route.ts", max: 30 },
+  ];
+  for (const { file, max } of publicCaps) {
+    const full = join(root, file);
+    if (!existsSync(full)) continue;
+    const src = readFileSync(full, "utf8");
+    const m = src.match(/export const maxDuration = (\d+)/);
+    if (!m) fail(`${file} must set export const maxDuration`);
+    const n = Number(m[1]);
+    if (n > max) fail(`${file} maxDuration=${n} exceeds hard cap ${max}`);
+  }
+
+  // No cron route may claim >60s while unscheduled lockdown is active
+  const cronRoot = join(root, "app/api/cron");
+  function walk(dir: string) {
+    for (const ent of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, ent.name);
+      if (ent.isDirectory()) walk(p);
+      else if (ent.name === "route.ts") {
+        const src = readFileSync(p, "utf8");
+        const m = src.match(/export const maxDuration = (\d+)/);
+        if (m && Number(m[1]) > 60) {
+          fail(`${p.replace(root + "/", "")} maxDuration=${m[1]} > 60 during Fluid lockdown`);
+        }
+      }
+    }
+  }
+  if (existsSync(cronRoot)) walk(cronRoot);
 }
 
 function checkNoBackgroundLoopsInCronRoutes() {
@@ -217,6 +273,7 @@ function main() {
   checkVercelMatchesRegistry();
   checkWarmRouteSource();
   checkJobGuardDefaults();
+  checkFluidSpendGuards();
   checkNoBackgroundLoopsInCronRoutes();
   checkOverlappingSchedules();
 

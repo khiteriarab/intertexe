@@ -4,6 +4,7 @@ import { priceBoundsFromTier, type ShopPriceTierId } from "../../../lib/catalog-
 import { normalizeSaleSort } from "../../../lib/sale-sort";
 
 export const revalidate = 300;
+export const maxDuration = 10;
 
 function parsePriceTier(raw: string | null): ShopPriceTierId {
   if (!raw || raw === "any") return "any";

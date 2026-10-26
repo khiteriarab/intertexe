@@ -5,7 +5,7 @@ import { getValidAccessToken } from "@/lib/dashboard/integrations/connections";
 import { prepareOutreachDrafts } from "@/lib/dashboard/gmail-prepare-drafts";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 /**
  * Create personalized Gmail drafts from the founder’s template drafts.

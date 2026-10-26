@@ -6,7 +6,7 @@ import {
 import { refreshCatalogRouteStats } from "../../../../lib/refresh-catalog-route-stats";
 
 export const revalidate = 3600;
-export const maxDuration = 45;
+export const maxDuration = 10;
 
 const CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",

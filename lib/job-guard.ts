@@ -12,9 +12,10 @@ export const COST_BUDGET_KEY = "vercel_cost_budget_usd";
 export const COST_OBSERVABILITY_KEY = "vercel_cost_observability";
 
 export function backgroundJobsEnabled(): boolean {
-  const raw = String(process.env.BACKGROUND_JOBS_ENABLED ?? "1").trim().toLowerCase();
+  // Default OFF after Oct 2026 Fluid spend pause — cron routes no-op unless explicitly enabled.
+  const raw = String(process.env.BACKGROUND_JOBS_ENABLED ?? "0").trim().toLowerCase();
   if (raw === "0" || raw === "false" || raw === "off" || raw === "no") return false;
-  return true;
+  return raw === "1" || raw === "true" || raw === "on" || raw === "yes";
 }
 
 export function warmCronEnabled(): boolean {

@@ -14,7 +14,11 @@ import {
   BACKGROUND_JOBS,
   MAX_MONTHLY_INVOCATIONS_WITHOUT_FOUNDER_REVIEW,
 } from "../lib/background-jobs/registry.ts";
-import { warmCronEnabled, expensiveJobsEnabled } from "../lib/job-guard.ts";
+import {
+  warmCronEnabled,
+  expensiveJobsEnabled,
+  backgroundJobsEnabled,
+} from "../lib/job-guard.ts";
 
 test("warm defaults off", () => {
   const prev = process.env.WARM_CRON_ENABLED;
@@ -22,6 +26,14 @@ test("warm defaults off", () => {
   assert.equal(warmCronEnabled(), false);
   if (prev === undefined) delete process.env.WARM_CRON_ENABLED;
   else process.env.WARM_CRON_ENABLED = prev;
+});
+
+test("background jobs master switch defaults off", () => {
+  const prev = process.env.BACKGROUND_JOBS_ENABLED;
+  delete process.env.BACKGROUND_JOBS_ENABLED;
+  assert.equal(backgroundJobsEnabled(), false);
+  if (prev === undefined) delete process.env.BACKGROUND_JOBS_ENABLED;
+  else process.env.BACKGROUND_JOBS_ENABLED = prev;
 });
 
 test("expensive background jobs default off", () => {

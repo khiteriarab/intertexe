@@ -6,12 +6,12 @@
  * Postgres instance can hold serverless isolates open until maxDuration
  * (10–300s), which is what drove the Oct 2026 +426% memory spike.
  */
-export function createSupabaseTimedFetch(defaultTimeoutMs = 8_000) {
+export function createSupabaseTimedFetch(defaultTimeoutMs = 5_000) {
   const timeoutMs = Math.max(
     1_000,
     Math.min(
       Number(process.env.SUPABASE_FETCH_TIMEOUT_MS || defaultTimeoutMs) || defaultTimeoutMs,
-      60_000
+      15_000
     )
   );
 
