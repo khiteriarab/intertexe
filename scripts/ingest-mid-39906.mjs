@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Targeted Rakuten ingest for MID 39906.
+ * Targeted Rakuten ingest for 3.1 Phillip Lim (MID 39906).
  * Qualifying products (≥80% NFP apparel / leather footwear gate) are written
  * by the shared sync pipeline — this script only scopes FTP to the new MID.
  */
@@ -18,7 +18,7 @@ const { syncRakutenFeeds, refreshCatalogMaterializedViews } = await import(
   pathToFileURL(path.join(root, 'lib/feed-sync/rakuten-sync.js')).href
 );
 
-console.log('INTERTEXE — Rakuten MID 39906 ingest\n');
+console.log('INTERTEXE — 3.1 Phillip Lim (MID 39906) ingest\n');
 
 const result = await syncRakutenFeeds({
   ftpDirFilter: ['39906'],
