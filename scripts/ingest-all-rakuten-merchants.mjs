@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pull all 16 Rakuten MIDs via generic sync (FTP filter).
+ * Pull all tracked Rakuten MIDs via generic sync (FTP filter).
  * For heavy feeds (MyTheresa, Bloomingdale's, Simon, Fleur du Mal) also run
  * dedicated scripts after this completes.
  *
