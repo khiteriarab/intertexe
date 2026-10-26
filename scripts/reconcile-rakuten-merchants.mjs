@@ -2,7 +2,7 @@
 /**
  * Full Rakuten merchant reconcile:
  * 1. Clear kill switches + heal stuck checkpoint
- * 2. Audit all 16 MIDs
+ * 2. Audit all tracked MIDs
  * 3. Run generic + dedicated ingests for thin/missing merchants
  *
  * Usage:
@@ -122,7 +122,7 @@ async function main() {
     console.log(`\n${stillBad.length} MIDs still need attention:`, stillBad.map((r) => r.mid).join(', '));
     process.exitCode = 1;
   } else {
-    console.log('\nAll 16 MIDs have live qualifying inventory.');
+    console.log(`\nAll ${RAKUTEN_MERCHANTS.length} tracked MIDs have live qualifying inventory.`);
   }
 }
 

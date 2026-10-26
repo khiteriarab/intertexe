@@ -22,11 +22,12 @@ const steps = [
   ['node', ['scripts/ingest-isabel-marant.mjs']],
   ['node', ['scripts/ingest-fleur-du-mal.cjs']],
   ['node', ['scripts/ingest-faithfull.mjs']],
+  ['node', ['scripts/ingest-mid-39906.mjs']],
   ['node', ['scripts/fetch-rakuten-pipe-feed.mjs', '42841', '42623']],
   ['node', ['scripts/ingest-lagence.cjs']],
   ['node', ['scripts/ingest-splendid.cjs']],
   // 7fam needs /tmp/7fam-womens.json — covered by generic FTP for MID 36145
-  // Generic FTP for Diesel, A.L.C., Peachy Den, Veronica Beard CA
+  // Generic FTP for Diesel, A.L.C., Peachy Den, Veronica Beard CA, MID 39906
   ['node', ['scripts/ingest-all-rakuten-merchants.mjs']],
   ['node', ['scripts/backfill-retailer-mid.mjs']],
   ['node', ['scripts/expedite-catalog-live.mjs']],
@@ -47,7 +48,7 @@ for (const [cmd, args] of steps) {
     env: {
       ...process.env,
       FEED_LIVE_INGEST_ENABLED: '1',
-      RAKUTEN_FTP_DIR_FILTER: '49384,41993,52708,52963,49987,43654,42841,42623,36145,46961,50739',
+      RAKUTEN_FTP_DIR_FILTER: '49384,41993,52708,52963,49987,43654,42841,42623,36145,46961,50739,39906',
     },
   });
   if (res.status !== 0) console.warn(`Step exit ${res.status}: ${script}`);
