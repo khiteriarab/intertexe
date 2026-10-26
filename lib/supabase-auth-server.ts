@@ -16,7 +16,7 @@ export function getConsumerAnonAuthClient() {
   cachedAuthClient = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
-      fetch: createSupabaseTimedFetch(8_000),
+      fetch: createSupabaseTimedFetch(5_000),
     },
   });
   return cachedAuthClient;

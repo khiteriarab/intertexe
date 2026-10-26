@@ -45,7 +45,7 @@ export function getConsumerSupabase() {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
       // Fail fast on hung Postgres — prevents Fluid provisioned-memory burn.
-      fetch: createSupabaseTimedFetch(8_000),
+      fetch: createSupabaseTimedFetch(5_000),
     },
   });
   return cachedServiceClient;

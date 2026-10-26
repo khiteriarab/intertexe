@@ -7,7 +7,7 @@
  * Auth: Bearer $CRON_SECRET
  */
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase-service-client";

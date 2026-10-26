@@ -3,6 +3,7 @@ import { fetchDesignersByNames, fetchDesignersByIds, getServerSupabase } from ".
 import { SHOPPABLE_MIN_PRODUCTS } from "../../../lib/shoppable-brands";
 
 export const revalidate = 300;
+export const maxDuration = 10;
 
 const PRODUCT_CACHE_HEADERS = {
   "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",

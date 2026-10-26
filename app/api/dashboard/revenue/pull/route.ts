@@ -3,7 +3,7 @@ import { getHqSession } from "../../../../../lib/dashboard/auth";
 import { pullRakutenRevenueReports } from "../../../../../lib/dashboard/rakuten-revenue-ftp";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 export async function POST() {
   const session = await getHqSession();

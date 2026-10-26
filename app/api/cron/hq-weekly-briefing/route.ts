@@ -9,7 +9,7 @@ import {
 } from "../../../../lib/feed-sync/ops-monitor";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 async function loadAcquisitionSafe() {
   try {

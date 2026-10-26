@@ -39,13 +39,14 @@ Even with expensive crons off, every real `/shop` and `/api/products` call still
 
 ## Hard guarantees now (code)
 
-1. **`vercel.json` → `"crons": []`** — zero scheduled background jobs (baseline v7).
-2. Registry: every job `scheduledInProduction: false` — CI fails if a cron is added without review.
-3. `WARM_CRON_ENABLED` defaults **off**; warm not scheduled.
-4. `EXPENSIVE_BACKGROUND_JOBS_ENABLED` defaults **off**.
-5. Supabase client **8s fetch timeout** — hung DB cannot hold instances until long maxDuration.
-6. Nightly Rakuten feed GitHub Action schedule **paused**.
-7. Google Merchant feed `maxDuration` capped (no 300s open-ended crawl on Fluid).
+1. **`vercel.json` → `"crons": []`** — zero scheduled background jobs (baseline v7). CI fails if any cron returns.
+2. Registry: every job `scheduledInProduction: false`.
+3. `BACKGROUND_JOBS_ENABLED` defaults **off** — even manual cron hits no-op unless set to `1`.
+4. `WARM_CRON_ENABLED` / `EXPENSIVE_BACKGROUND_JOBS_ENABLED` default **off**.
+5. Supabase client **5s fetch timeout** (hard ceiling 15s via env).
+6. Storefront API `maxDuration` ≤ **10s** (health ≤ 5s); cron routes ≤ **60s**; merchant feed ≤ **30s**.
+7. Nightly Rakuten feed GitHub Action schedule **paused**.
+8. `npm run check:background-jobs` / Vercel build enforces the above (`checkFluidSpendGuards`).
 
 ## Hard guarantees you must keep in Vercel (billing)
 
