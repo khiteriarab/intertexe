@@ -35,10 +35,13 @@ import {
   classifyGarment,
   catalogDedupeKey,
   catalogDedupeKeyFromProduct,
+  catalogDisplayName,
   catalogNormalizeImageUrl,
   dedupeCatalogProducts,
   dedupeCatalogRows,
+  mergeSizeOptions,
   offerCompletenessStatus,
+  pickDedupeWinner,
   rowMatchesShopFiber,
 } from "./catalog-rules";
 import {
@@ -115,6 +118,10 @@ export interface Product {
   /** Curator favorite — surfaces first on homepage rails. */
   isEditorPick?: boolean;
   editorPickedAt?: string | null;
+  /** Rakuten merchant id — used to pick the highest-commission click-out. */
+  retailerMid?: string | null;
+  /** Aggregated sizes when size SKUs collapse to one card. */
+  sizeOptions?: string[] | null;
 }
 
 const DESIGNER_PRODUCT_SLUG_ALIASES: Record<string, string> = {
@@ -980,7 +987,7 @@ export function mapProductRow(row: any): Product {
     id: row.id,
     brandSlug,
     brandName: sanitizeBrandName(row.brand_name || ""),
-    name: row.title || row.name || "",
+    name: catalogDisplayName(String(row.title || row.name || "")),
     productId: row.product_id || row.id,
     url: row.url || "",
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
@@ -1026,6 +1033,17 @@ export function mapProductRow(row: any): Product {
     editorPickedAt:
       row.editor_picked_at != null && String(row.editor_picked_at).trim()
         ? String(row.editor_picked_at).trim()
+        : null,
+    retailerMid:
+      row.retailer_mid != null && String(row.retailer_mid).trim()
+        ? String(row.retailer_mid).trim()
+        : row.retailerMid != null && String(row.retailerMid).trim()
+          ? String(row.retailerMid).trim()
+          : null,
+    sizeOptions: Array.isArray(row.size_options)
+      ? row.size_options.map((s: unknown) => String(s)).filter(Boolean)
+      : Array.isArray(row.sizeOptions)
+        ? row.sizeOptions.map((s: unknown) => String(s)).filter(Boolean)
         : null,
   };
 }
@@ -1395,11 +1413,12 @@ async function collectBrandCatalogPage(
     ? 6000
     : Math.min(4000, Math.max(2000, (offset + limit) * 12));
   let rawCursor = 0;
-  let skipped = 0;
-  const seen = new Set<string>();
-  const seenImages = new Set<string>();
-  const page: Product[] = [];
-  const allFiltered: Product[] = [];
+  /** Style/image groups: keep raw offers so we can pick highest-commission winner. */
+  const groups = new Map<
+    string,
+    { rows: Record<string, unknown>[]; products: Product[]; imageKey: string | null }
+  >();
+  const imageToGroupKey = new Map<string, string>();
   let exhausted = false;
 
   while (rawCursor < maxRawScan) {
@@ -1430,6 +1449,8 @@ async function collectBrandCatalogPage(
           "fiber_subtype_label",
           "gender_scope",
           "created_at",
+          "retailer_mid",
+          "size_options",
         ].join(",")
       )
       .eq("is_displayable", true)
@@ -1445,11 +1466,11 @@ async function collectBrandCatalogPage(
       .range(rawCursor, rawCursor + batchSize - 1);
 
     if (error && isCatalogTimeoutError(error)) {
-      allFiltered.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
-      const orderedPage = allFiltered.slice(offset, offset + limit);
+      const collapsed = collapseBrandOfferGroups(groups, region);
+      collapsed.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
       return {
-        products: orderedPage.length ? orderedPage : page,
-        filteredTotal: allFiltered.length,
+        products: collapsed.slice(offset, offset + limit),
+        filteredTotal: collapsed.length,
         timedOut: true,
         hasMoreHint: false,
       };
@@ -1465,20 +1486,27 @@ async function collectBrandCatalogPage(
     for (const row of rows) {
       const product = mapBrandCatalogRow(row as unknown as Record<string, unknown>);
       if (!product) continue;
-      const key = catalogDedupeKeyFromProduct(product);
+      const styleKey = catalogDedupeKeyFromProduct(product);
       const imageKey = catalogNormalizeImageUrl(product.imageUrl);
-      // Feed rows occasionally carry different product/canonical ids for the exact
-      // same brand image. Treat those as one visible offer without collapsing
-      // legitimate colour variants, whose image URLs differ.
-      if (seen.has(key) || (imageKey != null && seenImages.has(imageKey))) continue;
-      seen.add(key);
-      if (imageKey != null) seenImages.add(imageKey);
-      allFiltered.push(product);
-      if (skipped < offset) {
-        skipped += 1;
+      // Same brand image → same card even when feed ids differ (size SKUs).
+      // Colorways keep distinct image URLs and stay separate.
+      let groupKey = styleKey;
+      if (imageKey && imageToGroupKey.has(imageKey)) {
+        groupKey = imageToGroupKey.get(imageKey)!;
+      } else if (imageKey) {
+        imageToGroupKey.set(imageKey, groupKey);
+      }
+      const existing = groups.get(groupKey);
+      if (existing) {
+        existing.rows.push(row as unknown as Record<string, unknown>);
+        existing.products.push(product);
         continue;
       }
-      if (page.length < limit) page.push(product);
+      groups.set(groupKey, {
+        rows: [row as unknown as Record<string, unknown>],
+        products: [product],
+        imageKey,
+      });
     }
 
     if (rows.length < batchSize) {
@@ -1486,12 +1514,13 @@ async function collectBrandCatalogPage(
       break;
     }
 
-    // Pagination requests only need the next page — avoid rescanning the full brand (timeouts).
-    if (!resolveFullTotal && page.length >= limit) {
+    // Pagination requests only need enough unique cards for the next page.
+    if (!resolveFullTotal && groups.size >= offset + limit) {
       break;
     }
   }
 
+  const allFiltered = collapseBrandOfferGroups(groups, region);
   // Sale first on designer grids so markdowns appear under the designer name.
   allFiltered.sort((a, b) => Number(!!b.isSale) - Number(!!a.isSale));
   const orderedPage = allFiltered.slice(offset, offset + limit);
@@ -1500,11 +1529,40 @@ async function collectBrandCatalogPage(
   const hasMoreHint =
     orderedPage.length >= limit ? !exhausted || hitScanCap : hitScanCap;
   return {
-    products: orderedPage.length ? orderedPage : page,
+    products: orderedPage,
     filteredTotal: allFiltered.length,
     timedOut: false,
     hasMoreHint,
   };
+}
+
+/** Collapse size/retailer sibling offers → one card with best commission URL. */
+function collapseBrandOfferGroups(
+  groups: Map<
+    string,
+    { rows: Record<string, unknown>[]; products: Product[]; imageKey: string | null }
+  >,
+  region: string
+): Product[] {
+  const out: Product[] = [];
+  for (const group of groups.values()) {
+    const winnerRow = pickDedupeWinner(group.rows, region, region);
+    const winnerProduct =
+      group.products.find((p) => p.id === String(winnerRow.id)) || group.products[0];
+    if (!winnerProduct) continue;
+    const sizes = mergeSizeOptions(group.rows);
+    out.push({
+      ...winnerProduct,
+      name: catalogDisplayName(winnerProduct.name),
+      sizeOptions: sizes.length ? sizes : winnerProduct.sizeOptions,
+      retailerMid:
+        winnerRow.retailer_mid != null && String(winnerRow.retailer_mid).trim()
+          ? String(winnerRow.retailer_mid).trim()
+          : winnerProduct.retailerMid,
+      url: String(winnerRow.url || winnerProduct.url || ""),
+    });
+  }
+  return out;
 }
 
 export async function fetchProductsByBrand(
