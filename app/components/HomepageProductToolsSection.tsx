@@ -14,7 +14,7 @@ const SLIDES = [
     title: "Scan fabrics",
     emphasis: "in stores",
     description:
-      "Point your camera at any care label or barcode. Get fiber composition instantly and discover verified natural-fiber alternatives while you shop.",
+      "Point your camera at any care label or barcode. Get fiber composition instantly and discover verified natural-fiber alternatives while you shop. On iPhone, also enable INTERTEXE: Fabric Scanner under Settings → Apps → Safari → Extensions, then open any product page → Aa → INTERTEXE.",
     visualLabel:
       "INTERTEXE iOS app scanning a price tag and surfacing better-material matches",
     href: getAppStoreUrl(),

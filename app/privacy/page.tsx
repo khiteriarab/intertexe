@@ -19,7 +19,7 @@ export default function PrivacyPage() {
         <section className="flex flex-col gap-3">
           <h2 className="text-xl md:text-2xl font-serif text-foreground">1. Introduction</h2>
           <p>
-            Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the Chrome extension INTERTEXE: Fabric Scanner.
+            Intertexe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you visit our website, use the INTERTEXE iOS app, or use the INTERTEXE: Fabric Scanner browser extensions (Chrome and Safari on iPhone).
           </p>
         </section>
 
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
             <li><strong className="text-foreground">Scan history:</strong> Fiber composition results, barcodes scanned, and label data you submit through the scanner.</li>
             <li><strong className="text-foreground">Usage Data:</strong> Pages visited, search queries, features used, and general browsing patterns.</li>
             <li><strong className="text-foreground">Device tokens:</strong> If you enable push notifications on iOS, we store your device token to send welcome, price-drop, and re-engagement alerts.</li>
-            <li><strong className="text-foreground">Chrome extension saves:</strong> Product-page data you ask INTERTEXE: Fabric Scanner to save (see section 9).</li>
+            <li><strong className="text-foreground">Browser extension activity:</strong> Product-page data INTERTEXE: Fabric Scanner reads or saves from Chrome or Safari (see sections 9–10).</li>
           </ul>
         </section>
 
@@ -108,10 +108,10 @@ export default function PrivacyPage() {
 
           <h3 className="text-lg font-serif text-foreground pt-2">When the extension reads a retailer page</h3>
           <p>
-            The extension does not run on every page you visit. It does not use always-on content scripts. Opening the toolbar icon does not scrape the page. When you click <strong className="text-foreground">Save this page</strong>, the extension injects a script into the active tab and reads product information from that tab only.
+            The extension does not run on every page you visit. It does not use always-on content scripts. When you open the extension on a product page (or click Save), it may inject a script into the active tab only and read product information from that tab to show material context and better-material matches. Saving to your Inspirations happens when you explicitly save.
           </p>
           <p>
-            If you click Save this page while signed out, the extracted product fields are stored on your computer until you finish signing in, then they are sent to INTERTEXE.
+            If you save while signed out, the extracted product fields are stored on your computer until you finish signing in, then they are sent to INTERTEXE.
           </p>
 
           <h3 className="text-lg font-serif text-foreground pt-2">Product-page data</h3>
@@ -159,14 +159,29 @@ export default function PrivacyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">10. Changes to This Policy</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">10. Safari Web Extension on iPhone (INTERTEXE: Fabric Scanner)</h2>
+          <p>
+            On iPhone, INTERTEXE: Fabric Scanner can also run inside Safari as a Safari Web Extension shipped with the INTERTEXE iOS app. The product-page read model matches section 9 (active tab only; no always-on content scripts). Saves are tagged as coming from the Safari extension.
+          </p>
+          <h3 className="text-lg font-serif text-foreground pt-2">Shared session with the iOS app</h3>
+          <p>
+            If you are signed into the INTERTEXE iOS app, the Safari extension may reuse that session through an App Group on your device (<code className="text-sm">group.com.stellarcommunications.intertexe</code>) so you do not sign in twice. Signing out of Safari clears the extension&apos;s local tokens and does not globally sign you out of the iOS app. Signing out of the iOS app clears the shared App Group session so Share Extension and Safari no longer treat you as signed in.
+          </p>
+          <h3 className="text-lg font-serif text-foreground pt-2">Enable path</h3>
+          <p>
+            After installing or updating the INTERTEXE app, turn on the extension under Settings → Apps → Safari → Extensions → INTERTEXE: Fabric Scanner, then open it from Safari&apos;s Aa / Extensions menu on a product page.
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Changes to This Policy</h2>
           <p>
             We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the &ldquo;Last updated&rdquo; date.
           </p>
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">11. Material Intelligence API and B2B leads</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Material Intelligence API and B2B leads</h2>
           <p>
             If you request a Material Data Snapshot, onboarding fee engagement, or API access, we collect the work
             contact details you submit (name, email, company, role, website, approximate catalog size, and
@@ -177,7 +192,7 @@ export default function PrivacyPage() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl md:text-2xl font-serif text-foreground">12. Contact</h2>
+          <h2 className="text-xl md:text-2xl font-serif text-foreground">13. Contact</h2>
           <p>
             If you have any questions about this privacy policy, please contact us at{" "}
             <a href="mailto:info@intertexe.com" className="border-b border-foreground hover:text-muted-foreground transition-colors">info@intertexe.com</a>.
