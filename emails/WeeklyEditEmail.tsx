@@ -17,6 +17,7 @@ import {
 import {
   INTERTEXE_INSTAGRAM_URL,
   INTERTEXE_TIKTOK_URL,
+  INTERTEXE_X_URL,
   weeklyEditOpenHref,
   weeklyEditProductHref,
   type WeeklyEditSection,
@@ -214,13 +215,14 @@ const button = {
 };
 
 const EMAIL_ICONS = {
+  x: "https://www.intertexe.com/email/icon-x.png",
   tiktok: "https://www.intertexe.com/email/icon-tiktok.png",
   instagram: "https://www.intertexe.com/email/icon-instagram.png",
   app: "https://www.intertexe.com/email/icon-app.png",
 } as const;
 
 const iconColumn = {
-  width: "33%",
+  width: "25%",
   textAlign: "center" as const,
   backgroundColor: CANVAS,
   verticalAlign: "middle" as const,
@@ -631,6 +633,17 @@ export default function WeeklyEditEmail({
 
           <Section className="we-cell" style={{ backgroundColor: CANVAS, textAlign: "center" }}>
             <Row>
+              <Column style={iconColumn}>
+                <Link href={INTERTEXE_X_URL} style={iconLink}>
+                  <Img
+                    src={EMAIL_ICONS.x}
+                    alt="X"
+                    width="28"
+                    height="28"
+                    style={iconImage}
+                  />
+                </Link>
+              </Column>
               <Column style={iconColumn}>
                 <Link href={INTERTEXE_TIKTOK_URL} style={iconLink}>
                   <Img

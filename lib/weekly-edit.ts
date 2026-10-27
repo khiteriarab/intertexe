@@ -4,9 +4,13 @@ import { isFootwearListing } from "./catalog-product-filters";
 import { resolveWeeklyEditEditorial, seasonalProductScore, weekNumberFromDate } from "./weekly-edit-season";
 
 /** INTERTEXE brand socials — Weekly Edit follow CTA (not @Khiteri). */
-export const INTERTEXE_SOCIAL_HANDLE = "@intertexe";
-export const INTERTEXE_INSTAGRAM_URL = "https://www.instagram.com/intertexe";
-export const INTERTEXE_TIKTOK_URL = "https://www.tiktok.com/@intertexe";
+export {
+  INTERTEXE_SOCIAL_HANDLE,
+  INTERTEXE_INSTAGRAM_URL,
+  INTERTEXE_TIKTOK_URL,
+  INTERTEXE_X_URL,
+  INTERTEXE_X_HANDLE,
+} from "./socials";
 
 const WEEKLY_EDIT_OPEN_PARAMS = {
   utm_source: "resend",

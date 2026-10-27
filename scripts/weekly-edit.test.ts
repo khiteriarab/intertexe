@@ -9,6 +9,7 @@ import {
   INTERTEXE_INSTAGRAM_URL,
   INTERTEXE_SOCIAL_HANDLE,
   INTERTEXE_TIKTOK_URL,
+  INTERTEXE_X_URL,
   WEEKLY_EDIT_MIX,
   weeklyEditOpenHref,
   weeklyEditProductHref,
@@ -117,9 +118,11 @@ describe("Weekly Edit editor's picks", () => {
     assert.equal(INTERTEXE_SOCIAL_HANDLE, "@intertexe");
     assert.equal(INTERTEXE_INSTAGRAM_URL, "https://www.instagram.com/intertexe");
     assert.equal(INTERTEXE_TIKTOK_URL, "https://www.tiktok.com/@intertexe");
+    assert.equal(INTERTEXE_X_URL, "https://x.com/intertexe");
     assert.equal(INTERTEXE_INSTAGRAM_URL.includes("khiteri"), false);
     assert.equal(INTERTEXE_TIKTOK_URL.includes("khiteri"), false);
     assert.equal(INTERTEXE_TIKTOK_URL.includes("shopintertexe"), false);
+    assert.equal(INTERTEXE_X_URL.includes("shopintertexe"), false);
   });
 });
 
@@ -141,9 +144,11 @@ describe("Weekly Edit email", () => {
     assert.doesNotMatch(email, /Explore the edit/);
     assert.doesNotMatch(email, /TikTok →/);
     assert.doesNotMatch(email, /stackedButton/);
+    assert.match(email, /email\/icon-x\.png/);
     assert.match(email, /email\/icon-tiktok\.png/);
     assert.match(email, /email\/icon-instagram\.png/);
     assert.match(email, /email\/icon-app\.png/);
+    assert.match(email, /alt="X"/);
     assert.match(email, /alt="TikTok"/);
     assert.match(email, /alt="Instagram"/);
     assert.match(email, /alt="App"/);
@@ -162,6 +167,7 @@ describe("Weekly Edit email", () => {
     assert.match(email, /email_weekly_edit_app/);
     assert.match(email, /10:00 AM Eastern \/ 4:00 PM Barcelona/);
     assert.doesNotMatch(email, /Friday at 9am/);
+    assert.match(email, /INTERTEXE_X_URL/);
     assert.match(email, /INTERTEXE_INSTAGRAM_URL/);
     assert.match(email, /INTERTEXE_TIKTOK_URL/);
     assert.doesNotMatch(email, /Week \$\{/);
