@@ -40,7 +40,8 @@ for (const name of ["background.js", "popup.js", "capture-result.js"]) {
 const chromeManifest = JSON.parse(fs.readFileSync(path.join(chromeDir, "manifest.json"), "utf8"));
 const safariManifest = {
   ...chromeManifest,
-  version: "1.0.0",
+  // Keep Safari marketing version independent of Chrome (App Store Connect build).
+  version: "1.0.4",
   icons: {
     ...chromeManifest.icons,
     "512": "icons/icon512.png",

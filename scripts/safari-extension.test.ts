@@ -11,6 +11,7 @@ describe("Safari Web Extension package", () => {
     const manifest = JSON.parse(fs.readFileSync(path.join(safariDir, "manifest.json"), "utf8"));
     assert.equal(manifest.manifest_version, 3);
     assert.equal(manifest.name, "INTERTEXE: Fabric Scanner");
+    assert.equal(manifest.version, "1.0.4");
     assert.equal(manifest.browser_specific_settings?.safari?.strict_min_version, "16.4");
     assert.ok(manifest.icons["512"]);
     assert.ok(manifest.icons["1024"]);
