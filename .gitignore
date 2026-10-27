@@ -11,3 +11,6 @@ supabase/.temp/
 # Local E2E chrome artifacts
 scripts/artifacts/.chrome-e2e-profile*/
 scripts/artifacts/browsers/
+
+# Generated Safari Xcode host (created on Mac via safari-web-extension-converter)
+safari-web-extension/xcode/

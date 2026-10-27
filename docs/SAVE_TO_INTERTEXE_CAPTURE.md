@@ -119,7 +119,7 @@ Matched catalog IDs stored as `matched_product_id` only. Alternatives stored as 
 | **1** | Schema + Capture API + events + design | Done — migration applied to production Supabase |
 | **2** | In-app URL + photo + collections + Decode This + detail | Done (in-app Save to INTERTEXE) |
 | **3** | iOS Share Extension + App Group auth | In progress — target + App Group wired; enable App Group on Apple Developer / Xcode signing |
-| **4** | Chrome/Safari extension | 2–3 weeks after Phase 1–2 stable in production |
+| **4** | Chrome/Safari extension | Chrome live on Web Store; Safari package in `safari-web-extension/` — convert with Xcode + App Store (see `APPLE-SETUP.md`) |
 | Polish | Collections mixed grid, affiliate attribution, analytics dashboards | Ongoing |
 
 **Do not start Phase 4 until Phase 1–2 are stable in production.**
