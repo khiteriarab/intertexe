@@ -50,6 +50,8 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
   const alertQueryUsed = useRef(false);
   const [sort, setSort] = useState<TxMatchSort>("best");
   const [query, setQuery] = useState("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [sizeFilter, setSizeFilter] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -119,14 +121,42 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     const alts = view?.alternatives || [];
     return sortTxMatches(alts, sort, typeof capture?.price === "number" ? capture.price : null);
   }, [view, sort, capture?.price]);
+  const regionOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const alt of sorted) {
+      if (alt.region) set.add(String(alt.region).toLowerCase());
+    }
+    return ["all", ...Array.from(set).sort()];
+  }, [sorted]);
+
+  const sizeOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const alt of sorted) {
+      for (const sz of alt.sizeOptions || []) {
+        if (sz) set.add(String(sz).toUpperCase());
+      }
+    }
+    return Array.from(set).sort();
+  }, [sorted]);
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return sorted;
+    const size = sizeFilter.trim().toUpperCase();
     return sorted.filter((alt) => {
-      const hay = `${alt.brandName || ""} ${alt.name || ""} ${alt.compositionLine || ""}`.toLowerCase();
+      if (regionFilter !== "all" && String(alt.region || "").toLowerCase() !== regionFilter) {
+        return false;
+      }
+      if (size) {
+        const opts = (alt.sizeOptions || []).map((s) => String(s).toUpperCase());
+        if (opts.length && !opts.some((o) => o === size || o.includes(size))) return false;
+      }
+      if (!q) return true;
+      const hay = `${alt.brandName || ""} ${alt.name || ""} ${alt.compositionLine || ""} ${
+        alt.pairsWith || ""
+      }`.toLowerCase();
       return hay.includes(q);
     });
-  }, [sorted, query]);
+  }, [sorted, query, regionFilter, sizeFilter]);
   const processing =
     state === "ready" &&
     Boolean(capture) &&
@@ -202,7 +232,7 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capture, searchParams]);
 
-  async function setSaleAlert(enabled: boolean) {
+  async function setPriceWatch(enabled: boolean) {
     const next = `/matches/${captureId}?alert=1`;
     const { token, headers } = await authHeaders();
     if (!token) {
@@ -210,10 +240,42 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
       return;
     }
     if (!capture) return;
+    const originalUrl = String(capture.original_url || "").trim();
+    if (!originalUrl) {
+      setAlertNote("This match set has no retailer URL to watch.");
+      return;
+    }
     setAlerting(true);
     setAlertNote("");
     try {
-      const res = await fetch("/api/sale-alerts", {
+      // True PDP watch on the retailer URL.
+      const watchRes = await fetch("/api/price-watches", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          enabled,
+          originalUrl,
+          title: capture.title,
+          brand: capture.brand_name,
+          retailer: capture.retailer,
+          price: capture.price,
+          currency: capture.currency,
+          captureId,
+          source: "tx_match",
+        }),
+      });
+      if (watchRes.status === 401) {
+        window.location.assign(`/account?mode=login&next=${encodeURIComponent(next)}`);
+        return;
+      }
+      const watchData = await watchRes.json().catch(() => ({}));
+      if (!watchRes.ok) {
+        setAlertNote(watchData.error || "Could not update the price watch.");
+        return;
+      }
+
+      // Also keep catalog sale-alerts context for related INTERTEXE finds.
+      await fetch("/api/sale-alerts", {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -228,18 +290,14 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
           materials: capture.composition_text,
           retailer: capture.retailer,
         }),
-      });
-      if (res.status === 401) {
-        window.location.assign(`/account?mode=login&next=${encodeURIComponent(next)}`);
-        return;
-      }
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setAlertNote(data.error || "Could not update the sale alert.");
-        return;
-      }
-      setAlertOn(Boolean(data.enabled));
-      setAlertNote(data.enabled ? "We’ll watch this piece for a sale." : "Sale alert off for this piece.");
+      }).catch(() => null);
+
+      setAlertOn(Boolean(watchData.enabled ?? watchData.watching));
+      setAlertNote(
+        watchData.enabled || watchData.watching
+          ? "Watching this retailer page for a price drop."
+          : "Price watch off for this page."
+      );
     } finally {
       setAlerting(false);
     }
@@ -249,22 +307,25 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
     let cancelled = false;
     (async () => {
       const { token, headers } = await authHeaders();
-      if (!token || cancelled) return;
-      const res = await fetch("/api/sale-alerts", { headers });
+      if (!token || cancelled || !capture?.original_url) return;
+      const res = await fetch(
+        `/api/price-watches?url=${encodeURIComponent(String(capture.original_url))}`,
+        { headers }
+      );
       const data = await res.json().catch(() => ({}));
-      if (!cancelled && res.ok) setAlertOn(Boolean(data.enabled));
+      if (!cancelled && res.ok) setAlertOn(Boolean(data.watching));
     })();
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [captureId]);
+  }, [captureId, capture?.original_url]);
 
   useEffect(() => {
     if (searchParams.get("alert") !== "1" || !capture || alerting || alertQueryUsed.current) return;
     if (!localStorage.getItem(TOKEN_KEY)) return;
     alertQueryUsed.current = true;
-    void setSaleAlert(true);
+    void setPriceWatch(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capture, searchParams]);
 
@@ -367,16 +428,16 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
                 <p className="mt-1 text-[12px] text-[#111111]/45">{view.liningNote}</p>
               ) : null}
               <div className="mt-3 flex items-center justify-between gap-3 rounded-full border border-[#111111]/10 bg-white px-3 py-2">
-                <p className="text-[13px] text-[#111111]">Waiting for a sale?</p>
+                <p className="text-[13px] text-[#111111]">Watch this page’s price?</p>
                 <button
                   type="button"
-                  onClick={() => void setSaleAlert(!alertOn)}
+                  onClick={() => void setPriceWatch(!alertOn)}
                   disabled={alerting}
                   className={`shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium ${
                     alertOn ? "border border-[#1D4734] bg-white text-[#1D4734]" : "bg-[#1D4734] text-white"
                   } disabled:opacity-60`}
                 >
-                  {alerting ? "Saving…" : alertOn ? "Alert on" : "Alert me"}
+                  {alerting ? "Saving…" : alertOn ? "Watching" : "Watch price"}
                 </button>
               </div>
               {alertNote ? <p className="mt-2 text-[12px] text-[#111111]/50">{alertNote}</p> : null}
@@ -406,16 +467,55 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
             })}
           </nav>
 
-          <label className="mt-6 block max-w-md">
-            <span className="sr-only">Search these matches</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search these matches"
-              className="h-11 w-full border border-[#111111]/15 bg-white px-3 text-sm text-[#111111] placeholder:text-[#111111]/35"
-            />
-          </label>
+          <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-end">
+            <label className="block max-w-md flex-1">
+              <span className="sr-only">Search these matches</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search these matches"
+                className="h-11 w-full border border-[#111111]/15 bg-white px-3 text-sm text-[#111111] placeholder:text-[#111111]/35"
+              />
+            </label>
+            {regionOptions.length > 1 ? (
+              <label className="block shrink-0">
+                <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.16em] text-[#111111]/45">
+                  Region
+                </span>
+                <select
+                  value={regionFilter}
+                  onChange={(e) => setRegionFilter(e.target.value)}
+                  className="h-11 border border-[#111111]/15 bg-white px-3 text-sm text-[#111111]"
+                >
+                  {regionOptions.map((r) => (
+                    <option key={r} value={r}>
+                      {r === "all" ? "All regions" : r.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {sizeOptions.length ? (
+              <label className="block shrink-0">
+                <span className="mb-1 block text-[10px] font-medium uppercase tracking-[0.16em] text-[#111111]/45">
+                  Size
+                </span>
+                <select
+                  value={sizeFilter}
+                  onChange={(e) => setSizeFilter(e.target.value)}
+                  className="h-11 border border-[#111111]/15 bg-white px-3 text-sm text-[#111111]"
+                >
+                  <option value="">Any size</option>
+                  {sizeOptions.map((sz) => (
+                    <option key={sz} value={sz}>
+                      {sz}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+          </div>
 
           {visible.length > 0 ? (
             <section className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
@@ -454,7 +554,8 @@ export default function MatchesClient({ captureId }: { captureId: string }) {
               Your wardrobe. Better materials.
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-[#111111]/60">
-              Set your preferred fibers and synthetic tolerance to make future INTERTEXE matches even more personal.
+              Signed in? Analyze uses your fabric persona, preferred designers, and pieces you’ve already saved —
+              without auto-saving the page you’re browsing.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -523,12 +624,29 @@ function MatchCard({
 }) {
   const href = affiliateHref(alt);
   const reasons = alt.whyReasons.filter(Boolean).slice(0, 3);
+  const badges = (alt.badges || []).slice(0, 2);
   const body = (
     <>
       <div className="relative aspect-[3/4] overflow-hidden rounded-[10px] bg-[#EEEAE3]">
         {alt.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={alt.imageUrl} alt="" className="h-full w-full object-cover object-top" />
+        ) : null}
+        {badges.length ? (
+          <div className="absolute left-2 top-2 flex max-w-[90%] flex-col gap-1">
+            {badges.map((badge) => (
+              <span
+                key={badge}
+                className={`inline-block max-w-full truncate px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] ${
+                  /khiteri|editorial/i.test(badge)
+                    ? "bg-[#1D4734] text-white"
+                    : "bg-white/95 text-[#111111]"
+                }`}
+              >
+                {badge}
+              </span>
+            ))}
+          </div>
         ) : null}
         {reasons.length ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black/70 via-black/25 to-transparent p-3 pt-12 text-left text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:block">
@@ -550,7 +668,9 @@ function MatchCard({
         {alt.compositionLine ? (
           <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-[#111111]/50">{alt.compositionLine}</p>
         ) : null}
-        {alt.cardSignal ? (
+        {alt.pairsWith ? (
+          <p className="mt-2 text-[11px] leading-snug text-[#1D4734]">{alt.pairsWith}</p>
+        ) : alt.cardSignal ? (
           <p className="mt-2 text-[11px] font-medium tracking-[0.01em] text-[#1D4734]">{alt.cardSignal}</p>
         ) : null}
         {reasons.length ? (

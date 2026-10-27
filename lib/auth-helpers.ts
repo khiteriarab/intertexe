@@ -184,6 +184,7 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
   await supabase.from("quiz_results").delete().eq("user_id", userId);
   await supabase.from("scan_history").delete().eq("user_id", userId);
   await supabase.from("price_watches").delete().eq("user_id", userId);
+  await supabase.from("retailer_price_watches").delete().eq("user_id", userId);
   await supabase.from("user_product_clickouts").delete().eq("user_id", userId);
   await supabase.from("scanner_clickouts").delete().eq("user_id", userId);
   await supabase.from("user_product_views").delete().eq("user_id", userId);

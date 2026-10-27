@@ -29,16 +29,19 @@ describe("Sale alerts", () => {
     assert.ok(silk > other);
   });
 
-  it("keeps the Chrome Alert me treatment and routes it to the account API", () => {
+  it("keeps catalog sale-alerts API separate from retailer URL watches", () => {
     const api = fs.readFileSync(path.join(process.cwd(), "app/api/sale-alerts/route.ts"), "utf8");
+    const watchApi = fs.readFileSync(path.join(process.cwd(), "app/api/price-watches/route.ts"), "utf8");
     const popup = fs.readFileSync(path.join(process.cwd(), "chrome-web-store/save-to-intertexe/popup.js"), "utf8");
+    const bg = fs.readFileSync(path.join(process.cwd(), "chrome-web-store/save-to-intertexe/background.js"), "utf8");
     const drops = fs.readFileSync(path.join(process.cwd(), "app/api/notifications/price-drops/route.ts"), "utf8");
     assert.match(api, /sale_alerts_enabled/);
     assert.doesNotMatch(api, /price_watches/);
-    assert.match(popup, /Waiting for a sale\?/);
-    assert.match(popup, /Alert me/);
-    assert.match(popup, /Sign in to turn on a sale alert\./);
+    assert.match(watchApi, /retailer_price_watches/);
+    assert.match(popup, /Watch this page/);
+    assert.match(popup, /Watch price/);
     assert.match(popup, /SALE_ALERT/);
+    assert.match(bg, /\/api\/price-watches/);
     assert.match(drops, /dispatchCatalogSaleAlerts/);
     assert.match(drops, /sendAlertPushToUser/);
   });

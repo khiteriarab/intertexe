@@ -476,19 +476,19 @@ function renderResult(payload, opts = {}) {
   );
 
   const sale = el("div", "sale-row");
-  sale.appendChild(el("p", "", "Waiting for a sale?"));
-  const alertBtn = el("button", "alert-btn", "Alert me");
+  sale.appendChild(el("p", "", "Watch this page’s price?"));
+  const alertBtn = el("button", "alert-btn", "Watch price");
   alertBtn.type = "button";
   const urlKey = saleKey(capture);
   saleAlertEnabled().then((on) => {
     alertBtn.classList.toggle("is-on", on);
-    alertBtn.textContent = on ? "Alert on" : "Alert me";
+    alertBtn.textContent = on ? "Watching" : "Watch price";
   });
   if (signed) {
-    chrome.runtime.sendMessage({ type: "SALE_ALERT_STATUS" }).then((res) => {
+    chrome.runtime.sendMessage({ type: "SALE_ALERT_STATUS", capture }).then((res) => {
       if (!res || typeof res.enabled !== "boolean") return;
       alertBtn.classList.toggle("is-on", res.enabled);
-      alertBtn.textContent = res.enabled ? "Alert on" : "Alert me";
+      alertBtn.textContent = res.enabled ? "Watching" : "Watch price";
       void setSaleAlertEnabled(res.enabled);
     });
   }
@@ -498,31 +498,38 @@ function renderResult(payload, opts = {}) {
       await setSaleAlertEnabled(false);
       await chrome.runtime.sendMessage({ type: "SALE_ALERT", capture, enabled: false, source: "chrome_extension" });
       alertBtn.classList.remove("is-on");
-      alertBtn.textContent = "Alert me";
-      setStatus("Sale alert off for this piece.");
+      alertBtn.textContent = "Watch price";
+      setStatus("Price watch off for this page.");
       return;
     }
     if (!document.body.classList.contains("is-signed-in")) {
       await chrome.storage.local.set({ [PENDING_SALE_KEY]: urlKey });
-      setStatus("Sign in to turn on a sale alert.");
+      setStatus("Sign in to watch this page’s price.");
       await chrome.runtime.sendMessage({ type: "SIGN_IN" });
       return;
     }
-    saveBtn.disabled = true;
-    const res = await chrome.runtime.sendMessage({ type: "SAVE_TAB", force: true });
-    saveBtn.disabled = false;
-    const savedCapture = res?.result?.capture || capture;
+    alertBtn.disabled = true;
     await setSaleAlertEnabled(true);
     const synced = await chrome.runtime.sendMessage({
       type: "SALE_ALERT",
-      capture: savedCapture,
+      capture,
       enabled: true,
       source: "chrome_extension",
     });
-    alertBtn.classList.add("is-on");
-    alertBtn.textContent = "Alert on";
-    setStatus(synced?.error || res?.error ? synced?.error || res.error : "We’ll watch this piece for a sale.");
-    if (res?.result) renderResult(res.result, lastRenderOpts);
+    alertBtn.disabled = false;
+    if (synced?.needsSignIn) {
+      setStatus("Sign in to watch this page’s price.");
+      return;
+    }
+    alertBtn.classList.toggle("is-on", Boolean(synced?.enabled));
+    alertBtn.textContent = synced?.enabled ? "Watching" : "Watch price";
+    setStatus(
+      synced?.error
+        ? synced.error
+        : synced?.enabled
+          ? "Watching this retailer page for a price drop."
+          : "Could not start a price watch."
+    );
   });
   sale.appendChild(alertBtn);
   sourceEl.appendChild(sale);

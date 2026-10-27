@@ -16,6 +16,17 @@ import {
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
 import { fetchTastePreferences } from "./taste-preferences";
+import {
+  catalogRegionFromShopMarket,
+  isKhiteriEditProduct,
+  parsePreferredSizes,
+  personaFiberBoost,
+  preferredDesignerBoost,
+  silhouetteBoost,
+  sizeSoftMatch,
+  wardrobePairingHit,
+  type WardrobeHint,
+} from "./tx-match-elevate";
 
 export type FindBetterAlternative = {
   id: string;
@@ -29,6 +40,12 @@ export type FindBetterAlternative = {
   natural_fiber_percent: number | null;
   category: string | null;
   why: string;
+  badges?: string[];
+  pairs_with?: string | null;
+  is_editor_pick?: boolean;
+  is_khiteri_edit?: boolean;
+  size_options?: string[] | null;
+  region?: string | null;
 };
 
 export type FindBetterInput = {
@@ -50,8 +67,14 @@ export type FindBetterInput = {
   region?: string | null;
   userId?: string | null;
   preferredFibers?: string[];
+  preferredDesigners?: string[];
+  preferredSilhouettes?: string[];
+  preferredOccasions?: string[];
+  preferredSizes?: string[];
+  profileType?: string | null;
   userPriceMin?: number | null;
   userPriceMax?: number | null;
+  wardrobeHints?: WardrobeHint[];
 };
 
 const SHOE_RE =
@@ -154,12 +177,15 @@ function parsePrice(raw: unknown): number | null {
 function whyFor(
   product: Record<string, unknown>,
   input: FindBetterInput,
-  scannedNfp: number
+  scannedNfp: number,
+  pairingLabel?: string | null
 ): string {
   const parts: string[] = [];
   const nfp = Number(product.natural_fiber_percent) || 0;
   const price = parsePrice(product.price);
   const target = input.price;
+
+  if (pairingLabel) parts.push(pairingLabel);
 
   const fiber = preferredFiberFromInput(input);
   if (fiber && productMatchesFiber(product, fiber)) {
@@ -172,6 +198,10 @@ function whyFor(
 
   if (productMatchesColor(product, input.color)) {
     parts.push(`Same color (${normalizeColorToken(input.color!)})`);
+  }
+
+  if (preferredDesignerBoost(String(product.brand_name || ""), input.preferredDesigners)) {
+    parts.push("One of your preferred designers");
   }
 
   const sil = input.silhouette || input.subcategory;
@@ -202,11 +232,34 @@ function whyFor(
   return parts.slice(0, 3).join(" · ");
 }
 
+function badgesFor(
+  product: Record<string, unknown>,
+  pairingLabel?: string | null
+): { badges: string[]; pairs_with: string | null; is_editor_pick: boolean; is_khiteri_edit: boolean } {
+  const badges: string[] = [];
+  const isEditor = product.is_editor_pick === true;
+  const isKhiteri = isKhiteriEditProduct(product);
+  if (isKhiteri) badges.push("Khiteri’s Edit");
+  else if (isEditor) badges.push("Editorial");
+  if (pairingLabel) badges.push("Wardrobe match");
+  return {
+    badges,
+    pairs_with: pairingLabel || null,
+    is_editor_pick: isEditor,
+    is_khiteri_edit: isKhiteri,
+  };
+}
+
 function toAlternative(
   product: Record<string, unknown>,
   input: FindBetterInput,
   scannedNfp: number
 ): FindBetterAlternative {
+  const pairing = wardrobePairingHit(product, input.wardrobeHints || []);
+  const meta = badgesFor(product, pairing?.label || null);
+  const sizeOpts = Array.isArray(product.size_options)
+    ? product.size_options.map(String)
+    : null;
   return {
     id: String(product.id),
     name: String(product.name || ""),
@@ -219,7 +272,13 @@ function toAlternative(
     natural_fiber_percent:
       product.natural_fiber_percent != null ? Number(product.natural_fiber_percent) : null,
     category: (product.category as string) || null,
-    why: whyFor(product, input, scannedNfp),
+    why: whyFor(product, input, scannedNfp, pairing?.label || null),
+    badges: meta.badges,
+    pairs_with: meta.pairs_with,
+    is_editor_pick: meta.is_editor_pick,
+    is_khiteri_edit: meta.is_khiteri_edit,
+    size_options: sizeOpts,
+    region: product.region != null ? String(product.region) : null,
   };
 }
 
@@ -428,6 +487,19 @@ function rankAlternatives(
     const userFibers = (input.preferredFibers || []).map((f) => extractFiberFromText(f)).filter(Boolean);
     if (userFibers.some((f) => productMatchesFiber(p, f))) score += 18;
 
+    score += preferredDesignerBoost(String(p.brand_name || ""), input.preferredDesigners);
+    score += silhouetteBoost(String(p.name || ""), input.preferredSilhouettes);
+    score += personaFiberBoost(p, input.profileType, productMatchesFiber);
+
+    const pairing = wardrobePairingHit(p, input.wardrobeHints || []);
+    if (pairing) score += pairing.score;
+
+    if (p.is_editor_pick === true || isKhiteriEditProduct(p)) score += 22;
+
+    const sizeHit = sizeSoftMatch(p.size_options, input.preferredSizes);
+    if (sizeHit === true) score += 18;
+    else if (sizeHit === false) score -= 8;
+
     score += Math.min(nfp, 100) * 0.2;
     const price = parsePrice(p.price);
     if (targetPrice != null && price != null && targetPrice > 0) {
@@ -585,24 +657,116 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null
  * Query verified catalog for better-material alternatives.
  * Hard-ANDs garment category; never loosens filters to fill results.
  */
+function mapBrowseRow(p: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: p.id,
+    name: p.name,
+    brand_name: p.brand_name || p.brandName,
+    brand_slug: p.brand_slug || p.brandSlug,
+    image_url: p.image_url || p.imageUrl,
+    price: p.price,
+    currency: p.currency || "USD",
+    composition: p.composition,
+    natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
+    category: p.category,
+    garment_type: p.garment_type,
+    color: p.color ?? null,
+    shop_material_family: p.shop_material_family ?? null,
+    material_primary: p.material_primary ?? null,
+    is_editor_pick: p.is_editor_pick === true || p.isEditorPick === true,
+    size_options: p.size_options ?? p.sizeOptions ?? null,
+    region: p.region ?? p.listingRegion ?? null,
+    product_id: p.product_id ?? p.productId ?? null,
+    url: p.url ?? null,
+  };
+}
+
+async function loadWardrobeHints(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<WardrobeHint[]> {
+  try {
+    const { data } = await supabase
+      .from("external_captures")
+      .select("title, brand_name, category, subcategory, attributes")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(24);
+    if (!data?.length) return [];
+    return data.map((row) => {
+      const attrs =
+        row.attributes && typeof row.attributes === "object"
+          ? (row.attributes as Record<string, unknown>)
+          : {};
+      return {
+        title: (row.title as string) || null,
+        brand: (row.brand_name as string) || null,
+        category: (row.category as string) || null,
+        subcategory: (row.subcategory as string) || null,
+        color: typeof attrs.color === "string" ? attrs.color : null,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function findBetterAlternatives(
   supabase: SupabaseClient,
   input: FindBetterInput
 ): Promise<FindBetterAlternative[]> {
   let resolved: FindBetterInput = { ...input };
-  if (resolved.userId && !(resolved.preferredFibers && resolved.preferredFibers.length)) {
+  if (resolved.userId) {
     try {
       const taste = await fetchTastePreferences(supabase, resolved.userId);
       if (taste) {
         resolved = {
           ...resolved,
-          preferredFibers: taste.preferredFibers || [],
+          preferredFibers: resolved.preferredFibers?.length
+            ? resolved.preferredFibers
+            : taste.preferredFibers || [],
+          preferredDesigners: resolved.preferredDesigners?.length
+            ? resolved.preferredDesigners
+            : taste.preferredDesigners || [],
+          preferredSilhouettes: resolved.preferredSilhouettes?.length
+            ? resolved.preferredSilhouettes
+            : taste.preferredSilhouettes || [],
+          preferredOccasions: resolved.preferredOccasions?.length
+            ? resolved.preferredOccasions
+            : taste.preferredOccasions || [],
+          profileType: resolved.profileType || taste.profileType || null,
           userPriceMin: taste.priceMin ?? resolved.userPriceMin,
           userPriceMax: taste.priceMax ?? resolved.userPriceMax,
         };
       }
     } catch {
       /* taste is optional */
+    }
+
+    try {
+      const { data: prefs } = await supabase
+        .from("user_preferences")
+        .select("catalog_filter_prefs, shop_market, country_code")
+        .eq("user_id", resolved.userId)
+        .maybeSingle();
+      if (prefs) {
+        if (!resolved.preferredSizes?.length) {
+          resolved.preferredSizes = parsePreferredSizes(prefs.catalog_filter_prefs);
+        }
+        if (!resolved.region) {
+          const fromMarket = catalogRegionFromShopMarket(
+            prefs.shop_market as string | null,
+            prefs.country_code as string | null
+          );
+          if (fromMarket) resolved.region = fromMarket;
+        }
+      }
+    } catch {
+      /* prefs optional */
+    }
+
+    if (!resolved.wardrobeHints?.length) {
+      resolved.wardrobeHints = await loadWardrobeHints(supabase, resolved.userId);
     }
   }
 
@@ -671,22 +835,7 @@ export async function findBetterAlternatives(
       );
       rows = products
         .filter((p) => keptIds.has(String(p.id)))
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          brand_name: p.brand_name || p.brandName,
-          brand_slug: p.brand_slug || p.brandSlug,
-          image_url: p.image_url || p.imageUrl,
-          price: p.price,
-          currency: p.currency || "USD",
-          composition: p.composition,
-          natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
-          category: p.category,
-          garment_type: p.garment_type,
-          color: p.color ?? null,
-          shop_material_family: p.shop_material_family ?? null,
-          material_primary: p.material_primary ?? null,
-        }));
+        .map((p) => mapBrowseRow(p));
     }
   }
 
@@ -733,24 +882,7 @@ export async function findBetterAlternatives(
       const keptIds = new Set(
         filterProductsForIntegrity(integrityRows, integritySpec).map((r) => String(r.id))
       );
-      const extra = products
-        .filter((p) => keptIds.has(String(p.id)))
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          brand_name: p.brand_name || p.brandName,
-          brand_slug: p.brand_slug || p.brandSlug,
-          image_url: p.image_url || p.imageUrl,
-          price: p.price,
-          currency: p.currency || "USD",
-          composition: p.composition,
-          natural_fiber_percent: p.natural_fiber_percent ?? p.naturalFiberPercent,
-          category: p.category,
-          garment_type: p.garment_type,
-          color: p.color ?? null,
-          shop_material_family: p.shop_material_family ?? null,
-          material_primary: p.material_primary ?? null,
-        }));
+      const extra = products.filter((p) => keptIds.has(String(p.id))).map((p) => mapBrowseRow(p));
       rows = [...rows, ...extra];
     }
   }
