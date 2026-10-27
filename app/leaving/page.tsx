@@ -5,7 +5,11 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Suspense, useEffect, useState, useRef } from "react";
 import { trackAffiliateRedirect } from "../../lib/analytics";
-import { affiliateUrlWithClientU1 } from "../../lib/affiliate-url";
+import { affiliateUrlWithClientU1, resolveClientU1 } from "../../lib/affiliate-url";
+import {
+  improveRetailerClickoutUrl,
+  intertexeClickoutHopPath,
+} from "../../lib/retailer-clickout";
 
 function isValidExternalUrl(url: string): boolean {
   try {
@@ -22,7 +26,14 @@ function LeavingContent() {
   const brand = searchParams.get("brand") || "our partner";
 
   const isValid = isValidExternalUrl(rawUrl);
-  const url = isValid ? affiliateUrlWithClientU1(rawUrl) : "";
+  const url = isValid
+    ? (() => {
+        const improved = improveRetailerClickoutUrl(affiliateUrlWithClientU1(rawUrl));
+        const u1 = resolveClientU1();
+        const hop = intertexeClickoutHopPath(improved);
+        return u1 ? `${hop}&u1=${encodeURIComponent(u1)}` : hop;
+      })()
+    : "";
 
   const [countdown, setCountdown] = useState(2);
   const trackedRef = useRef(false);

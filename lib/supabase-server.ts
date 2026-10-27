@@ -3,6 +3,7 @@ import { cache } from "react";
 import { type SupabaseClient } from "@supabase/supabase-js";
 import { sanitizeBrandName } from "./brand-display";
 import { displayNaturalFiberPercent, naturalFiberPercentFromComposition } from "./display-natural-fiber";
+import { improveRetailerClickoutUrl } from "./retailer-clickout";
 import {
   consumerExclusionForProduct,
   consumerExclusionForRow,
@@ -982,7 +983,11 @@ export function mapProductRow(row: any): Product {
     brandName: sanitizeBrandName(row.brand_name || ""),
     name: row.title || row.name || "",
     productId: row.product_id || row.id,
-    url: row.url || "",
+    // Clean MyTheresa/Bloomingdale's destinations inside Rakuten links so iOS
+    // Universal Links open the PDP instead of retailer home / last brand PLP.
+    url: improveRetailerClickoutUrl(String(row.url || ""), {
+      retailerMid: row.retailer_mid != null ? String(row.retailer_mid) : null,
+    }),
     imageUrl: fixIsabelMarantImage(brandSlug, rawImageUrl),
     price: priceStr,
     composition: row.composition || "",
