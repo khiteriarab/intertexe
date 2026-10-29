@@ -4,7 +4,6 @@ export const revalidate = 0;
 export const maxDuration = 10;
 
 import { NextRequest, NextResponse, after } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { getSupabaseAuthUserId } from "../../../lib/supabase-auth-server";
 import {
   insertCapture,
@@ -19,25 +18,10 @@ import {
   isUsableCaptureImageUrl,
 } from "../../../lib/capture-enrichment";
 import { buildTxMatchCopyFromCapture, buildTxMatchLinks } from "../../../lib/tx-match-copy";
-import { getServerSupabase } from "../../../lib/supabase-service-client";
-import { createSupabaseTimedFetch } from "../../../lib/supabase-fetch";
-
-function userClient(accessToken: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const key =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    process.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
-    global: {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      // Same 5s abort as service client — hung list queries must not open-bill Fluid.
-      fetch: createSupabaseTimedFetch(5_000),
-    },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
+import {
+  captureApiErrorMessage,
+  getCaptureServiceClient,
+} from "../../../lib/capture-api-client";
 
 /**
  * POST /api/capture
@@ -65,7 +49,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = userClient(token);
+    // Service role + explicit userId scope — authenticated GRANTs were revoked
+    // by the Oct 20 RLS lockdown on external_captures.
+    const supabase = getCaptureServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
     }
@@ -89,14 +75,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
     }
 
-    const service = getServerSupabase();
     const { capture, duplicate } = await insertCapture(supabase, userId, body, {
-      serviceClient: service,
+      serviceClient: supabase,
     });
 
     // Keep work alive after the response on Vercel — bare `void` is often killed
     // mid-enrichment, which leaves Inspirations stuck on hostname placeholders.
-    const bgClient = service || supabase;
     const origin = new URL(req.url).origin;
     const captureId = capture.id;
     const existingAlts = Array.isArray((capture as { alternatives?: unknown[] }).alternatives)
@@ -107,7 +91,7 @@ export async function POST(req: NextRequest) {
     if (!duplicate || queueDecode) {
       if (queueDecode) {
         after(() =>
-          decodeCapture(bgClient, userId, captureId, {
+          decodeCapture(supabase, userId, captureId, {
             accessToken: token,
             siteOrigin: origin,
             findAlternatives: true,
@@ -117,7 +101,7 @@ export async function POST(req: NextRequest) {
         );
       } else if (!duplicate) {
         after(() =>
-          enrichCaptureMetadata(bgClient, userId, captureId).catch((e) => {
+          enrichCaptureMetadata(supabase, userId, captureId).catch((e) => {
             console.error("[capture] enrichCaptureMetadata failed", captureId, e);
           })
         );
@@ -132,7 +116,7 @@ export async function POST(req: NextRequest) {
       links: buildTxMatchLinks((capture as { id?: string }).id),
     });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Capture failed";
+    const message = captureApiErrorMessage(e, "Capture failed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -149,7 +133,7 @@ export async function GET(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = userClient(token);
+    const supabase = getCaptureServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
     }
@@ -192,10 +176,9 @@ export async function GET(req: NextRequest) {
       isCaptureEnrichmentIncomplete(c as Record<string, unknown>)
     );
     if (incomplete.length) {
-      const bg = getServerSupabase() || supabase;
       after(() => {
         for (const c of incomplete.slice(0, 3)) {
-          void recoverCaptureEnrichment(bg, userId, String(c.id));
+          void recoverCaptureEnrichment(supabase, userId, String(c.id));
         }
       });
     }
@@ -211,7 +194,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (e) {
     const name = e instanceof Error ? e.name : "";
-    const message = e instanceof Error ? e.message : "List failed";
+    const message = captureApiErrorMessage(e, "List failed");
     const aborted =
       name === "AbortError" ||
       name === "TimeoutError" ||
