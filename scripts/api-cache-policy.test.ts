@@ -24,7 +24,7 @@ test("GET /api/capture stays dynamic with private cache headers", () => {
   const src = readFileSync(join(root, "app/api/capture/route.ts"), "utf8");
   assert.match(src, /export const dynamic = "force-dynamic"/);
   assert.match(src, /export const maxDuration = 10/);
-  assert.match(src, /createSupabaseTimedFetch/);
+  assert.match(src, /getCaptureServiceClient/);
   assert.match(src, /private, no-store/);
   assert.match(src, /alternatives: \[\]/);
 });
