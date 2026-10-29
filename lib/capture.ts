@@ -517,6 +517,9 @@ export async function enrichCaptureMetadata(
               ? capture.natural_fiber_percent
               : null,
         });
+        if (/^[0-9a-f-]{36}$/i.test(String(userId))) {
+          fbInput.userId = String(userId);
+        }
         alternatives = await findBetterAlternatives(supabase, fbInput);
         resolutionStatus = alternatives.length ? "alternatives_ready" : "analyzed";
       } catch (e) {
@@ -827,7 +830,13 @@ export async function decodeCapture(
   supabase: SupabaseClient,
   userId: string,
   captureId: string,
-  opts?: { accessToken?: string; siteOrigin?: string; findAlternatives?: boolean }
+  opts?: {
+    accessToken?: string;
+    siteOrigin?: string;
+    findAlternatives?: boolean;
+    /** Signed-in taste profile — must not become the capture owner on public analyze. */
+    tasteUserId?: string | null;
+  }
 ) {
   const findAlternatives = opts?.findAlternatives !== false;
 
@@ -1060,7 +1069,11 @@ export async function decodeCapture(
         (working.composition_text as string) || fbInput.compositionText;
       fbInput.naturalFiberPercent =
         (working.natural_fiber_percent as number | null) ?? fbInput.naturalFiberPercent;
-      fbInput.userId = userId;
+      // Public match sets use an IP-hash owner — only a real tasteUserId personalizes ranking.
+      const tasteUserId =
+        opts?.tasteUserId ||
+        (/^[0-9a-f-]{36}$/i.test(String(userId)) ? String(userId) : null);
+      fbInput.userId = tasteUserId;
       inferredFiber = preferredFiberFromInput(fbInput);
 
       try {

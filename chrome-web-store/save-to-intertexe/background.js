@@ -555,9 +555,13 @@ async function savePayload(payload) {
 }
 
 async function createPublicMatches(payload) {
+  const store = await getStore();
+  // Pass Bearer when signed in so TX Match can use persona / designers / wardrobe
+  // without saving the analyze capture to the account.
   const { res, json } = await api("/api/matches", {
     method: "POST",
     body: payload,
+    token: store.accessToken || undefined,
   });
   if (res.ok && captureIdOf(json)) {
     const polled = await pollPublicCapture(captureIdOf(json));
@@ -771,10 +775,32 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
           sendResponse({ needsSignIn: true });
           return;
         }
+        const enabled = msg.enabled !== false;
+        const originalUrl = capture.original_url || capture.originalUrl || capture.url || null;
+        let watching = false;
+        let watchError = null;
+        if (originalUrl) {
+          const watch = await authedFetch("/api/price-watches", {
+            method: "POST",
+            body: {
+              enabled,
+              originalUrl,
+              title: capture.title || null,
+              brand: capture.brand_name || capture.brandName || null,
+              retailer: capture.retailer || null,
+              price: capture.price ?? null,
+              currency: capture.currency || null,
+              captureId: capture.id || null,
+              source: msg.source || "chrome_extension",
+            },
+          });
+          watching = Boolean(watch.json?.enabled || watch.json?.watching);
+          if (!watch.res.ok) watchError = watch.json?.error || "Could not update the price watch.";
+        }
         const { res, json } = await authedFetch("/api/sale-alerts", {
           method: "POST",
           body: {
-            enabled: msg.enabled !== false,
+            enabled,
             source: msg.source || "chrome_extension",
             captureId: capture.id || null,
             category: capture.category || capture.subcategory || null,
@@ -787,10 +813,12 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             naturalFiberPercent: capture.natural_fiber_percent ?? null,
           },
         });
+        const ok = originalUrl ? !watchError : res.ok;
         sendResponse({
-          ok: res.ok,
-          enabled: Boolean(json?.enabled),
-          error: res.ok ? null : json?.error || "Could not update the sale alert.",
+          ok,
+          enabled: originalUrl ? watching : Boolean(json?.enabled),
+          watching,
+          error: watchError || (res.ok ? null : json?.error || "Could not update the sale alert."),
         });
       } catch (e) {
         sendResponse({ error: e instanceof Error ? e.message : "Could not update the sale alert." });
@@ -802,6 +830,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         const store = await getStore();
         if (!store.accessToken) {
           sendResponse({ enabled: false });
+          return;
+        }
+        const capture = msg.capture || store.lastResult?.capture || {};
+        const originalUrl = capture.original_url || capture.originalUrl || capture.url || null;
+        if (originalUrl) {
+          const { res, json } = await authedFetch(
+            `/api/price-watches?url=${encodeURIComponent(originalUrl)}`
+          );
+          sendResponse({ enabled: Boolean(res.ok && json?.watching) });
           return;
         }
         const { res, json } = await authedFetch("/api/sale-alerts");

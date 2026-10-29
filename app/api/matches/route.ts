@@ -3,6 +3,7 @@ export const revalidate = 0;
 
 import { createHash } from "crypto";
 import { NextRequest, NextResponse, after } from "next/server";
+import { getUserFromToken } from "../../../lib/auth-helpers";
 import { decodeCapture, insertCapture, type CreateCaptureInput } from "../../../lib/capture";
 import { PUBLIC_MATCH_OWNER, publicMatchResponse } from "../../../lib/public-match-set";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
@@ -17,7 +18,8 @@ function publicOwner(ip: string): string {
   return `${PUBLIC_MATCH_OWNER}_${hash}`;
 }
 
-/** POST /api/matches — create a public match set without signing in. */
+/** POST /api/matches — create a public match set without signing in.
+ * Optional Bearer personalizes ranking (persona, designers, wardrobe) without saving the capture. */
 export async function POST(req: NextRequest) {
   try {
     const supabase = getServerSupabase();
@@ -25,13 +27,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
     }
 
-    const body = (await req.json()) as CreateCaptureInput;
+    const body = (await req.json()) as CreateCaptureInput & { region?: string };
     if (!body.originalUrl && !body.imageUrl && !body.imageStoragePath && !body.imageBase64) {
       return NextResponse.json(
         { error: "originalUrl, imageUrl, or imageBase64 required" },
         { status: 400 }
       );
     }
+
+    const signedIn = await getUserFromToken(req.headers.get("authorization"));
+    const tasteUserId = signedIn?.id ? String(signedIn.id) : null;
 
     const owner = publicOwner(clientIp(req));
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -58,7 +63,10 @@ export async function POST(req: NextRequest) {
     const captureId = String((capture as { id: string }).id);
     if (queueDecode) {
       after(() =>
-        decodeCapture(supabase, owner, captureId, { findAlternatives: true }).catch((e) => {
+        decodeCapture(supabase, owner, captureId, {
+          findAlternatives: true,
+          tasteUserId,
+        }).catch((e) => {
           console.error("[matches] decodeCapture failed", captureId, e);
         })
       );
@@ -68,6 +76,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       duplicate,
       public: true,
+      personalized: Boolean(tasteUserId),
       ...publicMatchResponse(capture as Record<string, unknown>),
     });
   } catch (e) {

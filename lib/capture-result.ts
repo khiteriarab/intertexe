@@ -40,6 +40,12 @@ export type CaptureResultAltView = {
   why: string | null;
   whyReasons: string[];
   naturalFiberPercent: number | null;
+  badges: string[];
+  pairsWith: string | null;
+  isEditorPick: boolean;
+  isKhiteriEdit: boolean;
+  sizeOptions: string[];
+  region: string | null;
 };
 
 export type CaptureResultView = {
@@ -124,6 +130,20 @@ export function buildCaptureResultView(
       (composed.headline === "Material details unavailable" ? "" : composed.headline);
     const nfp = alt.natural_fiber_percent != null ? Number(alt.natural_fiber_percent) : null;
     const priceNum = typeof alt.price === "number" ? alt.price : null;
+    const badgeList = Array.isArray(alt.badges)
+      ? alt.badges.map(String).filter(Boolean)
+      : [];
+    if (alt.is_khiteri_edit === true && !badgeList.some((b) => /khiteri/i.test(b))) {
+      badgeList.unshift("Khiteri’s Edit");
+    } else if (alt.is_editor_pick === true && !badgeList.some((b) => /editorial|khiteri/i.test(b))) {
+      badgeList.unshift("Editorial");
+    }
+    if (alt.pairs_with && !badgeList.some((b) => /wardrobe/i.test(b))) {
+      badgeList.push("Wardrobe match");
+    }
+    const sizeOptions = Array.isArray(alt.size_options)
+      ? alt.size_options.map(String).filter(Boolean)
+      : [];
     return {
       id: String(alt.id || idx),
       name: titleCaseName(String(alt.name || alt.brand_name || "TX Match")),
@@ -150,6 +170,12 @@ export function buildCaptureResultView(
         naturalFiberPercent: nfp,
       }),
       naturalFiberPercent: nfp,
+      badges: badgeList.slice(0, 3),
+      pairsWith: alt.pairs_with != null ? String(alt.pairs_with) : null,
+      isEditorPick: alt.is_editor_pick === true,
+      isKhiteriEdit: alt.is_khiteri_edit === true,
+      sizeOptions,
+      region: alt.region != null ? String(alt.region) : null,
     };
   });
   const links = buildTxMatchLinks(row.id != null ? String(row.id) : null);

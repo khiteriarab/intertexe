@@ -142,6 +142,91 @@ describe("TX Match fabric-first ranking", () => {
     assert.equal(productMatchesFiber({ composition: "100% silk" }, "silk"), true);
     assert.equal(productMatchesFiber({ composition: "100% cotton" }, "silk"), false);
   });
+
+  it("soft-boosts preferred designers without beating same-fiber ranking", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        {
+          id: "silk-other",
+          name: "Silk slip",
+          brand_name: "Other",
+          image_url: "https://example.com/x.jpg",
+          price: 320,
+          currency: "USD",
+          composition: "100% Silk",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dress",
+        },
+        {
+          id: "silk-toteme",
+          name: "Silk slip",
+          brand_name: "Toteme",
+          image_url: "https://example.com/x.jpg",
+          price: 340,
+          currency: "USD",
+          composition: "100% Silk",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dress",
+        },
+        {
+          id: "cotton-toteme",
+          name: "Cotton dress",
+          brand_name: "Toteme",
+          image_url: "https://example.com/x.jpg",
+          price: 200,
+          currency: "USD",
+          composition: "100% Cotton",
+          natural_fiber_percent: 100,
+          category: "dresses",
+          garment_type: "dress",
+        },
+      ],
+      {
+        title: "Silk slip dress",
+        compositionText: "100% Silk",
+        garmentType: "dress",
+        category: "dresses",
+        price: 360,
+        preferredDesigners: ["Toteme"],
+      }
+    );
+    assert.equal(ranked[0].id, "silk-toteme");
+    assert.ok(ranked.findIndex((a) => a.id === "silk-other") < ranked.findIndex((a) => a.id === "cotton-toteme"));
+  });
+
+  it("badges wardrobe pairing and editorial picks", () => {
+    const ranked = rankTxMatchAlternatives(
+      [
+        {
+          id: "top-1",
+          name: "Silk blouse",
+          brand_name: "Test",
+          image_url: "https://example.com/x.jpg",
+          price: 280,
+          currency: "USD",
+          composition: "100% Silk",
+          natural_fiber_percent: 100,
+          category: "tops",
+          garment_type: "top",
+          is_editor_pick: true,
+        },
+      ],
+      {
+        title: "Silk blouse",
+        compositionText: "silk",
+        garmentType: "top",
+        category: "tops",
+        price: 300,
+        wardrobeHints: [{ title: "Wide-leg wool trousers", category: "trousers", color: "black" }],
+      }
+    );
+    assert.equal(ranked[0].is_editor_pick, true);
+    assert.ok(ranked[0].badges?.some((b) => /editorial/i.test(b)));
+    assert.ok(ranked[0].pairs_with);
+    assert.match(String(ranked[0].pairs_with), /pairs with your/i);
+  });
 });
 
 describe("TX Match copy", () => {
