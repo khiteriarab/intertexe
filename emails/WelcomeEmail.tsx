@@ -69,12 +69,23 @@ export default function WelcomeEmail({ firstName, ctaUrl }: WelcomeEmailProps) {
               </Column>
             </Row>
 
-            <Row style={{ marginBottom: "0" }}>
+            <Row style={{ marginBottom: "28px" }}>
               <Column>
                 <Text style={styles.featureTitle}>FIND THE BETTER VERSION</Text>
                 <Text style={styles.featureBody}>
                   See something you love? INTERTEXE helps you discover similar pieces based on
                   fabric, style, color, silhouette and price.
+                </Text>
+              </Column>
+            </Row>
+
+            <Row style={{ marginBottom: "0" }}>
+              <Column>
+                <Text style={styles.featureTitle}>SHOP ON SAFARI</Text>
+                <Text style={styles.featureBody}>
+                  On iPhone, enable INTERTEXE: Fabric Scanner under Settings → Apps → Safari →
+                  Extensions. Then open any product page → Aa → INTERTEXE to see better-material
+                  matches while you browse.
                 </Text>
               </Column>
             </Row>

@@ -16,6 +16,7 @@ async function getStore() {
     "extSession",
     "lastResult",
     "lastPeek",
+    "lastPersisted",
     "uiStatus",
     "uiError",
   ]);
@@ -32,6 +33,7 @@ async function publicState() {
     busy: Boolean(store.extSession),
     result: store.lastResult || null,
     peek: store.lastPeek || null,
+    persisted: Boolean(store.lastPersisted),
     status: store.uiStatus || "",
     error: Boolean(store.uiError),
   };
@@ -550,7 +552,11 @@ async function savePayload(payload) {
   }
   const polled = await pollCapture(captureIdOf(json));
   const result = await attachLiveLinks(polled || json, true);
-  await chrome.storage.local.set({ lastResult: result, pendingCapture: null });
+  await chrome.storage.local.set({
+    lastResult: result,
+    lastPersisted: true,
+    pendingCapture: null,
+  });
   return { result };
 }
 
@@ -562,11 +568,11 @@ async function createPublicMatches(payload) {
   if (res.ok && captureIdOf(json)) {
     const polled = await pollPublicCapture(captureIdOf(json));
     const result = await attachLiveLinks(polled || json, false);
-    await chrome.storage.local.set({ lastResult: result });
+    await chrome.storage.local.set({ lastResult: result, lastPersisted: false });
     return { result };
   }
   const result = await fallbackAnalyze(payload);
-  await chrome.storage.local.set({ lastResult: result });
+  await chrome.storage.local.set({ lastResult: result, lastPersisted: false });
   return { result };
 }
 
@@ -723,38 +729,40 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       }
       return;
     }
-    if (msg?.type === "SAVE_TAB") {
+    if (msg?.type === "ANALYZE_TAB" || msg?.type === "SAVE_TAB") {
       try {
         const payload = msg.payload || (await extractActiveTab());
         const store = await getStore();
         const currentUrl = String(payload.originalUrl || "");
         const priorUrl = priorCaptureUrl(store.lastResult);
         const priorAlts = store.lastResult?.capture?.alternatives || store.lastResult?.view?.alternatives;
+        // Persist only on explicit Save (force). Opening the popup must never write Inspirations.
+        const persist = Boolean(msg.force) && msg?.type !== "ANALYZE_TAB";
         if (
-          !msg.force &&
+          !persist &&
           currentUrl &&
           priorUrl &&
           currentUrl === priorUrl &&
           Array.isArray(priorAlts) &&
           priorAlts.length
         ) {
-          sendResponse({ result: store.lastResult, peek: payload, reused: true });
+          sendResponse({ result: store.lastResult, peek: payload, reused: true, persisted: false });
+          return;
+        }
+        if (!persist) {
+          const created = await createPublicMatches(payload);
+          await chrome.storage.local.set({ lastPeek: payload });
+          sendResponse({ ...created, peek: payload, persisted: false });
           return;
         }
         if (!store.accessToken) {
-          if (msg.force) {
-            await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
-            await startSignIn();
-            sendResponse({ needsSignIn: true, peek: payload });
-            return;
-          }
-          const created = await createPublicMatches(payload);
-          await chrome.storage.local.set({ lastPeek: payload });
-          sendResponse({ ...created, peek: payload });
+          await chrome.storage.local.set({ pendingCapture: payload, lastPeek: payload });
+          await startSignIn();
+          sendResponse({ needsSignIn: true, peek: payload });
           return;
         }
         const saved = await savePayload(payload);
-        sendResponse({ ...saved, peek: payload });
+        sendResponse({ ...saved, peek: payload, persisted: true });
       } catch (e) {
         const error = e instanceof Error ? e.message : "Save failed";
         await setUi(error, true);

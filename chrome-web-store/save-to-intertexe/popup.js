@@ -659,7 +659,7 @@ async function activatePendingSaleAlert(capture) {
 
 async function refreshUi() {
   const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
-  const hasSaved = Boolean(state?.result?.capture?.id);
+  const hasSaved = Boolean(state?.persisted && state?.result?.capture?.id);
   const hasProduct = Boolean(state?.result || state?.peek);
   showAuth(Boolean(state?.signedIn), hasSaved, hasProduct);
   if (state?.status && !isEmptyPageCopy(state.status) && !isNoiseStatus(state.status)) {
@@ -693,13 +693,12 @@ async function scanOpenTab() {
     setStatus("");
     renderPeek(peeked.peek);
   }
-  const state = await chrome.runtime.sendMessage({ type: "GET_STATE" });
+  // Analyze only — never persist on popup open (Save button uses force: true).
   saveBtn.disabled = true;
   setStatus("Finding better-material matches…");
   const res = await chrome.runtime.sendMessage({
-    type: "SAVE_TAB",
+    type: "ANALYZE_TAB",
     payload: peeked?.peek,
-    quiet: true,
   });
   if (res?.error) {
     if (isEmptyPageCopy(res.error) || isNoiseStatus(res.error)) setStatus("");
@@ -708,10 +707,9 @@ async function scanOpenTab() {
   if (res?.result) {
     renderResult(res.result);
     const signed = Boolean((await chrome.runtime.sendMessage({ type: "GET_STATE" }))?.signedIn);
-    showAuth(signed, Boolean(signed && res.result?.capture?.id), true);
+    showAuth(signed, false, true);
   }
-  if (res?.error) saveBtn.disabled = false;
-  else saveBtn.disabled = Boolean(res?.result);
+  saveBtn.disabled = false;
   await refreshUi();
 }
 
