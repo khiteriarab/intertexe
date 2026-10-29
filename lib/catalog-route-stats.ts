@@ -22,7 +22,8 @@ export type CatalogRouteStatsReadResult = CatalogRouteStatsPayload & {
   ageMs: number | null;
 };
 
-const MAX_AGE_MS = 8 * 24 * 60 * 60 * 1000;
+/** Soft freshness window — past this we still serve cache, but mark it stale. */
+export const CATALOG_ROUTE_STATS_FRESH_MS = 8 * 24 * 60 * 60 * 1000;
 
 function isValidPayload(value: unknown): value is CatalogRouteStatsPayload {
   if (!value || typeof value !== "object") return false;
@@ -39,8 +40,20 @@ function isValidPayload(value: unknown): value is CatalogRouteStatsPayload {
   );
 }
 
+export type ReadCatalogRouteStatsOptions = {
+  /**
+   * When true (default), serve rows past the freshness window instead of
+   * returning null. Request paths must never block on a full recompute —
+   * refresh-catalog-stats cron is paused during Fluid spend lockdown.
+   */
+  allowStale?: boolean;
+};
+
 /** Read cached route stats from system_status (service role). */
-export async function readCatalogRouteStats(): Promise<CatalogRouteStatsReadResult | null> {
+export async function readCatalogRouteStats(
+  options: ReadCatalogRouteStatsOptions = {}
+): Promise<CatalogRouteStatsReadResult | null> {
+  const allowStale = options.allowStale !== false;
   const supabase = getServerSupabase();
   if (!supabase) return null;
 
@@ -55,7 +68,8 @@ export async function readCatalogRouteStats(): Promise<CatalogRouteStatsReadResu
     const payload = data.value_json as CatalogRouteStatsPayload;
     const updatedAt = payload.updatedAt || (data.updated_at ? String(data.updated_at) : null);
     const ageMs = updatedAt ? Date.now() - new Date(updatedAt).getTime() : null;
-    if (ageMs != null && ageMs > MAX_AGE_MS) return null;
+    const stale = ageMs != null && ageMs > CATALOG_ROUTE_STATS_FRESH_MS;
+    if (stale && !allowStale) return null;
 
     return {
       ...payload,

@@ -148,9 +148,13 @@ export async function GET(req: NextRequest) {
     }
 
     const limit = Math.min(50, Number(req.nextUrl.searchParams.get("limit") || 20));
+    // Narrow select (no heavy alternatives jsonb) — list must stay under the 5s
+    // Supabase abort so iOS does not surface URLError.cancelled on Inspirations.
     const { data, error } = await supabase
       .from("external_captures")
-      .select("*")
+      .select(
+        "id, user_id, created_at, updated_at, original_url, canonical_url, image_url, title, brand_name, retailer, price, currency, composition_text, enrichment_status, enrichment_locked_at, resolution_status, source_app"
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(limit);
@@ -160,20 +164,18 @@ export async function GET(req: NextRequest) {
     // List payloads omit full TX Match arrays (detail GET still returns them) so
     // Inspirations stays fast and resilient to alternative-shape drift.
     const captures = (data || []).map((row) => {
-      const alts = Array.isArray(row.alternatives) ? row.alternatives : [];
       const pageUrl = String(row.canonical_url || row.original_url || "");
       const fixedImage =
         canonicalizeCaptureImageUrl(row.image_url as string | null, pageUrl) ||
         (isUsableCaptureImageUrl(row.image_url as string | null, pageUrl)
           ? (row.image_url as string)
           : null);
-      const { alternatives: _omit, ...rest } = row as Record<string, unknown> & {
-        alternatives?: unknown;
-      };
+      const ready = String(row.resolution_status || "") === "alternatives_ready";
       return {
-        ...rest,
+        ...(row as Record<string, unknown>),
         image_url: fixedImage,
-        alternatives_count: alts.length,
+        // Detail GET returns the real array; list only needs a presence hint.
+        alternatives_count: ready ? 1 : 0,
       };
     });
 
@@ -184,7 +186,7 @@ export async function GET(req: NextRequest) {
     if (incomplete.length) {
       const bg = getServerSupabase() || supabase;
       after(() => {
-        for (const c of incomplete.slice(0, 5)) {
+        for (const c of incomplete.slice(0, 3)) {
           void recoverCaptureEnrichment(bg, userId, String(c.id));
         }
       });
@@ -200,7 +202,17 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (e) {
+    const name = e instanceof Error ? e.name : "";
     const message = e instanceof Error ? e.message : "List failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const aborted =
+      name === "AbortError" ||
+      name === "TimeoutError" ||
+      /abort|cancel/i.test(message);
+    // Do not echo raw "cancelled"/AbortError to clients — iOS shows that as the
+    // Inspirations empty-state title.
+    return NextResponse.json(
+      { error: aborted ? "Inspirations are taking too long — try again" : message },
+      { status: aborted ? 503 : 500 }
+    );
   }
 }

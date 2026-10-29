@@ -81,6 +81,12 @@ function unavailableStats(): CachedCatalogStats {
 }
 
 export async function getCachedCatalogStats(region = "us"): Promise<CachedCatalogStats> {
+  // Prefer platform_stats_cache on the request path. Exact counts on
+  // live_products_apparel routinely burn 5s+ (or AbortError under Fluid
+  // guards) and made /shop SSR hang 5–11s.
+  const cached = await readPlatformStatsCache();
+  if (cached) return cached;
+
   const live = await readLiveApparelCount(region);
   if (live != null) {
     return {
@@ -90,7 +96,7 @@ export async function getCachedCatalogStats(region = "us"): Promise<CachedCatalo
       source: "live_count",
     };
   }
-  return (await readPlatformStatsCache()) ?? unavailableStats();
+  return unavailableStats();
 }
 
 export const getCachedCatalogStatsMemo = unstable_cache(
