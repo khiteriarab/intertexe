@@ -37,6 +37,7 @@ import { COLLECTION_SECTIONS } from "../../lib/site-architecture";
 import { editorialHeroForSlug } from "../../lib/editorial-assets";
 import { stockCardBadgeLabel } from "../../lib/stock-display";
 import { fiberSubtypesFor } from "../../lib/fiber-subtypes";
+import { trackMaterialFilter } from "../../lib/analytics";
 import {
   CATEGORY_SUBCATEGORY_OPTIONS,
   productMatchesSubcategory,
@@ -304,6 +305,22 @@ export default function ShopClient({
       setSelectedFabricConstructions([]);
     }
   }, [fiberTab, primaryCategory]);
+
+  const materialFilterReady = useRef(false);
+  useEffect(() => {
+    // Skip initial hydrate — only track intentional filter changes.
+    if (!materialFilterReady.current) {
+      materialFilterReady.current = true;
+      return;
+    }
+    trackMaterialFilter({
+      fiber: fiberTab !== "all" ? fiberTab : null,
+      category: primaryCategory,
+      color: selectedColor || null,
+      brand: selectedBrandSlugs[0] || null,
+      source: "shop",
+    });
+  }, [fiberTab, primaryCategory, selectedColor, selectedBrandSlugs.join(",")]);
 
   const syncUrl = useCallback(
     (
