@@ -7,6 +7,7 @@ import {
   rowMatchesGarmentFilter,
 } from "./catalog-shop-mappings";
 import { consumerExclusionReason as consumerExclusionReasonShared } from "./catalog-consumer-rules.js";
+import { commissionPercentForRow } from "./merchant-commission.js";
 
 export {
   garmentTypesForShopCategory,
@@ -90,8 +91,6 @@ function isSwimGarment(category = "", name = ""): boolean {
   return false;
 }
 
-import { consumerExclusionReason as consumerExclusionReasonShared } from "./catalog-consumer-rules.js";
-
 export function consumerExclusionReason(row: {
   category?: string;
   name?: string;
@@ -152,17 +151,42 @@ export function normTokenCatalog(input: string): string {
     .trim();
 }
 
-/** Strip color suffixes so regional/color variants dedupe to one style. */
+/** Trailing letter sizes only — avoid stripping colorway words like "Medium". */
+const LETTER_SIZES = "xxxxl|xxxl|xxl|xl|xs|xxs|os|one\\s*size|[sml]";
+
+/**
+ * Strip feed size tokens and trailing standard color suffixes so size SKUs
+ * of the same colorway collapse to one card. Colorway words embedded in the
+ * title (e.g. "Dream", "Grey Melange") are kept so color variants stay separate.
+ */
 export function catalogStyleBaseName(name: string): string {
   let base = String(name || "")
+    .replace(/\s*[-–|:]\s*size\s*[:.]?\s*[a-z0-9./+-]+\s*(women|womens|men|mens|us|uk|eu)?\s*$/i, "")
+    .replace(/\s+size\s*[:.]?\s*[a-z0-9./+-]+\s*(women|womens|men|mens|us|uk|eu)?\s*$/i, "")
+    .replace(new RegExp(`\\s*[-–|/]\\s*(${LETTER_SIZES})\\s*$`, "i"), "")
+    .replace(new RegExp(`\\s+(${LETTER_SIZES})\\s*$`, "i"), "")
+    .replace(/\s*[-–]\s*\d{1,2}(\.\d)?\s*$/i, "")
     .replace(
       /\s*[-–]\s*(black|white|grey|gray|ecru|navy|blue|red|pink|green|beige|khaki|brown|camel|cream|ivory|nude|sand|taupe|chocolate|burgundy|plum|powder|midnight|heather|medium|deep|light|dark|washed|faded|natural|stone|oatmeal|chalk|pearl|snow).*$/i,
       ""
     )
-    .replace(/\s+size\s+[a-z0-9./]+\s*(women|womens|men|mens|us|uk|eu)?.*$/i, "")
     .trim()
     .toLowerCase();
   return base;
+}
+
+/** Display title without size SKU noise (title-case preserved from source when possible). */
+export function catalogDisplayName(name: string): string {
+  const raw = String(name || "").trim();
+  if (!raw) return "";
+  const stripped = raw
+    .replace(/\s*[-–|:]\s*size\s*[:.]?\s*[a-z0-9./+-]+\s*(women|womens|men|mens|us|uk|eu)?\s*$/i, "")
+    .replace(/\s+size\s*[:.]?\s*[a-z0-9./+-]+\s*(women|womens|men|mens|us|uk|eu)?\s*$/i, "")
+    .replace(new RegExp(`\\s*[-–|/]\\s*(${LETTER_SIZES})\\s*$`, "i"), "")
+    .replace(new RegExp(`\\s+(${LETTER_SIZES})\\s*$`, "i"), "")
+    .replace(/\s*[-–]\s*\d{1,2}(\.\d)?\s*$/i, "")
+    .trim();
+  return stripped || raw;
 }
 
 export function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): string | null {
@@ -171,19 +195,29 @@ export function catalogNormalizeImageUrl(pImageUrl: string | null | undefined): 
   return trimmed || null;
 }
 
+/**
+ * One visible card per style/colorway.
+ * Prefer size-stripped style over canonical_id — brand feeds often mint a
+ * distinct canonical per size SKU, which previously produced duplicate tiles.
+ */
 export function catalogDedupeKey(row: Record<string, unknown>): string {
+  const b = normTokenCatalog(String(row.brand_name ?? row.brandName ?? ""));
+  const style = normTokenCatalog(
+    catalogStyleBaseName(String(row.name ?? row.title ?? ""))
+  );
+  const color = normTokenCatalog(String(row.color ?? row.colour ?? ""));
+  if (b && style.length >= 6) {
+    return color ? `style:${b}|${style}|${color}` : `style:${b}|${style}`;
+  }
+
+  const img = catalogNormalizeImageUrl((row.image_url ?? row.imageUrl) as string);
+  if (img) return `img:${img}`;
+
   const canonical = String(row.canonical_id ?? row.canonicalId ?? "")
     .trim()
     .toLowerCase();
   if (canonical) return `canonical:${canonical}`;
 
-  const b = normTokenCatalog(String(row.brand_name ?? row.brandName ?? ""));
-  const style = normTokenCatalog(
-    catalogStyleBaseName(String(row.name ?? row.title ?? ""))
-  );
-  if (b && style.length >= 6) return `style:${b}|${style}`;
-  const img = catalogNormalizeImageUrl((row.image_url ?? row.imageUrl) as string);
-  if (img) return `img:${img}`;
   const pid = String(row.product_id ?? row.productId ?? "").trim().toLowerCase();
   if (pid) return `pid:${pid}`;
   const n = normTokenCatalog(String(row.name ?? ""));
@@ -202,16 +236,50 @@ export function catalogRegionRank(region: string | null | undefined, preferred: 
   return 4;
 }
 
+/**
+ * Winner among offers of the same style:
+ * region → higher affiliate commission % → NFP → recency.
+ */
 export function pickDedupeWinner(rows: Record<string, unknown>[], preferred = "us", fallback = "us") {
   return [...rows].sort((a, b) => {
     const d = catalogRegionRank(a.region as string, preferred) - catalogRegionRank(b.region as string, preferred);
     if (d !== 0) return d;
     const df = catalogRegionRank(a.region as string, fallback) - catalogRegionRank(b.region as string, fallback);
     if (df !== 0) return df;
+    const commission =
+      commissionPercentForRow(b as { retailer_mid?: string }) -
+      commissionPercentForRow(a as { retailer_mid?: string });
+    if (commission !== 0) return commission;
     const nfp = Number(b.natural_fiber_percent || 0) - Number(a.natural_fiber_percent || 0);
     if (nfp !== 0) return nfp;
     return new Date(String(b.created_at || 0)).getTime() - new Date(String(a.created_at || 0)).getTime();
   })[0];
+}
+
+/** Union size tokens from sibling size-SKU offers onto the winning card. */
+export function mergeSizeOptions(
+  rows: Array<{ size_options?: unknown; sizeOptions?: unknown }>
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const row of rows) {
+    const raw = row.size_options ?? row.sizeOptions;
+    const parts = Array.isArray(raw)
+      ? raw
+      : typeof raw === "string"
+        ? String(raw).split(/[|,/;]/)
+        : [];
+    for (const part of parts) {
+      const size = String(part || "").trim();
+      if (!size) continue;
+      const key = size.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(size);
+      if (out.length >= 40) return out;
+    }
+  }
+  return out;
 }
 
 export function dedupeCatalogRows(rows: Record<string, unknown>[], preferred = "us", fallback = "us") {
@@ -231,7 +299,9 @@ export function catalogDedupeKeyFromProduct(p: {
   name?: string;
   imageUrl?: string;
   composition?: string;
+  color?: string | null;
   canonicalId?: string | null;
+  retailerMid?: string | null;
 }): string {
   return catalogDedupeKey({
     canonical_id: p.canonicalId,
@@ -241,6 +311,8 @@ export function catalogDedupeKeyFromProduct(p: {
     name: p.name,
     image_url: p.imageUrl,
     composition: p.composition,
+    color: p.color,
+    retailer_mid: p.retailerMid,
   });
 }
 
