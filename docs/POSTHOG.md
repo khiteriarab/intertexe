@@ -2,16 +2,27 @@
 
 PostHog powers product analytics and session replay on **www.intertexe.com** consumer pages only.
 
+## Project
+
+| Field | Value |
+|-------|-------|
+| Project ID | `696070` |
+| Region | US Cloud |
+| API host | `https://us.i.posthog.com` |
+| UI | `https://us.posthog.com` |
+
+Use the **Project token** (`phc_…`) from PostHog → Settings → Project → General as `NEXT_PUBLIC_POSTHOG_KEY`. It is write-only and safe in the browser; never commit it to git.
+
 ## Env vars (Vercel + local)
 
 | Variable | Required | Example |
 |----------|----------|---------|
-| `NEXT_PUBLIC_POSTHOG_KEY` | yes | `phc_…` (Project API Key) |
+| `NEXT_PUBLIC_POSTHOG_KEY` | yes | `phc_…` (Project token from Settings → General) |
 | `NEXT_PUBLIC_POSTHOG_HOST` | no (defaults US) | `https://us.i.posthog.com` |
 | `NEXT_PUBLIC_POSTHOG_UI_HOST` | no | `https://us.posthog.com` |
 | `NEXT_PUBLIC_POSTHOG_REPLAY` | no (default on) | `1` or `0` |
 
-Never commit real keys. Set them in Vercel → Project → Settings → Environment Variables (Production + Preview).
+Never commit real keys. Set them in Vercel → Project → Settings → Environment Variables (Production + Preview). After merge, confirm Live events land under project **696070**.
 
 ## Consent
 
