@@ -19,8 +19,13 @@ import {
   getFounderWelcomeTransactionalId,
   isLoopsFounderWelcomeEnabled,
 } from "../lib/loops.ts";
-import { resolveWelcomeCtaUrl } from "../lib/founder-welcome.ts";
+import {
+  resolveWelcomeAppDownloadUrl,
+  resolveWelcomeChromeExtensionUrl,
+  resolveWelcomeCtaUrl,
+} from "../lib/founder-welcome.ts";
 import { getAppSchemeOpenUrl, getAppSchemeProductUrl } from "../lib/app-store.ts";
+import { getChromeWebStoreUrl } from "../lib/chrome-extension.ts";
 
 test("channel split identities", () => {
   assert.equal(EMAIL_FROM, "Intertexe <info@mail.intertexe.com>");
@@ -55,12 +60,31 @@ test("Loops founder welcome is gated off by default", () => {
   else process.env.LOOPS_FOUNDER_WELCOME_TRANSACTIONAL_ID = prevId;
 });
 
-test("welcome CTA opens the installed app via /open", () => {
+test("welcome CTA is app download (most recipients have not installed yet)", () => {
   const url = resolveWelcomeCtaUrl();
-  assert.equal(
-    url,
-    "https://www.intertexe.com/open?itx_cta=email_founder_welcome&utm_source=loops&utm_medium=email&utm_campaign=founder_welcome"
+  assert.equal(url, resolveWelcomeAppDownloadUrl());
+  assert.match(url, /^https:\/\/www\.intertexe\.com\/download\?/);
+  assert.match(url, /itx_cta=email_founder_welcome_app/);
+  assert.match(url, /utm_source=loops/);
+  assert.match(url, /utm_medium=email/);
+  assert.match(url, /utm_campaign=founder_welcome/);
+});
+
+test("welcome email includes Chrome Web Store + app download links", () => {
+  const chrome = resolveWelcomeChromeExtensionUrl();
+  assert.ok(chrome.startsWith(getChromeWebStoreUrl()));
+  assert.match(chrome, /itx_cta=email_founder_welcome_chrome/);
+  assert.match(chrome, /utm_source=loops/);
+  assert.match(chrome, /utm_campaign=founder_welcome/);
+
+  const email = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../emails/WelcomeEmail.tsx"),
+    "utf8"
   );
+  assert.match(email, /Download the iOS App/);
+  assert.match(email, /Add to Chrome/);
+  assert.match(email, /appDownloadUrl/);
+  assert.match(email, /chromeExtensionUrl/);
 });
 
 test("custom scheme opens the installed app when Gmail swallows Universal Links", () => {
@@ -72,7 +96,7 @@ test("custom scheme opens the installed app when Gmail swallows Universal Links"
   );
 });
 
-test("Loops template dataVariables include lowercase firstname", () => {
+test("Loops template dataVariables include lowercase firstname and install URLs", () => {
   // Production failure 2026-08-14: "Missing required data variable(s): firstname."
   const src = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "../lib/founder-welcome.ts"),
@@ -81,4 +105,7 @@ test("Loops template dataVariables include lowercase firstname", () => {
   assert.match(src, /firstname:/);
   assert.match(src, /firstName:/);
   assert.match(src, /ctaUrl/);
+  assert.match(src, /appDownloadUrl/);
+  assert.match(src, /chromeExtensionUrl/);
+  assert.match(src, /chromeextensionurl/);
 });
