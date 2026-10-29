@@ -9,6 +9,7 @@ import { Navbar } from "./Navbar";
 import { ScrollToTop } from "./ScrollToTop";
 import { Analytics } from "./Analytics";
 import { MetaPixel } from "./MetaPixel";
+import { PostHogAnalytics } from "./PostHogAnalytics";
 import { Footer } from "./Footer";
 import { EmailBanner } from "./EmailBanner";
 import { SignInBenefitsBanner } from "./SignInBenefitsBanner";
@@ -110,6 +111,7 @@ function AppFrame({
     <>
       {showConsumerChrome ? <Analytics /> : null}
       {showConsumerChrome ? <MetaPixel /> : null}
+      {showConsumerChrome ? <PostHogAnalytics /> : null}
       <div
         className={`min-h-screen flex flex-col w-full max-w-[100vw] overflow-x-clip ${
           minimalChrome ? "bg-white text-gray-900" : "bg-background text-foreground"

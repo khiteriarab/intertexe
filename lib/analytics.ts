@@ -7,6 +7,15 @@ declare global {
 
 const GA_MEASUREMENT_ID = "G-EVKFJLK9BP";
 
+function ph(
+  event: string,
+  properties?: Record<string, unknown>
+) {
+  void import("./posthog")
+    .then((m) => m.capturePostHogEvent(event, properties))
+    .catch(() => null);
+}
+
 /** Parse GA4 client_id from the _ga cookie. */
 export function getGaClientId(): string | null {
   if (typeof document === "undefined") return null;
@@ -35,12 +44,16 @@ export function setGaUserId(userId: string | null | undefined) {
     send_page_view: false,
   });
   window.gtag?.("set", { user_id: id });
+  void import("./posthog")
+    .then((m) => m.identifyPostHogUser(id))
+    .catch(() => null);
 }
 
 /** Legacy scanner hooks (brand + mode + matched). */
 export function trackScanStart(mode: string) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "scan_start", { scan_mode: mode });
+  ph("scan_start", { scan_mode: mode });
   void import("./meta-pixel").then((m) => m.metaTrackScanStarted(mode)).catch(() => null);
 }
 
@@ -58,12 +71,14 @@ export function trackScanComplete(
 ) {
   if (typeof window === "undefined") return;
   if (typeof brandOrParams === "object") {
-    window.gtag?.("event", "scan_complete", {
+    const props = {
       natural_fiber_percent: brandOrParams.naturalPercent,
       verdict: brandOrParams.verdict,
       has_alternatives: brandOrParams.hasAlternatives,
       scan_source: brandOrParams.source,
-    });
+    };
+    window.gtag?.("event", "scan_complete", props);
+    ph("scan_complete", props);
     void import("./meta-pixel")
       .then((m) =>
         m.metaTrackScanCompleted({
@@ -83,6 +98,11 @@ export function trackScanComplete(
     scan_mode: mode,
     matched: Boolean(matched),
   });
+  ph("scan_complete", {
+    brand_name: brandOrParams,
+    scan_mode: mode,
+    matched: Boolean(matched),
+  });
   void import("./meta-pixel")
     .then((m) => m.metaTrackScanCompleted({ mode, matched: Boolean(matched) }))
     .catch(() => null);
@@ -94,6 +114,7 @@ export function trackScanComplete(
 export function trackScanError(mode: string, message: string) {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "scan_error", { scan_mode: mode, error_message: message });
+  ph("scan_error", { scan_mode: mode, error_message: message });
 }
 
 export function trackAffiliateClick(params: {
@@ -107,7 +128,7 @@ export function trackAffiliateClick(params: {
   editMonth?: string;
 }) {
   if (typeof window === "undefined") return;
-  window.gtag?.("event", "affiliate_click", {
+  const props = {
     product_id: params.productId,
     brand_name: params.brandName,
     value: params.price,
@@ -116,7 +137,9 @@ export function trackAffiliateClick(params: {
     click_target: params.clickTarget,
     edit_slug: params.editSlug,
     edit_month: params.editMonth,
-  });
+  };
+  window.gtag?.("event", "affiliate_click", props);
+  ph("affiliate_click", props);
   // Never fire Meta Purchase for affiliate clickouts.
   void import("./meta-pixel")
     .then((m) =>
@@ -155,6 +178,7 @@ export function trackAffiliateRedirect(brand: string, url: string) {
     brand_name: brand,
     link_url: url,
   });
+  ph("affiliate_redirect", { brand_name: brand, link_url: url });
 }
 
 export function trackQuizStart() {
@@ -196,11 +220,35 @@ export function trackSearch(params: { searchTerm: string; resultCount: number })
     search_term: params.searchTerm,
     result_count: params.resultCount,
   });
+  ph("search", {
+    search_term: params.searchTerm,
+    result_count: params.resultCount,
+  });
   void import("./meta-pixel")
     .then((m) =>
       m.metaTrackSearch({ searchString: params.searchTerm, resultCount: params.resultCount })
     )
     .catch(() => null);
+}
+
+/** Shop material / category filter changes. */
+export function trackMaterialFilter(params: {
+  fiber?: string | null;
+  category?: string | null;
+  color?: string | null;
+  brand?: string | null;
+  source?: string;
+}) {
+  if (typeof window === "undefined") return;
+  const props = {
+    fiber: params.fiber || "all",
+    category: params.category || "all",
+    color: params.color || null,
+    brand: params.brand || null,
+    source: params.source || "shop",
+  };
+  window.gtag?.("event", "material_filter", props);
+  ph("material_filter", props);
 }
 
 export function trackProductFavorite(params: {
@@ -212,6 +260,12 @@ export function trackProductFavorite(params: {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "add_to_wishlist", {
     product_id: params.productId,
+    value: params.value ?? undefined,
+    currency: params.currency || "USD",
+  });
+  ph("product_favorite", {
+    product_id: params.productId,
+    content_name: params.contentName,
     value: params.value ?? undefined,
     currency: params.currency || "USD",
   });
@@ -237,6 +291,12 @@ export function trackViewContent(params: {
   window.gtag?.("event", "view_item", {
     item_id: params.productId,
     item_name: params.contentName,
+    value: params.value ?? undefined,
+    currency: params.currency || "USD",
+  });
+  ph("product_viewed", {
+    product_id: params.productId,
+    content_name: params.contentName,
     value: params.value ?? undefined,
     currency: params.currency || "USD",
   });
