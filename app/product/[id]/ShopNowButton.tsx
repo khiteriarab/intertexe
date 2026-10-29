@@ -2,7 +2,11 @@
 
 import { ExternalLink } from "lucide-react";
 import { useMemo } from "react";
-import { affiliateUrlWithClientU1 } from "../../../lib/affiliate-url";
+import { affiliateUrlWithClientU1, resolveClientU1 } from "../../../lib/affiliate-url";
+import {
+  improveRetailerClickoutUrl,
+  intertexeClickoutHopPath,
+} from "../../../lib/retailer-clickout";
 
 const TOKEN_KEY = "intertexe_auth_token";
 
@@ -65,10 +69,15 @@ export function ShopNowButton({
   product: ShopNowProduct;
   unavailable?: boolean;
 }) {
-  const shopUrl = useMemo(
-    () => (product.url ? affiliateUrlWithClientU1(product.url) : null),
-    [product.url]
-  );
+  const shopUrl = useMemo(() => {
+    if (!product.url) return null;
+    // Hop through /api/go so attribution stays on Rakuten while the open URL is a
+    // cleaned MyTheresa/Bloomingdale's PDP (avoids retailer-app UL dumping to home).
+    const improved = improveRetailerClickoutUrl(affiliateUrlWithClientU1(product.url));
+    const u1 = resolveClientU1();
+    const hop = intertexeClickoutHopPath(improved);
+    return u1 ? `${hop}&u1=${encodeURIComponent(u1)}` : hop;
+  }, [product.url]);
   if (!shopUrl) return null;
 
   if (unavailable) {

@@ -11,6 +11,7 @@ import {
   integritySpecFromBrowseOpts,
   type FilterIntegrityProduct,
 } from "./catalog-filter-integrity";
+import { improveRetailerClickoutUrl } from "./retailer-clickout";
 
 export type CatalogBrowseV2Opts = {
   region?: string;
@@ -172,7 +173,9 @@ function mapProductRow(row: Record<string, unknown>): CatalogBrowseProduct {
     brandName: String(row.brand_name ?? ""),
     name: String(row.name ?? ""),
     productId: String(row.product_id ?? row.id ?? ""),
-    url: String(row.url ?? ""),
+    url: improveRetailerClickoutUrl(String(row.url ?? ""), {
+      retailerMid: row.retailer_mid != null ? String(row.retailer_mid) : null,
+    }),
     imageUrl: String(row.image_url ?? ""),
     price: String(row.price ?? ""),
     composition: String(row.composition ?? ""),
