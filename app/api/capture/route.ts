@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+/** Keep list/create under Fluid caps; iOS cancels slow Inspirations fetches. */
+export const maxDuration = 10;
 
 import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -18,6 +20,7 @@ import {
 } from "../../../lib/capture-enrichment";
 import { buildTxMatchCopyFromCapture, buildTxMatchLinks } from "../../../lib/tx-match-copy";
 import { getServerSupabase } from "../../../lib/supabase-service-client";
+import { createSupabaseTimedFetch } from "../../../lib/supabase-fetch";
 
 function userClient(accessToken: string) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -27,7 +30,11 @@ function userClient(accessToken: string) {
     process.env.VITE_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createClient(url, key, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    global: {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      // Same 5s abort as service client — hung list queries must not open-bill Fluid.
+      fetch: createSupabaseTimedFetch(5_000),
+    },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
@@ -174,7 +181,8 @@ export async function GET(req: NextRequest) {
       return {
         ...(row as Record<string, unknown>),
         image_url: fixedImage,
-        // Detail GET returns the real array; list only needs a presence hint.
+        // Keep key for older iOS decoders; detail GET still returns the real array.
+        alternatives: [] as unknown[],
         alternatives_count: ready ? 1 : 0,
       };
     });
