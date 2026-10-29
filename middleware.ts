@@ -13,7 +13,29 @@ const API_CACHE_HEADERS: Record<string, string> = {
   "Vercel-CDN-Cache-Control": "public, s-maxage=30",
 };
 
-const NO_CACHE_PREFIXES = ["/api/auth/", "/api/cron/", "/api/dashboard/", "/api/matches"];
+/** Private/auth APIs must never get public CDN cache (cached 401s → iOS "cancelled"). */
+const PRIVATE_API_NO_CACHE_HEADERS: Record<string, string> = {
+  "Cache-Control": "private, no-store, no-cache, must-revalidate",
+  "CDN-Cache-Control": "no-store",
+  "Vercel-CDN-Cache-Control": "no-store",
+  Pragma: "no-cache",
+};
+
+/**
+ * Opt-in public CDN cache for anonymous catalog reads only.
+ * Default for every other /api/* is private no-store — Inspirations
+ * (`/api/capture`), favorites, auth, cron, dashboard, etc.
+ */
+const PUBLIC_API_CACHE_PREFIXES = [
+  "/api/products",
+  "/api/catalog",
+  "/api/sale",
+  "/api/health",
+  "/api/homepage",
+  "/api/designers",
+  "/api/feeds",
+  "/api/collections",
+];
 
 function hasDashboardSession(request: NextRequest): boolean {
   return !!(
@@ -157,12 +179,13 @@ export function middleware(request: NextRequest) {
   if (!pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
-  if (NO_CACHE_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
-    return NextResponse.next();
-  }
 
   const response = NextResponse.next();
-  for (const [key, value] of Object.entries(API_CACHE_HEADERS)) {
+  const allowPublicCache = PUBLIC_API_CACHE_PREFIXES.some((prefix) =>
+    pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+  const headers = allowPublicCache ? API_CACHE_HEADERS : PRIVATE_API_NO_CACHE_HEADERS;
+  for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
   }
   return response;
