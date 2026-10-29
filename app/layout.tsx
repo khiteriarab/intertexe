@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@shopintertexe",
+    site: "@intertexe",
     title: "INTERTEXE | Natural Fiber Fashion Discovery",
     description:
       `Shop ${CATALOG_STATS.productCountFormatted} verified natural fiber pieces. Scan any label to find better natural fiber alternatives at your price point.`,
@@ -98,9 +98,11 @@ const orgSchema = {
     contactType: "customer service",
   },
   sameAs: [
-    "https://twitter.com/shopintertexe",
+    "https://x.com/intertexe",
     "https://www.instagram.com/intertexe",
+    "https://www.tiktok.com/@intertexe",
     "https://www.linkedin.com/company/intertexe",
+    "https://www.pinterest.com/shopintertexe",
   ],
   knowsAbout: [
     "natural fiber fashion",
@@ -135,8 +137,11 @@ const websiteSchema = {
     "query-input": "required name=search_term_string",
   },
   sameAs: [
+    "https://x.com/intertexe",
     "https://www.instagram.com/intertexe",
+    "https://www.tiktok.com/@intertexe",
     "https://www.linkedin.com/company/intertexe",
+    "https://www.pinterest.com/shopintertexe",
   ],
 };
 

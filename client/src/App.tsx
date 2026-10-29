@@ -113,7 +113,10 @@ function OrganizationSchema() {
     logo: "https://www.intertexe.com/favicon.svg",
     description: "Shop fashion by fabric, not just style. 17,000+ clothing items ranked by material quality. Filter polyester out and find natural fibers instantly across 60+ curated brands.",
     sameAs: [
-      "https://twitter.com/shopintertexe"
+      "https://x.com/intertexe",
+      "https://www.instagram.com/intertexe",
+      "https://www.tiktok.com/@intertexe",
+      "https://www.linkedin.com/company/intertexe",
     ]
   };
 

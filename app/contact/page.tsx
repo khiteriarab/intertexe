@@ -43,6 +43,9 @@ export default function ContactPage() {
               <span className="text-xs uppercase tracking-widest text-muted-foreground">Follow Us</span>
             </div>
             <div className="flex flex-col gap-3">
+              <a href="https://x.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-x">
+                X — @intertexe
+              </a>
               <a href="https://instagram.com/intertexe" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-muted-foreground transition-colors" data-testid="link-contact-instagram">
                 Instagram — @intertexe
               </a>

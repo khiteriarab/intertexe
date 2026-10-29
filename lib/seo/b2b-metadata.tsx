@@ -39,7 +39,7 @@ export function b2bPageMetadata({ title, description, path, ogImageAlt }: B2bMet
     },
     twitter: {
       card: "summary_large_image",
-      site: "@shopintertexe",
+      site: "@intertexe",
       title,
       description,
       images: [image.url],
@@ -58,8 +58,9 @@ export function organizationJsonLd() {
     description:
       "INTERTEXE provides fashion material intelligence and Digital Product Passport software for brands and retailers.",
     sameAs: [
-      "https://twitter.com/shopintertexe",
+      "https://x.com/intertexe",
       "https://www.instagram.com/intertexe",
+      "https://www.tiktok.com/@intertexe",
       "https://www.linkedin.com/company/intertexe",
     ],
     knowsAbout: [
